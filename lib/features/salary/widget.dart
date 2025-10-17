@@ -1,22 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:miraclemoney/constants/sizes.dart';
 
 class LabeledTextFormField extends StatelessWidget {
   final String label;
   final String hint;
-  final FormFieldSetter<String>? onSaved;
+  final TextEditingController? controller;
   final TextInputType keyboardType;
+  final String? Function(String?)? validator;
+  final List<TextInputFormatter>? inputFormatters;
 
   const LabeledTextFormField({
     super.key,
     required this.label,
     required this.hint,
-    this.onSaved,
+    this.controller,
     this.keyboardType = TextInputType.text,
+    this.validator,
+    this.inputFormatters,
   });
 
   @override
   Widget build(BuildContext context) {
+    final defaultFormatters =
+        (keyboardType == TextInputType.number ||
+            keyboardType == TextInputType.numberWithOptions())
+        ? <TextInputFormatter>[
+            FilteringTextInputFormatter.allow(RegExp(r'[\d\.,]')),
+          ]
+        : <TextInputFormatter>[];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -27,10 +40,12 @@ class LabeledTextFormField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         TextFormField(
+          controller: controller,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters ?? defaultFormatters,
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.grey.shade100,
+            fillColor: Colors.grey.shade200,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(Sizes.size8),
               borderSide: BorderSide.none,
@@ -41,7 +56,7 @@ class LabeledTextFormField extends StatelessWidget {
               borderRadius: BorderRadius.circular(Sizes.size8),
             ),
           ),
-          onSaved: onSaved,
+          validator: validator,
         ),
       ],
     );
