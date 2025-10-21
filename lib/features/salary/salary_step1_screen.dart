@@ -1,8 +1,10 @@
+// ...existing code...
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:miraclemoney/constants/gaps.dart';
 import 'package:miraclemoney/constants/sizes.dart';
 import 'widget.dart';
+import 'package:keyboard_actions/keyboard_actions.dart';
 
 class SalaryStep1Screen extends StatefulWidget {
   const SalaryStep1Screen({super.key});
@@ -29,9 +31,20 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
       TextEditingController();
   final TextEditingController _shortTermGoalDurationController =
       TextEditingController();
-
   final TextEditingController _shortTermSavedController =
       TextEditingController();
+
+  // focus nodes (각 입력 필드 포커스 제어)
+  final FocusNode _currentAgeFocus = FocusNode();
+  final FocusNode _retireAgeFocus = FocusNode();
+  final FocusNode _livingExpenseFocus = FocusNode();
+  final FocusNode _snpValueFocus = FocusNode();
+  final FocusNode _expectedReturnFocus = FocusNode();
+  final FocusNode _inflationFocus = FocusNode();
+  final FocusNode _shortTermGoalAmountFocus = FocusNode();
+  final FocusNode _shortTermGoalDurationFocus = FocusNode();
+  final FocusNode _shortTermSavedFocus = FocusNode();
+  final FocusNode _shortTermDropdownFocus = FocusNode();
 
   bool _hasShortTermGoal = false;
   String? _selectedShortTermGoal;
@@ -61,12 +74,22 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
     _shortTermGoalAmountController.dispose();
     _shortTermGoalDurationController.dispose();
     _shortTermSavedController.dispose();
+    _currentAgeFocus.dispose();
+    _retireAgeFocus.dispose();
+    _livingExpenseFocus.dispose();
+    _snpValueFocus.dispose();
+    _expectedReturnFocus.dispose();
+    _inflationFocus.dispose();
+    _shortTermGoalAmountFocus.dispose();
+    _shortTermGoalDurationFocus.dispose();
+    _shortTermSavedFocus.dispose();
+    _shortTermDropdownFocus.dispose();
     super.dispose();
   }
 
   double? _parseDouble(String? s) {
     if (s == null) return null;
-    final normalized = s.replaceAll(',', '').trim();
+    final normalized = s.replaceAll(',', '').replaceAll('%', '').trim();
     return double.tryParse(normalized);
   }
 
@@ -84,13 +107,9 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
     // TODO: null/비정상 값 처리 및 계산 로직 호출
     // TODO: DB 저장 예: await MyDbService.saveUserInputs(...);
 
-    // 예시 간단 검증
     if (currentAge == null) {
-      // 오류 처리(토스트/다이얼로그 등)
       return;
     }
-
-    // 계산 호출 예: final result = FinancialCalculator.compute(...);
   }
 
   String? _numberValidator(String? v) {
@@ -108,6 +127,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
+        // KeyboardActions로 툴바 추가
         child: Form(
           key: _formKey,
           child: Padding(
@@ -122,53 +142,98 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   hint: '현재 나이',
                   controller: _currentAgeController,
                   keyboardType: TextInputType.number,
+                  focusNode: _currentAgeFocus,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) =>
+                      FocusScope.of(context).requestFocus(_retireAgeFocus),
                   validator: _numberValidator,
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 28),
                 LabeledTextFormField(
                   label: '은퇴 희망 나이',
                   hint: '은퇴 희망 나이',
                   controller: _retireAgeController,
                   keyboardType: TextInputType.number,
+                  focusNode: _retireAgeFocus,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) =>
+                      FocusScope.of(context).requestFocus(_livingExpenseFocus),
                   validator: _numberValidator,
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 28),
                 LabeledTextFormField(
                   label: '현재 희망 생활비',
-                  hint: '현재 희망 생활비',
+                  hint: '예: 2,000,000',
                   controller: _livingExpenseController,
                   keyboardType: TextInputType.number,
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.digitsOnly,
+                    ThousandsSeparatorInputFormatter(),
+                  ],
+                  suffixText: '₩',
+
+                  focusNode: _livingExpenseFocus,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) =>
+                      FocusScope.of(context).requestFocus(_snpValueFocus),
                   validator: _numberValidator,
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 28),
                 LabeledTextFormField(
                   label: '현재 S&P500 평가금액',
-                  hint: '현재 S&P500 평가금액',
+                  hint: '예: 3,000,000',
                   controller: _snpValueController,
                   keyboardType: TextInputType.number,
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.digitsOnly,
+                    ThousandsSeparatorInputFormatter(),
+                  ],
+                  suffixText: '₩',
+
+                  focusNode: _snpValueFocus,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) =>
+                      FocusScope.of(context).requestFocus(_expectedReturnFocus),
                   validator: _numberValidator,
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 28),
                 LabeledTextFormField(
                   label: '기대수익률',
-                  hint: '기대수익률',
+                  hint: '예: 8.2',
                   controller: _expectedReturnController,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  suffixText: '%',
+                  focusNode: _expectedReturnFocus,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) =>
+                      FocusScope.of(context).requestFocus(_inflationFocus),
                   validator: _numberValidator,
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 28),
                 LabeledTextFormField(
                   label: '예상 물가 상승률',
-                  hint: '예상 물가 상승률',
+                  hint: '예: 2.5',
                   controller: _inflationController,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  suffixText: '%',
+                  focusNode: _inflationFocus,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) {
+                    if (_hasShortTermGoal) {
+                      FocusScope.of(
+                        context,
+                      ).requestFocus(_shortTermDropdownFocus);
+                    } else {
+                      FocusScope.of(context).unfocus();
+                    }
+                  },
                   validator: _numberValidator,
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 28),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -199,7 +264,6 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                       value: _hasShortTermGoal,
                       onChanged: (val) =>
                           setState(() => _hasShortTermGoal = val),
-                      // SwitchListTile의 배경/모양을 추가로 제어하려면 아래 사용
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -207,32 +271,32 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                     ),
                   ),
                 ),
-
                 if (_hasShortTermGoal) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 28),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(color: Colors.grey.shade100),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          '단기 목표를 고르세요',
+                          '단기 목표',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(height: 8),
                         DropdownButtonFormField<String>(
+                          focusNode: _shortTermDropdownFocus,
                           decoration: InputDecoration(
                             filled: true,
-                            fillColor: Colors.grey.shade100,
+                            fillColor: Colors.grey.shade200,
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(Sizes.size8),
                               borderSide: BorderSide.none,
@@ -255,33 +319,61 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                           validator: (v) =>
                               (v == null || v.isEmpty) ? '단기 목표를 선택하세요' : null,
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 28),
                         LabeledTextFormField(
                           label: '단기 목표 금액',
                           hint: '예: 1,000,000',
                           controller: _shortTermGoalAmountController,
                           keyboardType: TextInputType.number,
+                          inputFormatters: <TextInputFormatter>[
+                            FilteringTextInputFormatter.digitsOnly,
+                            ThousandsSeparatorInputFormatter(),
+                          ],
+                          suffixText: '₩',
+
+                          focusNode: _shortTermGoalAmountFocus,
+                          textInputAction: TextInputAction.next,
+                          onFieldSubmitted: (_) => FocusScope.of(
+                            context,
+                          ).requestFocus(_shortTermGoalDurationFocus),
                           validator: _numberValidator,
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 28),
                         LabeledTextFormField(
                           label: '단기 목표 기간 (월)',
                           hint: '예: 12',
                           controller: _shortTermGoalDurationController,
                           keyboardType: TextInputType.number,
+                          focusNode: _shortTermGoalDurationFocus,
+                          textInputAction: TextInputAction.next,
+                          onFieldSubmitted: (_) => FocusScope.of(
+                            context,
+                          ).requestFocus(_shortTermSavedFocus),
                           validator: _numberValidator,
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 28),
                         LabeledTextFormField(
                           label: '현재 단기 목표 저축액',
                           hint: '예: 500,000',
                           controller: _shortTermSavedController,
                           keyboardType: TextInputType.number,
+                          inputFormatters: <TextInputFormatter>[
+                            FilteringTextInputFormatter.digitsOnly,
+                            ThousandsSeparatorInputFormatter(),
+                          ],
+                          suffixText: '₩',
+
+                          focusNode: _shortTermSavedFocus,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) {
+                            _onSubmit();
+                          },
                           validator: _numberValidator,
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 18),
                   ElevatedButton(
                     onPressed: _onSubmit,
                     child: const Text('Submit'),
@@ -295,3 +387,4 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
     );
   }
 }
+// ...existing code...
