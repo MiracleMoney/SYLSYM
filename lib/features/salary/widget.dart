@@ -72,14 +72,14 @@ class LabeledTextFormField extends StatelessWidget {
           ]
         : <TextInputFormatter>[];
 
+    final labelStyle = Theme.of(
+      context,
+    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          textAlign: TextAlign.left,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-        ),
+        Text(label, textAlign: TextAlign.left, style: labelStyle),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
