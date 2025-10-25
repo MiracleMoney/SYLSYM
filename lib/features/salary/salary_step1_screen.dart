@@ -54,10 +54,14 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
   late final List<TextEditingController> _allControllers;
   late final List<FocusNode> _allFocusNodes;
 
+  // 현재 화면에서 선택된 연월
+  late DateTime _currentMonth;
+
   @override
   void initState() {
     super.initState();
-    _loadSavedData();
+    // 현재 월을 기본값으로 설정 (데이터 저장/로딩은 나중에 구현)
+    _currentMonth = DateTime.now();
     _allControllers = [
       _currentAgeController,
       _retireAgeController,
@@ -206,6 +210,13 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
     if (currentAge == null) return;
   }
 
+  // 단순히 화면에 보이는 연월만 변경 (데이터 저장은 나중에 구현)
+  void _changeMonth(DateTime newMonth) {
+    setState(() {
+      _currentMonth = newMonth;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // KeyboardActions config (필요하면 활성화)
@@ -265,9 +276,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
       appBar: AppBar(title: const Text('월급 최적화')),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
+
         child: Form(
           key: _formKey,
           child: Padding(
@@ -276,7 +285,39 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
               vertical: Sizes.size24,
             ),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
+                // ---------- 월 네비게이션 바 (상단) ----------
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left),
+                      onPressed: () {
+                        final prev = DateTime(
+                          _currentMonth.year,
+                          _currentMonth.month - 1,
+                        );
+                        _changeMonth(prev);
+                      },
+                    ),
+                    Text(
+                      '${_currentMonth.year}년 ${_currentMonth.month}월',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right),
+                      onPressed: () {
+                        final next = DateTime(
+                          _currentMonth.year,
+                          _currentMonth.month + 1,
+                        );
+                        _changeMonth(next);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
                 _buildNumberField(
                   label: '현재 나이',
                   hint: '현재 나이',

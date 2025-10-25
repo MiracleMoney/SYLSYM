@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   keyboard_actions: ^4.2.0
   google_fonts: ^6.3.2
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
