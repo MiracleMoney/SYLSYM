@@ -3,6 +3,7 @@ import 'package:miraclemoney/constants/sizes.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:miraclemoney/features/salary/salary_step1_screen.dart';
+import 'package:miraclemoney/features/salary/salary_step2_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,6 +21,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         // Google Fonts Roboto로 전체 텍스트 테마 설정
         textTheme: GoogleFonts.robotoTextTheme().copyWith(
+          headlineLarge: GoogleFonts.roboto(
+            textStyle: const TextStyle(
+              fontSize: Sizes.size24,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          headlineMedium: GoogleFonts.roboto(
+            textStyle: const TextStyle(
+              fontSize: Sizes.size20 + Sizes.size2,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           titleMedium: GoogleFonts.roboto(
             textStyle: const TextStyle(
               fontSize: Sizes.size16 + Sizes.size4,
@@ -36,7 +49,7 @@ class MyApp extends StatelessWidget {
             textStyle: const TextStyle(fontSize: Sizes.size16),
           ),
           bodyMedium: GoogleFonts.roboto(
-            textStyle: const TextStyle(fontSize: Sizes.size14),
+            textStyle: const TextStyle(fontSize: Sizes.size16 + Sizes.size4),
           ),
         ),
         brightness: Brightness.light,

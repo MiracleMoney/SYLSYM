@@ -273,16 +273,23 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('월급 최적화')),
+      appBar: AppBar(
+        title: Text(
+          '월급 최적화',
+          style: Theme.of(context).textTheme.headlineLarge?.copyWith(),
+        ),
+      ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
 
         child: Form(
           key: _formKey,
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Sizes.size20,
-              vertical: Sizes.size24,
+            padding: const EdgeInsets.only(
+              left: Sizes.size20,
+              right: Sizes.size20,
+              top: Sizes.size2,
+              bottom: Sizes.size24,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -303,7 +310,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                     ),
                     Text(
                       '${_currentMonth.year}년 ${_currentMonth.month}월',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(),
                     ),
                     IconButton(
                       icon: const Icon(Icons.chevron_right),
@@ -317,7 +324,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 48),
                 _buildNumberField(
                   label: '현재 나이',
                   hint: '현재 나이',
