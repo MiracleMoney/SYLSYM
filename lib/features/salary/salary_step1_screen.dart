@@ -45,6 +45,8 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
   final FocusNode _shortTermGoalDurationFocus = FocusNode();
   final FocusNode _shortTermSavedFocus = FocusNode();
   final FocusNode _shortTermDropdownFocus = FocusNode();
+  // Next 버튼이 포커스를 가지지 않도록 할 FocusNode
+  late final FocusNode _nextButtonFocus;
 
   bool _hasShortTermGoal = true;
   String? _selectedShortTermGoal;
@@ -86,6 +88,9 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
       _shortTermGoalDurationFocus,
       _shortTermSavedFocus,
       _shortTermDropdownFocus,
+
+      // 버튼 포커스 노드는 포커스 불가로 설정
+      (_nextButtonFocus = FocusNode()..canRequestFocus = false),
     ];
   }
 
@@ -165,7 +170,51 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
   }
 
   Future<void> _onNext() async {
-    // 위에서부터 첫 번째 빈 칸으로 포커스 이동 (자동 입력 없음)
+    // 입력 필드 순서 (UI 상의 순서와 일치하도록)
+    final orderedFocuses = <FocusNode?>[
+      _currentAgeFocus,
+      _retireAgeFocus,
+      _livingExpenseFocus,
+      _snpValueFocus,
+      _expectedReturnFocus,
+      _inflationFocus,
+      // 드롭다운(단기 목표)도 순서에 포함
+      _shortTermDropdownFocus,
+      _shortTermGoalAmountFocus,
+      _shortTermGoalDurationFocus,
+      _shortTermSavedFocus,
+    ];
+
+    // 현재 포커스된 노드 얻기 (null일 수 있음)
+    final FocusNode? currentFocus =
+        FocusScope.of(context).focusedChild ??
+        FocusManager.instance.primaryFocus;
+
+    // 만약 현재 포커스가 목록에 있으면 다음 유효한 필드로 이동
+    if (currentFocus != null) {
+      final idx = orderedFocuses.indexWhere((f) => f == currentFocus);
+      if (idx != -1) {
+        for (int i = idx + 1; i < orderedFocuses.length; i++) {
+          final next = orderedFocuses[i];
+          if (next == null) continue;
+          // 단기 목표 관련 필드는 섹션이 꺼져 있으면 건너뜀
+          if (!_hasShortTermGoal &&
+              (next == _shortTermDropdownFocus ||
+                  next == _shortTermGoalAmountFocus ||
+                  next == _shortTermGoalDurationFocus ||
+                  next == _shortTermSavedFocus)) {
+            continue;
+          }
+          Future.microtask(() {
+            if (!mounted) return;
+            FocusScope.of(context).requestFocus(next);
+          });
+          return;
+        }
+        // 현재 포커스가 마지막 필드이면 fallback으로 아래 로직으로 넘어감
+      }
+    }
+    // 위에서부터 첫 번째 빈 칸으로 포커스 이동 (키보드는 유지)
     final entries = <MapEntry<TextEditingController, FocusNode>>[
       MapEntry(_currentAgeController, _currentAgeFocus),
       MapEntry(_retireAgeController, _retireAgeFocus),
@@ -176,9 +225,9 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
     ];
 
     if (_hasShortTermGoal) {
+      // 드롭다운이 비어 있으면 드롭다운에 포커스
       if (_selectedShortTermGoal == null ||
           _selectedShortTermGoal!.trim().isEmpty) {
-        // build/레이아웃이 끝난 뒤 포커스 이동 — microtask로 연기
         Future.microtask(() {
           if (!mounted) return;
           FocusScope.of(context).requestFocus(_shortTermDropdownFocus);
@@ -201,13 +250,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
         return;
       }
     }
-
-    // 모두 채워졌으면 검증 후 처리
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-
-    final currentAge = _parseDouble(_currentAgeController.text);
-    // TODO: 실제 처리 로직 추가
-    if (currentAge == null) return;
+    // 모든 칸이 채워져 있으면 아무 동작도 하지 않음 (다음 화면 이동 등은 나중에 구현)
   }
 
   // 단순히 화면에 보이는 연월만 변경 (데이터 저장은 나중에 구현)
@@ -276,7 +319,10 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
       appBar: AppBar(
         title: Text(
           '월급 최적화',
-          style: Theme.of(context).textTheme.headlineLarge?.copyWith(),
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            fontFamily: "Gmarket_sans",
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -294,6 +340,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const SizedBox(height: 10),
                 // ---------- 월 네비게이션 바 (상단) ----------
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -310,7 +357,11 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                     ),
                     Text(
                       '${_currentMonth.year}년 ${_currentMonth.month}월',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontFamily: "Gmarket_sans",
+                        fontWeight: FontWeight.w500,
+                        fontSize: Sizes.size16 + Sizes.size2,
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.chevron_right),
@@ -324,7 +375,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 36),
                 _buildNumberField(
                   label: '현재 나이',
                   hint: '현재 나이',
@@ -408,7 +459,11 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                       title: Text(
                         '단기 목표가 있나요?',
                         style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                            ?.copyWith(
+                              fontFamily: "Gmarket_sans",
+                              fontWeight: FontWeight.w700,
+                              fontSize: Sizes.size16 + Sizes.size2,
+                            ),
                       ),
                       value: _hasShortTermGoal,
                       onChanged: (val) {
@@ -440,7 +495,11 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                         Text(
                           '단기 목표',
                           style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                              ?.copyWith(
+                                fontFamily: "Gmarket_sans",
+                                fontWeight: FontWeight.w700,
+                                fontSize: Sizes.size20 + Sizes.size2,
+                              ),
                         ),
                         const SizedBox(height: 8),
                         DropdownButtonFormField<String>(
@@ -523,23 +582,29 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
           top: false,
           child: SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+            // 누르는 순간(onTapDown)에 실행 -> 버튼이 포커스를 얻기 전에 다음 드에 포커스가 넘어갑니다.
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapDown: (_) => _onNext(),
+              child: ElevatedButton(
+                focusNode: _nextButtonFocus,
+                style: ElevatedButton.styleFrom(
+                  textStyle: const TextStyle(
+                    fontSize: Sizes.size16 + Sizes.size2,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(56),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  side: BorderSide(color: Colors.grey.shade400, width: 2),
                 ),
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                minimumSize: const Size.fromHeight(56),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                side: BorderSide(color: Colors.grey.shade400, width: 2),
+                onPressed: _onNext,
+                child: const Text('Next'),
               ),
-              onPressed: _onNext,
-              child: const Text('Next'),
             ),
           ),
         ),

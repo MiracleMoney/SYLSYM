@@ -19,39 +19,41 @@ class MyApp extends StatelessWidget {
       title: 'Miracle Money',
       themeMode: ThemeMode.system,
       theme: ThemeData(
+        fontFamily: "Gmarket_sans",
+
         // Google Fonts Roboto로 전체 텍스트 테마 설정
-        textTheme: GoogleFonts.robotoTextTheme().copyWith(
-          headlineLarge: GoogleFonts.roboto(
-            textStyle: const TextStyle(
-              fontSize: Sizes.size24,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          headlineMedium: GoogleFonts.roboto(
-            textStyle: const TextStyle(
-              fontSize: Sizes.size20 + Sizes.size2,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          titleMedium: GoogleFonts.roboto(
-            textStyle: const TextStyle(
-              fontSize: Sizes.size16 + Sizes.size4,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          titleSmall: GoogleFonts.roboto(
-            textStyle: const TextStyle(
-              fontSize: Sizes.size14,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          bodyLarge: GoogleFonts.roboto(
-            textStyle: const TextStyle(fontSize: Sizes.size16),
-          ),
-          bodyMedium: GoogleFonts.roboto(
-            textStyle: const TextStyle(fontSize: Sizes.size16 + Sizes.size4),
-          ),
-        ),
+        // textTheme: GoogleFonts.robotoTextTheme().copyWith(
+        //   headlineLarge: GoogleFonts.roboto(
+        //     textStyle: const TextStyle(
+        //       fontSize: Sizes.size24,
+        //       fontWeight: FontWeight.w700,
+        //     ),
+        //   ),
+        //   headlineMedium: GoogleFonts.roboto(
+        //     textStyle: const TextStyle(
+        //       fontSize: Sizes.size20 + Sizes.size2,
+        //       fontWeight: FontWeight.w700,
+        //     ),
+        //   ),
+        //   titleMedium: GoogleFonts.roboto(
+        //     textStyle: const TextStyle(
+        //       fontSize: Sizes.size16 + Sizes.size4,
+        //       fontWeight: FontWeight.w700,
+        //     ),
+        //   ),
+        //   titleSmall: GoogleFonts.roboto(
+        //     textStyle: const TextStyle(
+        //       fontSize: Sizes.size14,
+        //       fontWeight: FontWeight.w700,
+        //     ),
+        //   ),
+        //   bodyLarge: GoogleFonts.roboto(
+        //     textStyle: const TextStyle(fontSize: Sizes.size16),
+        //   ),
+        //   bodyMedium: GoogleFonts.roboto(
+        //     textStyle: const TextStyle(fontSize: Sizes.size16 + Sizes.size4),
+        //   ),
+        // ),
         brightness: Brightness.light,
         scaffoldBackgroundColor: Colors.white,
         colorScheme: ColorScheme.fromSeed(
