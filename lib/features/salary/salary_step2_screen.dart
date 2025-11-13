@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:miraclemoney/constants/sizes.dart';
 import 'package:miraclemoney/constants/gaps.dart';
-import 'widget.dart';
+import 'widgets/form_widgets.dart';
 
 class SalaryStep2Screen extends StatefulWidget {
   const SalaryStep2Screen({super.key});

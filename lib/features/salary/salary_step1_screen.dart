@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:miraclemoney/constants/gaps.dart';
 import 'package:miraclemoney/constants/sizes.dart';
-import 'widget.dart';
+import 'widgets/form_widgets.dart';
 import 'package:keyboard_actions/keyboard_actions.dart';
-import 'salary_step2_screen.dart'; // same-folder import
+import 'salary_step2_screen.dart'; // same-folde
+import 'widgets/bottom_action_button.dart';
+import 'widgets/number_input_field.dart';
 
 class SalaryStep1Screen extends StatefulWidget {
   const SalaryStep1Screen({super.key});
@@ -164,82 +166,6 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
     ).push(MaterialPageRoute(builder: (_) => const SalaryStep2Screen()));
   }
 
-  Widget _buildBottomButton() {
-    final padding = EdgeInsets.only(
-      left: 20,
-      right: 20,
-      bottom: MediaQuery.of(context).viewInsets.bottom + 12,
-    );
-
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 50),
-      curve: Curves.easeOut,
-      padding: padding,
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          width: double.infinity,
-          child: _allFieldsFilled
-              // 모든 필드 채워짐 -> 다음 화면으로 이동하는 버튼 표시
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTapDown: (_) => _navigateToStep2(),
-                        child: ElevatedButton(
-                          focusNode: _nextButtonFocus,
-                          style: ElevatedButton.styleFrom(
-                            textStyle: const TextStyle(
-                              fontSize: Sizes.size16 + Sizes.size2,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            backgroundColor: Colors.blue.shade900, // 구분 색상 예시
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size.fromHeight(56),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: _navigateToStep2,
-                          child: const Text('Go to Step 2'),
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              // 아직 빈칸 존재 -> 기존 Next 버튼(다음 빈칸 또는 포커스 이동)
-              : GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTapDown: (_) => _onNext(),
-                  child: ElevatedButton(
-                    focusNode: _nextButtonFocus,
-                    style: ElevatedButton.styleFrom(
-                      textStyle: const TextStyle(
-                        fontSize: Sizes.size16 + Sizes.size2,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(56),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      side: BorderSide(color: Colors.grey.shade400, width: 2),
-                    ),
-                    onPressed: _onNext,
-                    child: const Text('Next'),
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
-
   double? _parseDouble(String? s) {
     if (s == null) return null;
     final normalized = s.replaceAll(',', '').replaceAll('%', '').trim();
@@ -250,52 +176,6 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
     if (v == null || v.trim().isEmpty) return '값을 입력하세요';
     if (_parseDouble(v) == null) return '유효한 숫자를 입력하세요';
     return null;
-  }
-
-  Widget _buildNumberField({
-    required String label,
-    required String hint,
-    required TextEditingController controller,
-    required FocusNode focusNode,
-    TextInputType keyboardType = TextInputType.number,
-    List<TextInputFormatter>? inputFormatters,
-    String? suffixText,
-    required FocusNode? nextFocus,
-    bool allowDecimal = false,
-    TextInputAction? action,
-  }) {
-    final defaultFormatters = allowDecimal
-        ? <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-          ]
-        : <TextInputFormatter>[
-            FilteringTextInputFormatter.digitsOnly,
-            ThousandsSeparatorInputFormatter(),
-          ];
-
-    return LabeledTextFormField(
-      label: label,
-      hint: hint,
-      controller: controller,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters ?? defaultFormatters,
-      suffixText: suffixText,
-      focusNode: focusNode,
-      textInputAction: action ?? TextInputAction.next,
-      onFieldSubmitted: (_) {
-        // 레이아웃/시맨틱스 중간에 포커스 변경으로 인한 assertion 방지
-        Future.microtask(() {
-          if (!mounted) return;
-          if (nextFocus != null) {
-            FocusScope.of(context).requestFocus(nextFocus);
-          } else {
-            FocusScope.of(context).unfocus();
-          }
-        });
-      },
-
-      validator: _numberValidator,
-    );
   }
 
   Future<void> _onNext() async {
@@ -450,7 +330,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
           '월급 최적화',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontFamily: "Gmarket_sans",
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -505,7 +385,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   ],
                 ),
                 const SizedBox(height: 36),
-                _buildNumberField(
+                NumberInputField(
                   label: '현재 나이',
                   hint: '현재 나이',
                   controller: _currentAgeController,
@@ -513,7 +393,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   nextFocus: _retireAgeFocus,
                 ),
                 const SizedBox(height: 28),
-                _buildNumberField(
+                NumberInputField(
                   label: '은퇴 희망 나이',
                   hint: '예: 65',
                   controller: _retireAgeController,
@@ -521,7 +401,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   nextFocus: _livingExpenseFocus,
                 ),
                 const SizedBox(height: 28),
-                _buildNumberField(
+                NumberInputField(
                   label: '현재 희망 생활비',
                   hint: '예: 2,000,000',
                   controller: _livingExpenseController,
@@ -530,7 +410,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   suffixText: '₩',
                 ),
                 const SizedBox(height: 28),
-                _buildNumberField(
+                NumberInputField(
                   label: '현재 S&P500 평가금액',
                   hint: '예: 3,000,000',
                   controller: _snpValueController,
@@ -539,7 +419,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   suffixText: '₩',
                 ),
                 const SizedBox(height: 28),
-                _buildNumberField(
+                NumberInputField(
                   label: '기대수익률',
                   hint: '예: 8.2',
                   controller: _expectedReturnController,
@@ -552,7 +432,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   suffixText: '%',
                 ),
                 const SizedBox(height: 28),
-                _buildNumberField(
+                NumberInputField(
                   label: '예상 물가 상승률',
                   hint: '예: 2.5',
                   controller: _inflationController,
@@ -661,7 +541,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                               (v == null || v.isEmpty) ? '단기 목표를 선택하세요' : null,
                         ),
                         const SizedBox(height: 28),
-                        _buildNumberField(
+                        NumberInputField(
                           label: '단기 목표 금액',
                           hint: '예: 1,000,000',
                           controller: _shortTermGoalAmountController,
@@ -670,7 +550,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                           suffixText: '₩',
                         ),
                         const SizedBox(height: 28),
-                        _buildNumberField(
+                        NumberInputField(
                           label: '단기 목표 기간 (월)',
                           hint: '예: 12',
                           controller: _shortTermGoalDurationController,
@@ -679,7 +559,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                           keyboardType: TextInputType.number,
                         ),
                         const SizedBox(height: 28),
-                        _buildNumberField(
+                        NumberInputField(
                           label: '현재 단기 목표 저축액',
                           hint: '예: 500,000',
                           controller: _shortTermSavedController,
@@ -699,7 +579,12 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
         ),
       ),
       // Next 버튼을 키보드 위에 고정
-      bottomNavigationBar: _buildBottomButton(),
+      bottomNavigationBar: BottomActionButton(
+        allFieldsFilled: _allFieldsFilled,
+        onNext: _onNext,
+        onNavigate: _navigateToStep2,
+        buttonFocus: _nextButtonFocus,
+      ),
     );
   }
 }
