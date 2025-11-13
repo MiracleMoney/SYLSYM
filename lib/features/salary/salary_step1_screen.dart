@@ -5,6 +5,7 @@ import 'package:miraclemoney/constants/gaps.dart';
 import 'package:miraclemoney/constants/sizes.dart';
 import 'widget.dart';
 import 'package:keyboard_actions/keyboard_actions.dart';
+import 'salary_step2_screen.dart'; // same-folder import
 
 class SalaryStep1Screen extends StatefulWidget {
   const SalaryStep1Screen({super.key});
@@ -92,6 +93,16 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
       // 버튼 포커스 노드는 포커스 불가로 설정
       (_nextButtonFocus = FocusNode()..canRequestFocus = false),
     ];
+
+    for (final c in _allControllers) {
+      c.addListener(_onFieldChanged);
+    }
+  }
+
+  void _onFieldChanged() {
+    // 간단히 rebuild 하여 bottomNavigationBar 버튼을 교체
+    if (!mounted) return;
+    setState(() {});
   }
 
   Future<void> _loadSavedData() async {
@@ -103,12 +114,130 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
   @override
   void dispose() {
     for (final c in _allControllers) {
+      c.removeListener(_onFieldChanged);
+
       c.dispose();
     }
     for (final f in _allFocusNodes) {
       f.dispose();
     }
     super.dispose();
+  }
+
+  bool _controllersFilled(List<TextEditingController> ctrls) {
+    return ctrls.every((c) => c.text.trim().isNotEmpty);
+  }
+
+  bool get _allFieldsFilled {
+    // 기본 필수 필드
+    final basic = [
+      _currentAgeController,
+      _retireAgeController,
+      _livingExpenseController,
+      _snpValueController,
+      _expectedReturnController,
+      _inflationController,
+    ];
+    if (!_controllersFilled(basic)) return false;
+
+    // 단기 목표가 켜져있다면 드롭다운과 단기 필드도 체크
+    if (_hasShortTermGoal) {
+      if (_selectedShortTermGoal == null ||
+          _selectedShortTermGoal!.trim().isEmpty)
+        return false;
+      final short = [
+        _shortTermGoalAmountController,
+        _shortTermGoalDurationController,
+        _shortTermSavedController,
+      ];
+      if (!_controllersFilled(short)) return false;
+    }
+
+    return true;
+  }
+
+  void _navigateToStep2() {
+    // 키보드가 떠 있는 상태에서도 정상 동작하도록 onTapDown에서 호출하거나
+    // onPressed에서도 호출되게 구성했습니다.
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const SalaryStep2Screen()));
+  }
+
+  Widget _buildBottomButton() {
+    final padding = EdgeInsets.only(
+      left: 20,
+      right: 20,
+      bottom: MediaQuery.of(context).viewInsets.bottom + 12,
+    );
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 50),
+      curve: Curves.easeOut,
+      padding: padding,
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          width: double.infinity,
+          child: _allFieldsFilled
+              // 모든 필드 채워짐 -> 다음 화면으로 이동하는 버튼 표시
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTapDown: (_) => _navigateToStep2(),
+                        child: ElevatedButton(
+                          focusNode: _nextButtonFocus,
+                          style: ElevatedButton.styleFrom(
+                            textStyle: const TextStyle(
+                              fontSize: Sizes.size16 + Sizes.size2,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            backgroundColor: Colors.blue.shade900, // 구분 색상 예시
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size.fromHeight(56),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: _navigateToStep2,
+                          child: const Text('Go to Step 2'),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              // 아직 빈칸 존재 -> 기존 Next 버튼(다음 빈칸 또는 포커스 이동)
+              : GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTapDown: (_) => _onNext(),
+                  child: ElevatedButton(
+                    focusNode: _nextButtonFocus,
+                    style: ElevatedButton.styleFrom(
+                      textStyle: const TextStyle(
+                        fontSize: Sizes.size16 + Sizes.size2,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(56),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      side: BorderSide(color: Colors.grey.shade400, width: 2),
+                    ),
+                    onPressed: _onNext,
+                    child: const Text('Next'),
+                  ),
+                ),
+        ),
+      ),
+    );
   }
 
   double? _parseDouble(String? s) {
@@ -570,45 +699,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
         ),
       ),
       // Next 버튼을 키보드 위에 고정
-      bottomNavigationBar: AnimatedPadding(
-        duration: const Duration(milliseconds: 50),
-        curve: Curves.easeOut,
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 12,
-        ),
-        child: SafeArea(
-          top: false,
-          child: SizedBox(
-            width: double.infinity,
-            // 누르는 순간(onTapDown)에 실행 -> 버튼이 포커스를 얻기 전에 다음 드에 포커스가 넘어갑니다.
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTapDown: (_) => _onNext(),
-              child: ElevatedButton(
-                focusNode: _nextButtonFocus,
-                style: ElevatedButton.styleFrom(
-                  textStyle: const TextStyle(
-                    fontSize: Sizes.size16 + Sizes.size2,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(56),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  side: BorderSide(color: Colors.grey.shade400, width: 2),
-                ),
-                onPressed: _onNext,
-                child: const Text('Next'),
-              ),
-            ),
-          ),
-        ),
-      ),
+      bottomNavigationBar: _buildBottomButton(),
     );
   }
 }
