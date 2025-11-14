@@ -159,11 +159,24 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
   }
 
   void _navigateToStep2() {
-    // 키보드가 떠 있는 상태에서도 정상 동작하도록 onTapDown에서 호출하거나
-    // onPressed에서도 호출되게 구성했습니다.
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const SalaryStep2Screen()));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SalaryStep2Screen(
+          // Step1의 컨트롤러들을 전달합니다.
+          currentAgeController: _currentAgeController,
+          retireAgeController: _retireAgeController,
+          livingExpenseController: _livingExpenseController,
+          snpValueController: _snpValueController,
+          expectedReturnController: _expectedReturnController,
+          inflationController: _inflationController,
+          hasShortTermGoal: _hasShortTermGoal,
+          selectedShortTermGoal: _selectedShortTermGoal,
+          shortTermAmountController: _shortTermGoalAmountController,
+          shortTermDurationController: _shortTermGoalDurationController,
+          shortTermSavedController: _shortTermSavedController,
+        ),
+      ),
+    );
   }
 
   double? _parseDouble(String? s) {
