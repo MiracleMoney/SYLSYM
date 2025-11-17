@@ -58,15 +58,15 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
   // helper lists for iteration
   late final List<TextEditingController> _allControllers;
   late final List<FocusNode> _allFocusNodes;
-
-  // 현재 화면에서 선택된 연월
-  late DateTime _currentMonth;
+  // 현재 화면에서 선택된 연월 (실시간 공유를 위해 ValueNotifier 사용)
+  late final ValueNotifier<DateTime> _currentMonth;
 
   @override
   void initState() {
     super.initState();
     // 현재 월을 기본값으로 설정 (데이터 저장/로딩은 나중에 구현)
-    _currentMonth = DateTime.now();
+    _currentMonth = ValueNotifier<DateTime>(DateTime.now());
+    // ... 기존 코드 (controller 리스너 등) ...
     _allControllers = [
       _currentAgeController,
       _retireAgeController,
@@ -123,6 +123,8 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
     for (final f in _allFocusNodes) {
       f.dispose();
     }
+    _currentMonth.dispose(); // ValueNotifier dispose
+
     super.dispose();
   }
 
@@ -174,6 +176,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
           shortTermAmountController: _shortTermGoalAmountController,
           shortTermDurationController: _shortTermGoalDurationController,
           shortTermSavedController: _shortTermSavedController,
+          currentMonthNotifier: _currentMonth, // 추가: 월 동기화용
         ),
       ),
     );
@@ -277,9 +280,10 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
 
   // 단순히 화면에 보이는 연월만 변경 (데이터 저장은 나중에 구현)
   void _changeMonth(DateTime newMonth) {
-    setState(() {
-      _currentMonth = newMonth;
-    });
+    _currentMonth.value = newMonth;
+    // ValueNotifier가 알아서 리스너들에게 통지하므로 setState 불필요
+    // 단, 현재 화면(Step1)도 갱신하려면 setState 호출 (아래 참고)
+    if (mounted) setState(() {}); // Step1 화면 자체도 rebuild
   }
 
   @override
@@ -371,14 +375,14 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                       icon: const Icon(Icons.chevron_left),
                       onPressed: () {
                         final prev = DateTime(
-                          _currentMonth.year,
-                          _currentMonth.month - 1,
+                          _currentMonth.value.year,
+                          _currentMonth.value.month - 1,
                         );
                         _changeMonth(prev);
                       },
                     ),
                     Text(
-                      '${_currentMonth.year}년 ${_currentMonth.month}월',
+                      '${_currentMonth.value.year}년 ${_currentMonth.value.month}월',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontFamily: "Gmarket_sans",
                         fontWeight: FontWeight.w500,
@@ -389,15 +393,15 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                       icon: const Icon(Icons.chevron_right),
                       onPressed: () {
                         final next = DateTime(
-                          _currentMonth.year,
-                          _currentMonth.month + 1,
+                          _currentMonth.value.year,
+                          _currentMonth.value.month + 1,
                         );
                         _changeMonth(next);
                       },
                     ),
                   ],
                 ),
-                const SizedBox(height: 36),
+                const SizedBox(height: 28),
                 NumberInputField(
                   label: '현재 나이',
                   hint: '현재 나이',

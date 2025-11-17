@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:miraclemoney/constants/sizes.dart';
 import 'package:miraclemoney/constants/gaps.dart';
+import 'package:miraclemoney/features/salary/widgets/bottom_action_button.dart';
 import 'widgets/form_widgets.dart';
+import 'widgets/number_input_field.dart';
 import 'dart:math';
 
 class SalaryStep2Screen extends StatefulWidget {
@@ -17,6 +19,7 @@ class SalaryStep2Screen extends StatefulWidget {
   final TextEditingController? shortTermAmountController;
   final TextEditingController? shortTermDurationController;
   final TextEditingController? shortTermSavedController;
+  final ValueNotifier<DateTime>? currentMonthNotifier; // 추가
 
   const SalaryStep2Screen({
     super.key,
@@ -31,6 +34,7 @@ class SalaryStep2Screen extends StatefulWidget {
     this.shortTermAmountController,
     this.shortTermDurationController,
     this.shortTermSavedController,
+    this.currentMonthNotifier, // 추가
   });
 
   @override
@@ -70,20 +74,28 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
   final FocusNode _side2Focus = FocusNode();
   final FocusNode _side3Focus = FocusNode();
   final FocusNode _retirementFocus = FocusNode();
-  late final FocusNode _calculateButtonFocus;
+  late final FocusNode _actionButtonFocus; // 이것만 남기고
 
   // month
-  late DateTime _currentMonth;
 
+  // month (Step1에서 전달된 ValueNotifier 또는 로컬 생성)
+  late final ValueNotifier<DateTime> _currentMonth;
   // calculated display
   String _calculatedMonthlyExpense = '\$0';
   String _calculatedFreedomTarget = '\$0';
 
+  late final List<TextEditingController> _allStep2Controllers;
+
   @override
   void initState() {
     super.initState();
-    _currentMonth = DateTime.now();
-    _calculateButtonFocus = FocusNode()..canRequestFocus = false;
+    _actionButtonFocus = FocusNode()..canRequestFocus = false;
+    // Step1에서 전달된 ValueNotifier를 사용하거나, 없으면 새로 생성
+    _currentMonth =
+        widget.currentMonthNotifier ?? ValueNotifier<DateTime>(DateTime.now());
+
+    // ValueNotifier 변경시 Step2 화면도 갱신되도록 리스너 등록
+    _currentMonth.addListener(_onMonthChanged);
 
     // 전달된 Step1 컨트롤러들을 할당
     _s1CurrentAge = widget.currentAgeController;
@@ -112,8 +124,35 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
     attachIfNotNull(_s1ShortDuration);
     attachIfNotNull(_s1ShortSaved);
 
+    // Step2 필드 리스너 추가
+    _allStep2Controllers = [
+      _baseSalaryController,
+      _overtimeController,
+      _bonusController,
+      _incentiveController,
+      _side1Controller,
+      _side2Controller,
+      _side3Controller,
+      _retirementController,
+    ];
+
+    for (final c in _allStep2Controllers) {
+      c.addListener(_onFieldChanged);
+    }
+
     // 초기 계산 (한 번)
     _recomputeFromStep1();
+  }
+
+  void _onFieldChanged() {
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  // 월 변경 리스너 (Step2 화면 갱신)
+  void _onMonthChanged() {
+    if (!mounted) return;
+    setState(() {}); // 화면 rebuild
   }
 
   @override
@@ -135,13 +174,15 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
     _side2Focus.dispose();
     _side3Focus.dispose();
     _retirementFocus.dispose();
-    _calculateButtonFocus.dispose();
+    _actionButtonFocus.dispose(); // 변수명 변경
 
     // remove listeners from passed controllers (do not dispose them; they belong to Step1)
     void detachIfNotNull(TextEditingController? c) {
       if (c != null) c.removeListener(_recomputeFromStep1);
     }
 
+    detachIfNotNull(_s1CurrentAge);
+    detachIfNotNull(_s1RetireAge);
     detachIfNotNull(_s1LivingExpense);
     detachIfNotNull(_s1SnpValue);
     detachIfNotNull(_s1ExpectedReturn);
@@ -150,7 +191,26 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
     detachIfNotNull(_s1ShortDuration);
     detachIfNotNull(_s1ShortSaved);
 
+    for (final c in _allStep2Controllers) {
+      c.removeListener(_onFieldChanged);
+    }
+
+    // ValueNotifier 리스너 제거 (Step1에서 전달받은 경우 dispose 안함)
+    _currentMonth.removeListener(_onMonthChanged);
+    if (widget.currentMonthNotifier == null) {
+      // Step1에서 전달받지 않았고 로컬에서 생성한 경우만 dispose
+      _currentMonth.dispose();
+    }
+
     super.dispose();
+  }
+
+  bool _controllersFilled(List<TextEditingController> ctrls) {
+    return ctrls.every((c) => c.text.trim().isNotEmpty);
+  }
+
+  bool get _allFieldsFilled {
+    return _controllersFilled(_allStep2Controllers);
   }
 
   // Recompute display values from Step1 controllers (실시간 업데이트)
@@ -238,21 +298,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
   }
 
   String _monthLabel(DateTime d) {
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    return '${months[d.month - 1]} ${d.year}';
+    return '${d.year}년 ${d.month}월';
   }
 
   // 간단한 숫자 파서 (콤마 제거)
@@ -273,6 +319,59 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
     }
     final formatted = buffer.toString().split('').reversed.join();
     return '\$$formatted';
+  }
+
+  Future<void> _onNext() async {
+    // 입력 필드 순서
+    final orderedFocuses = <FocusNode>[
+      _baseSalaryFocus,
+      _overtimeFocus,
+      _bonusFocus,
+      _incentiveFocus,
+      _side1Focus,
+      _side2Focus,
+      _side3Focus,
+      _retirementFocus,
+    ];
+
+    // 현재 포커스된 노드
+    final FocusNode? currentFocus =
+        FocusScope.of(context).focusedChild ??
+        FocusManager.instance.primaryFocus;
+
+    // 현재 포커스가 목록에 있으면 다음 유효한 필드로 이동
+    if (currentFocus != null) {
+      final idx = orderedFocuses.indexWhere((f) => f == currentFocus);
+      if (idx != -1 && idx < orderedFocuses.length - 1) {
+        Future.microtask(() {
+          if (!mounted) return;
+          FocusScope.of(context).requestFocus(orderedFocuses[idx + 1]);
+        });
+        return;
+      }
+    }
+
+    // 위에서부터 첫 번째 빈 칸으로 포커스 이동
+    final entries = <MapEntry<TextEditingController, FocusNode>>[
+      MapEntry(_baseSalaryController, _baseSalaryFocus),
+      MapEntry(_overtimeController, _overtimeFocus),
+      MapEntry(_bonusController, _bonusFocus),
+      MapEntry(_incentiveController, _incentiveFocus),
+      MapEntry(_side1Controller, _side1Focus),
+      MapEntry(_side2Controller, _side2Focus),
+      MapEntry(_side3Controller, _side3Focus),
+      MapEntry(_retirementController, _retirementFocus),
+    ];
+
+    for (final e in entries) {
+      if (e.key.text.trim().isEmpty) {
+        Future.microtask(() {
+          if (!mounted) return;
+          FocusScope.of(context).requestFocus(e.value);
+        });
+        return;
+      }
+    }
   }
 
   // Calculate 버튼 동작: 데모용 간단 계산
@@ -299,103 +398,69 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
     // 버튼이 포커스를 가지지 않으므로 키보드는 유지됩니다 (필요 시 unfocus 사용)
   }
 
-  Widget _buildCurrencyField({
-    required String label,
-    required String hint,
-    required TextEditingController controller,
-    required FocusNode focusNode,
-    FocusNode? nextFocus,
-    TextInputAction? action,
-  }) {
-    return LabeledTextFormField(
-      label: label,
-      hint: hint,
-      controller: controller,
-      keyboardType: TextInputType.number,
-      inputFormatters: <TextInputFormatter>[
-        FilteringTextInputFormatter.digitsOnly,
-        ThousandsSeparatorInputFormatter(),
-      ],
-      suffixText: '\$',
-      focusNode: focusNode,
-      textInputAction: action ?? TextInputAction.next,
-      onFieldSubmitted: (_) {
-        Future.microtask(() {
-          if (!mounted) return;
-          if (nextFocus != null) {
-            FocusScope.of(context).requestFocus(nextFocus);
-          } else {
-            FocusScope.of(context).unfocus();
-          }
-        });
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final cardRadius = BorderRadius.circular(12.0);
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.chevron_left),
-              onPressed: () {
-                final prev = DateTime(
-                  _currentMonth.year,
-                  _currentMonth.month - 1,
-                );
-                setState(() => _currentMonth = prev);
-              },
-            ),
-            Expanded(
-              child: Text(
-                _monthLabel(_currentMonth),
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontFamily: 'Gmarket_sans'),
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.chevron_right),
-              onPressed: () {
-                final next = DateTime(
-                  _currentMonth.year,
-                  _currentMonth.month + 1,
-                );
-                setState(() => _currentMonth = next);
-              },
-            ),
-          ],
+        title: Text(
+          '월급 최적화',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            fontFamily: "Gmarket_sans",
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        centerTitle: true,
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        padding: const EdgeInsets.only(
+          left: Sizes.size20,
+          right: Sizes.size20,
+          top: Sizes.size2,
+          bottom: Sizes.size24,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 6),
-            Text(
-              'Salary Optimization - Step 2',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontFamily: 'Gmarket_sans',
-                fontWeight: FontWeight.w700,
-              ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left),
+                  onPressed: () {
+                    final prev = DateTime(
+                      _currentMonth.value.year,
+                      _currentMonth.value.month - 1,
+                    );
+                    _currentMonth.value = prev; // ValueNotifier 업데이트
+                  },
+                ),
+
+                Text(
+                  _monthLabel(_currentMonth.value),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontFamily: 'Gmarket_sans',
+                    fontSize: Sizes.size16 + Sizes.size2,
+                  ),
+                ),
+
+                IconButton(
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: () {
+                    final next = DateTime(
+                      _currentMonth.value.year,
+                      _currentMonth.value.month + 1,
+                    );
+                    _currentMonth.value = next; // ValueNotifier 업데이트
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Enter your income details',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontFamily: 'Gmarket_sans'),
-            ),
-            const SizedBox(height: 18),
+
+            const SizedBox(height: 28),
 
             // calculated targets card
             Container(
@@ -413,7 +478,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                       const Icon(Icons.calculate_outlined, size: 18),
                       const SizedBox(width: 8),
                       Text(
-                        'Calculated Targets',
+                        '목표 금액',
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
                               fontFamily: 'Gmarket_sans',
@@ -439,8 +504,8 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                       children: [
                         Flexible(
                           child: Text(
-                            'Post-retirement\nMonthly Expense',
-                            style: Theme.of(context).textTheme.bodyMedium
+                            '은퇴 후 필요 생활비',
+                            style: Theme.of(context).textTheme.bodyLarge
                                 ?.copyWith(
                                   fontFamily: 'Gmarket_sans',
                                   height: 1.15,
@@ -475,8 +540,8 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                       children: [
                         Flexible(
                           child: Text(
-                            'Economic\nFreedom Target',
-                            style: Theme.of(context).textTheme.bodyMedium
+                            '경제적자유 금액',
+                            style: Theme.of(context).textTheme.bodyLarge
                                 ?.copyWith(
                                   fontFamily: 'Gmarket_sans',
                                   height: 1.15,
@@ -508,7 +573,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
             ),
             const SizedBox(height: 12),
 
-            _buildCurrencyField(
+            NumberInputField(
               label: 'Base Salary',
               hint: '\$0.00',
               controller: _baseSalaryController,
@@ -516,7 +581,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               nextFocus: _overtimeFocus,
             ),
             const SizedBox(height: 12),
-            _buildCurrencyField(
+            NumberInputField(
               label: 'Overtime',
               hint: '\$0.00',
               controller: _overtimeController,
@@ -524,7 +589,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               nextFocus: _bonusFocus,
             ),
             const SizedBox(height: 12),
-            _buildCurrencyField(
+            NumberInputField(
               label: 'Bonus',
               hint: '\$0.00',
               controller: _bonusController,
@@ -532,7 +597,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               nextFocus: _incentiveFocus,
             ),
             const SizedBox(height: 12),
-            _buildCurrencyField(
+            NumberInputField(
               label: 'Incentive',
               hint: '\$0.00',
               controller: _incentiveController,
@@ -549,7 +614,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               ),
             ),
             const SizedBox(height: 12),
-            _buildCurrencyField(
+            NumberInputField(
               label: 'Side Income 1',
               hint: '\$0.00',
               controller: _side1Controller,
@@ -557,7 +622,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               nextFocus: _side2Focus,
             ),
             const SizedBox(height: 12),
-            _buildCurrencyField(
+            NumberInputField(
               label: 'Side Income 2',
               hint: '\$0.00',
               controller: _side2Controller,
@@ -565,7 +630,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               nextFocus: _side3Focus,
             ),
             const SizedBox(height: 12),
-            _buildCurrencyField(
+            NumberInputField(
               label: 'Side Income 3',
               hint: '\$0.00',
               controller: _side3Controller,
@@ -600,19 +665,14 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  LabeledTextFormField(
+                  NumberInputField(
                     label: '',
                     hint: '\$0.00',
                     controller: _retirementController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly,
-                      ThousandsSeparatorInputFormatter(),
-                    ],
-                    suffixText: '\$',
                     focusNode: _retirementFocus,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
+                    nextFocus: null,
+                    suffixText: '\$',
+                    action: TextInputAction.done,
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -631,55 +691,12 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
         ),
       ),
 
-      // Calculate 버튼을 키보드 위에 고정
-      bottomNavigationBar: AnimatedPadding(
-        duration: const Duration(milliseconds: 50),
-        curve: Curves.easeOut,
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 12,
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: double.infinity,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTapDown: (_) => _onCalculate(),
-                  child: ElevatedButton.icon(
-                    focusNode: _calculateButtonFocus,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(56),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: _onCalculate,
-                    icon: const Icon(Icons.calculate_outlined),
-                    label: const Text('Calculate'),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => Navigator.of(context).maybePop(),
-                child: Text(
-                  'Back',
-                  style: TextStyle(
-                    color: Colors.grey.shade700,
-                    fontFamily: 'Gmarket_sans',
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      // BottomActionButton을 사용하여 동적 버튼 구현
+      bottomNavigationBar: BottomActionButton(
+        allFieldsFilled: _allFieldsFilled,
+        onNext: _onNext,
+        onNavigate: _onCalculate,
+        buttonFocus: _actionButtonFocus,
       ),
     );
   }
