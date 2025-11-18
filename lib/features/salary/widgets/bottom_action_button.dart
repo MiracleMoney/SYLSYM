@@ -6,6 +6,8 @@ class BottomActionButton extends StatelessWidget {
   final VoidCallback onNext;
   final VoidCallback onNavigate;
   final FocusNode buttonFocus;
+  final String nextButtonText; // 추가
+  final String navigateButtonText; // 추가
 
   const BottomActionButton({
     super.key,
@@ -13,6 +15,8 @@ class BottomActionButton extends StatelessWidget {
     required this.onNext,
     required this.onNavigate,
     required this.buttonFocus,
+    this.nextButtonText = 'Next', // 기본값
+    this.navigateButtonText = 'Next Step', // 기본값
   });
 
   @override
@@ -52,7 +56,7 @@ class BottomActionButton extends StatelessWidget {
                             minimumSize: const Size.fromHeight(56),
                           ),
                           onPressed: onNavigate,
-                          child: const Text('Next Step'),
+                          child: Text(navigateButtonText),
                         ),
                       ),
                     ),
@@ -73,7 +77,7 @@ class BottomActionButton extends StatelessWidget {
                       minimumSize: const Size.fromHeight(56),
                     ),
                     onPressed: onNext,
-                    child: const Text('Next'),
+                    child: Text(nextButtonText),
                   ),
                 ),
         ),

@@ -423,7 +423,6 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -460,7 +459,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               ],
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 12),
 
             // calculated targets card
             Container(
@@ -483,6 +482,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                             ?.copyWith(
                               fontFamily: 'Gmarket_sans',
                               fontWeight: FontWeight.w700,
+                              fontSize: Sizes.size16 + Sizes.size4,
                             ),
                       ),
                     ],
@@ -509,6 +509,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                                 ?.copyWith(
                                   fontFamily: 'Gmarket_sans',
                                   height: 1.15,
+                                  fontSize: Sizes.size16 + Sizes.size2,
                                 ),
                           ),
                         ),
@@ -545,6 +546,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                                 ?.copyWith(
                                   fontFamily: 'Gmarket_sans',
                                   height: 1.15,
+                                  fontSize: Sizes.size16 + Sizes.size2,
                                 ),
                           ),
                         ),
@@ -563,82 +565,91 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 30),
             Text(
-              'Monthly Income Breakdown',
+              '월 소득 입력',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontFamily: 'Gmarket_sans',
                 fontWeight: FontWeight.w700,
+                fontSize: Sizes.size20,
               ),
             ),
             const SizedBox(height: 12),
 
             NumberInputField(
-              label: 'Base Salary',
-              hint: '\$0.00',
+              label: '월급',
+              hint: '예: 1,800,000',
               controller: _baseSalaryController,
               focusNode: _baseSalaryFocus,
               nextFocus: _overtimeFocus,
+              suffixText: '₩',
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             NumberInputField(
-              label: 'Overtime',
-              hint: '\$0.00',
+              label: '추가 근무',
+              hint: '예: 300,000',
               controller: _overtimeController,
               focusNode: _overtimeFocus,
               nextFocus: _bonusFocus,
+              suffixText: '₩',
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             NumberInputField(
-              label: 'Bonus',
-              hint: '\$0.00',
+              label: '상여금',
+              hint: '예: 500,000',
               controller: _bonusController,
               focusNode: _bonusFocus,
               nextFocus: _incentiveFocus,
+              suffixText: '₩',
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             NumberInputField(
-              label: 'Incentive',
-              hint: '\$0.00',
+              label: '성과급',
+              hint: '예: 500,000',
               controller: _incentiveController,
               focusNode: _incentiveFocus,
               nextFocus: _side1Focus,
+              suffixText: '₩',
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
             Text(
-              'Additional Income Sources',
+              '월급 외 수입',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontFamily: 'Gmarket_sans',
                 fontWeight: FontWeight.w700,
+                fontSize: Sizes.size20,
               ),
             ),
             const SizedBox(height: 12),
             NumberInputField(
-              label: 'Side Income 1',
-              hint: '\$0.00',
+              label: '추가 수입 1',
+              hint: '예: 300,000',
               controller: _side1Controller,
               focusNode: _side1Focus,
               nextFocus: _side2Focus,
+              suffixText: '₩',
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             NumberInputField(
-              label: 'Side Income 2',
-              hint: '\$0.00',
+              label: '추가 수입 2',
+              hint: '예: 200,000',
               controller: _side2Controller,
               focusNode: _side2Focus,
               nextFocus: _side3Focus,
+              suffixText: '₩',
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             NumberInputField(
-              label: 'Side Income 3',
-              hint: '\$0.00',
+              label: '추가 수입 3',
+              hint: '예: 100,000',
               controller: _side3Controller,
               focusNode: _side3Focus,
               nextFocus: _retirementFocus,
+              suffixText: '₩',
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
             // retirement card
             Container(
               width: double.infinity,
@@ -667,11 +678,11 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                   const SizedBox(height: 8),
                   NumberInputField(
                     label: '',
-                    hint: '\$0.00',
+                    hint: '예: 220,000',
                     controller: _retirementController,
                     focusNode: _retirementFocus,
                     nextFocus: null,
-                    suffixText: '\$',
+                    suffixText: '₩',
                     action: TextInputAction.done,
                   ),
                   const SizedBox(height: 8),
@@ -685,8 +696,6 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                 ],
               ),
             ),
-
-            const SizedBox(height: 96), // leave space for bottom button
           ],
         ),
       ),
