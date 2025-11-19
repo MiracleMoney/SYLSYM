@@ -400,7 +400,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                Gaps.v12,
                 NumberInputField(
                   label: '현재 나이',
                   hint: '예: 30',
@@ -408,7 +408,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   focusNode: _currentAgeFocus,
                   nextFocus: _retireAgeFocus,
                 ),
-                const SizedBox(height: 16),
+                Gaps.v16,
                 NumberInputField(
                   label: '은퇴 희망 나이',
                   hint: '예: 65',
@@ -416,7 +416,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   focusNode: _retireAgeFocus,
                   nextFocus: _livingExpenseFocus,
                 ),
-                const SizedBox(height: 16),
+                Gaps.v16,
                 NumberInputField(
                   label: '현재 희망 생활비',
                   hint: '예: 2,000,000',
@@ -425,7 +425,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   nextFocus: _snpValueFocus,
                   suffixText: '₩',
                 ),
-                const SizedBox(height: 16),
+                Gaps.v16,
                 NumberInputField(
                   label: '현재 S&P500 평가금액',
                   hint: '예: 3,000,000',
@@ -434,7 +434,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   nextFocus: _expectedReturnFocus,
                   suffixText: '₩',
                 ),
-                const SizedBox(height: 16),
+                Gaps.v16,
                 NumberInputField(
                   label: '기대수익률',
                   hint: '예: 8.2',
@@ -447,7 +447,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   ),
                   suffixText: '%',
                 ),
-                const SizedBox(height: 16),
+                Gaps.v16,
                 NumberInputField(
                   label: '예상 물가 상승률',
                   hint: '예: 2.5',
@@ -460,7 +460,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   ),
                   suffixText: '%',
                 ),
-                const SizedBox(height: 30),
+                Gaps.v32,
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -505,7 +505,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   ),
                 ),
                 if (_hasShortTermGoal) ...[
-                  const SizedBox(height: 12),
+                  Gaps.v12,
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(18),
@@ -526,7 +526,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                                 fontSize: Sizes.size16 + Sizes.size2,
                               ),
                         ),
-                        const SizedBox(height: 10),
+                        Gaps.v10,
                         DropdownButtonFormField<String>(
                           focusNode: _shortTermDropdownFocus,
                           decoration: InputDecoration(
@@ -556,7 +556,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                           validator: (v) =>
                               (v == null || v.isEmpty) ? '단기 목표를 선택하세요' : null,
                         ),
-                        const SizedBox(height: 16),
+                        Gaps.v16,
                         NumberInputField(
                           label: '단기 목표 금액',
                           hint: '예: 1,000,000',
@@ -565,7 +565,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                           nextFocus: _shortTermGoalDurationFocus,
                           suffixText: '₩',
                         ),
-                        const SizedBox(height: 16),
+                        Gaps.v16,
                         NumberInputField(
                           label: '단기 목표 기간 (월)',
                           hint: '예: 12',
@@ -574,7 +574,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                           nextFocus: _shortTermSavedFocus,
                           keyboardType: TextInputType.number,
                         ),
-                        const SizedBox(height: 16),
+                        Gaps.v16,
                         NumberInputField(
                           label: '현재 단기 목표 저축액',
                           hint: '예: 500,000',

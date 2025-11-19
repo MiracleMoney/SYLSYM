@@ -6,6 +6,7 @@ import 'package:miraclemoney/features/salary/widgets/bottom_action_button.dart';
 import 'widgets/form_widgets.dart';
 import 'widgets/number_input_field.dart';
 import 'dart:math';
+import 'salary_result_screen.dart';
 
 class SalaryStep2Screen extends StatefulWidget {
   final TextEditingController? currentAgeController;
@@ -378,24 +379,42 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
   void _onCalculate() async {
     // 먼저 저장
     await _saveAllInputs();
-    // 합계 계산: 기본급 + 초과 + 보너스 + 인센티브 + 사이드들 - (퇴직계좌는 제외)
-    // 기존 계산 로직 유지 (여기선 Step2의 입력들을 합산)
 
-    final base = _parseCurrency(_baseSalaryController.text);
-    final overtime = _parseCurrency(_overtimeController.text);
-    final bonus = _parseCurrency(_bonusController.text);
-    final incentive = _parseCurrency(_incentiveController.text);
-    final side1 = _parseCurrency(_side1Controller.text);
-    final side2 = _parseCurrency(_side2Controller.text);
-    final side3 = _parseCurrency(_side3Controller.text);
+    if (!mounted) return;
 
-    final monthlyIncome =
-        base + overtime + bonus + incentive + side1 + side2 + side3;
-    // 임의의 경제적 자유 목표 계산: 연간 필요액 * 12 * 25 (예: 25배)
+    // Navigate to result screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SalaryResultScreen(
+          // Step1 data
+          currentAgeController: _s1CurrentAge,
+          retireAgeController: _s1RetireAge,
+          livingExpenseController: _s1LivingExpense,
+          snpValueController: _s1SnpValue,
+          expectedReturnController: _s1ExpectedReturn,
+          inflationController: _s1Inflation,
+          hasShortTermGoal: _s1HasShortTermGoal,
+          selectedShortTermGoal: _s1SelectedShortTerm,
+          shortTermAmountController: _s1ShortAmount,
+          shortTermDurationController: _s1ShortDuration,
+          shortTermSavedController: _s1ShortSaved,
 
-    setState(() {});
+          // Step2 data
+          baseSalaryController: _baseSalaryController,
+          overtimeController: _overtimeController,
+          bonusController: _bonusController,
+          incentiveController: _incentiveController,
+          side1Controller: _side1Controller,
+          side2Controller: _side2Controller,
+          side3Controller: _side3Controller,
+          retirementController: _retirementController,
 
-    // 버튼이 포커스를 가지지 않으므로 키보드는 유지됩니다 (필요 시 unfocus 사용)
+          // Shared month notifier
+          currentMonthNotifier: _currentMonth,
+        ),
+      ),
+    );
   }
 
   @override
@@ -487,8 +506,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  // first item
+                  Gaps.v12, // first item
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
@@ -524,7 +542,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  Gaps.v10,
                   // second item
                   Container(
                     width: double.infinity,
@@ -565,7 +583,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               ),
             ),
 
-            const SizedBox(height: 30),
+            Gaps.v32,
             Text(
               '월 소득 입력',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -574,7 +592,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                 fontSize: Sizes.size20,
               ),
             ),
-            const SizedBox(height: 12),
+            Gaps.v12,
 
             NumberInputField(
               label: '월급',
@@ -584,7 +602,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               nextFocus: _overtimeFocus,
               suffixText: '₩',
             ),
-            const SizedBox(height: 16),
+            Gaps.v16,
             NumberInputField(
               label: '추가 근무',
               hint: '예: 300,000',
@@ -593,7 +611,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               nextFocus: _bonusFocus,
               suffixText: '₩',
             ),
-            const SizedBox(height: 16),
+            Gaps.v16,
             NumberInputField(
               label: '상여금',
               hint: '예: 500,000',
@@ -602,7 +620,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               nextFocus: _incentiveFocus,
               suffixText: '₩',
             ),
-            const SizedBox(height: 16),
+            Gaps.v16,
             NumberInputField(
               label: '성과급',
               hint: '예: 500,000',
@@ -612,7 +630,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               suffixText: '₩',
             ),
 
-            const SizedBox(height: 30),
+            Gaps.v32,
             Text(
               '월급 외 수입',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -621,7 +639,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                 fontSize: Sizes.size20,
               ),
             ),
-            const SizedBox(height: 12),
+            Gaps.v12,
             NumberInputField(
               label: '추가 수입 1',
               hint: '예: 300,000',
@@ -630,7 +648,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               nextFocus: _side2Focus,
               suffixText: '₩',
             ),
-            const SizedBox(height: 16),
+            Gaps.v16,
             NumberInputField(
               label: '추가 수입 2',
               hint: '예: 200,000',
@@ -639,7 +657,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               nextFocus: _side3Focus,
               suffixText: '₩',
             ),
-            const SizedBox(height: 16),
+            Gaps.v16,
             NumberInputField(
               label: '추가 수입 3',
               hint: '예: 100,000',
@@ -649,33 +667,28 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               suffixText: '₩',
             ),
 
-            const SizedBox(height: 30),
+            Gaps.v32,
             // retirement card
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.02),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                border: Border.all(color: Colors.grey.shade300),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Retirement Account Investment',
+                    '퇴직금 투자 금액',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontFamily: 'Gmarket_sans',
                       fontWeight: FontWeight.w700,
+                      fontSize: Sizes.size16 + Sizes.size4,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  Gaps.v20,
                   NumberInputField(
                     label: '',
                     hint: '예: 220,000',
@@ -685,12 +698,13 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                     suffixText: '₩',
                     action: TextInputAction.done,
                   ),
-                  const SizedBox(height: 8),
+                  Gaps.v8,
                   Text(
-                    'Monthly contribution to retirement accounts',
+                    '연 퇴직금을 12개월로 나눈 금액을 입력해주세요.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontFamily: 'Gmarket_sans',
                       color: Colors.grey.shade600,
+                      fontSize: Sizes.size16,
                     ),
                   ),
                 ],
