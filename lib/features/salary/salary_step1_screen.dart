@@ -364,6 +364,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
               bottom: Sizes.size24,
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 // ---------- 월 네비게이션 바 (상단) ----------
@@ -397,6 +398,24 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                         );
                         _changeMonth(next);
                       },
+                    ),
+                  ],
+                ),
+                Gaps.v12,
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.flag_outlined, // 또는 Icons.trending_up
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '경제적자유 목표 설정',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w700,
+                        fontSize: Sizes.size20,
+                      ),
                     ),
                   ],
                 ),

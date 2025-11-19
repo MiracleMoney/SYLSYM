@@ -478,119 +478,23 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               ],
             ),
 
-            const SizedBox(height: 12),
-
-            // calculated targets card
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: cardRadius,
-              ),
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                children: [
-                  // header
-                  Row(
-                    children: [
-                      const Icon(Icons.calculate_outlined, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        '목표 금액',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontFamily: 'Gmarket_sans',
-                              fontWeight: FontWeight.w700,
-                              fontSize: Sizes.size16 + Sizes.size4,
-                            ),
-                      ),
-                    ],
+            Gaps.v12,
+            Row(
+              children: [
+                const Icon(
+                  Icons.payments_outlined,
+                  size: 18,
+                ), // 또는 Icons.pie_chart
+                const SizedBox(width: 8),
+                Text(
+                  '본업 수입',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontFamily: 'Gmarket_sans',
+                    fontWeight: FontWeight.w700,
+                    fontSize: Sizes.size20,
                   ),
-                  Gaps.v12, // first item
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            '은퇴 후 필요 생활비',
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(
-                                  fontFamily: 'Gmarket_sans',
-                                  height: 1.15,
-                                  fontSize: Sizes.size16 + Sizes.size2,
-                                ),
-                          ),
-                        ),
-                        Text(
-                          _calculatedMonthlyExpense,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                fontFamily: 'Gmarket_sans',
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Gaps.v10,
-                  // second item
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            '경제적자유 금액',
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(
-                                  fontFamily: 'Gmarket_sans',
-                                  height: 1.15,
-                                  fontSize: Sizes.size16 + Sizes.size2,
-                                ),
-                          ),
-                        ),
-                        Text(
-                          _calculatedFreedomTarget,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                fontFamily: 'Gmarket_sans',
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Gaps.v32,
-            Text(
-              '월 소득 입력',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontFamily: 'Gmarket_sans',
-                fontWeight: FontWeight.w700,
-                fontSize: Sizes.size20,
-              ),
+                ),
+              ],
             ),
             Gaps.v12,
 
@@ -631,13 +535,19 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
             ),
 
             Gaps.v32,
-            Text(
-              '월급 외 수입',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontFamily: 'Gmarket_sans',
-                fontWeight: FontWeight.w700,
-                fontSize: Sizes.size20,
-              ),
+            Row(
+              children: [
+                const Icon(Icons.money, size: 18), // 또는 Icons.pie_chart
+                const SizedBox(width: 8),
+                Text(
+                  '추가 수입',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontFamily: 'Gmarket_sans',
+                    fontWeight: FontWeight.w700,
+                    fontSize: Sizes.size20,
+                  ),
+                ),
+              ],
             ),
             Gaps.v12,
             NumberInputField(

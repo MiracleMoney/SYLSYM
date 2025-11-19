@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:miraclemoney/constants/sizes.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:miraclemoney/features/salary/salary_result_screen.dart';
 
 import 'package:miraclemoney/features/salary/salary_step1_screen.dart';
 import 'package:miraclemoney/features/salary/salary_step2_screen.dart';
