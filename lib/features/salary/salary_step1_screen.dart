@@ -524,7 +524,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   ),
                 ),
                 if (_hasShortTermGoal) ...[
-                  Gaps.v12,
+                  Gaps.v16,
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(18),
@@ -591,6 +591,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                           controller: _shortTermGoalDurationController,
                           focusNode: _shortTermGoalDurationFocus,
                           nextFocus: _shortTermSavedFocus,
+                          suffixText: '개월',
                           keyboardType: TextInputType.number,
                         ),
                         Gaps.v16,

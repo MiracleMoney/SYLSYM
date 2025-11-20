@@ -579,46 +579,41 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
 
             Gaps.v32,
             // retirement card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
+            Row(
+              children: [
+                const Icon(
+                  Icons.monetization_on_outlined,
+                  size: 18,
+                ), // 또는 Icons.pie_chart
+                const SizedBox(width: 8),
+                Text(
+                  '퇴직금 투자 금액',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontFamily: 'Gmarket_sans',
+                    fontWeight: FontWeight.w700,
+                    fontSize: Sizes.size16 + Sizes.size4,
+                  ),
+                ),
+              ],
+            ),
+            Gaps.v4,
+            Text(
+              '(연 퇴직금을 12개월로 나눈 금액을 입력해주세요)',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontFamily: 'Gmarket_sans',
+                color: Colors.grey.shade600,
+                fontSize: Sizes.size16,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '퇴직금 투자 금액',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontFamily: 'Gmarket_sans',
-                      fontWeight: FontWeight.w700,
-                      fontSize: Sizes.size16 + Sizes.size4,
-                    ),
-                  ),
-                  Gaps.v20,
-                  NumberInputField(
-                    label: '',
-                    hint: '예: 220,000',
-                    controller: _retirementController,
-                    focusNode: _retirementFocus,
-                    nextFocus: null,
-                    suffixText: '₩',
-                    action: TextInputAction.done,
-                  ),
-                  Gaps.v8,
-                  Text(
-                    '연 퇴직금을 12개월로 나눈 금액을 입력해주세요.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontFamily: 'Gmarket_sans',
-                      color: Colors.grey.shade600,
-                      fontSize: Sizes.size16,
-                    ),
-                  ),
-                ],
-              ),
+            ),
+            Gaps.v12,
+            NumberInputField(
+              label: '퇴직금',
+              hint: '예: 220,000',
+              controller: _retirementController,
+              focusNode: _retirementFocus,
+              nextFocus: null,
+              suffixText: '₩',
+              action: TextInputAction.done,
             ),
           ],
         ),

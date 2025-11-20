@@ -175,31 +175,29 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(width: 24),
+                Gaps.v24,
                 Text(
-                  'Apply Allocation',
+                  '예산에 적용하기',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontFamily: 'Gmarket_sans',
                     fontWeight: FontWeight.w700,
+                    fontSize: Sizes.size24,
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            Gaps.v8,
             Text(
-              'Where should this allocation be applied?',
+              '월급 최적화 금액을 몇 월 예산에 적용하시겠습니까?',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 fontFamily: 'Gmarket_sans',
                 color: Colors.grey.shade600,
+                fontSize: Sizes.size16,
               ),
             ),
-            const SizedBox(height: 24),
+            Gaps.v24,
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -213,10 +211,10 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                 ),
                 onPressed: () {
                   Navigator.pop(context);
-                  _applyToBudget('this');
+                  _applyToBudget('next');
                 },
                 child: const Text(
-                  'This Month',
+                  '다음 달',
                   style: TextStyle(
                     fontFamily: 'Gmarket_sans',
                     fontSize: 18,
@@ -225,7 +223,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            Gaps.v12,
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
@@ -239,10 +237,10 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                 ),
                 onPressed: () {
                   Navigator.pop(context);
-                  _applyToBudget('next');
+                  _applyToBudget('this');
                 },
                 child: const Text(
-                  'Next Month',
+                  '이번 달',
                   style: TextStyle(
                     fontFamily: 'Gmarket_sans',
                     fontSize: 18,
@@ -251,7 +249,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            Gaps.v12,
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text(
@@ -295,7 +293,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(width: 24),
                 Text(
@@ -304,10 +302,6 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                     fontFamily: 'Gmarket_sans',
                     fontWeight: FontWeight.w700,
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
@@ -694,6 +688,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                       style: TextStyle(
                         fontFamily: 'Gmarket_sans',
                         fontWeight: FontWeight.w700,
+                        fontSize: Sizes.size16 + Sizes.size2,
                       ),
                     ),
                   ),
@@ -716,6 +711,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                       style: TextStyle(
                         fontFamily: 'Gmarket_sans',
                         fontWeight: FontWeight.w700,
+                        fontSize: Sizes.size16 + Sizes.size2,
                       ),
                     ),
                   ),
