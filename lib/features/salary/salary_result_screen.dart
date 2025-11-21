@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:miraclemoney/constants/sizes.dart';
 import 'package:miraclemoney/constants/gaps.dart';
-import 'dart:math';
+import 'salary_calculation_logic.dart';
 
 class SalaryResultScreen extends StatefulWidget {
   // Step1 data
@@ -62,12 +62,22 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
   late final ValueNotifier<DateTime> _currentMonth;
   bool _isDetailsExpanded = false;
 
-  // Calculated values
+  // Calculated values from SalaryCalculationLogic
+  double _investmentPeriod = 0.0;
+  double _retirementMonthlyExpense = 0.0;
+  double _economicFreedomAmount = 0.0;
+  double _totalRequiredInvestment = 0.0;
+  double _compoundReturnSum = 0.0;
+  double _annualInvestment = 0.0;
+  double _monthlyInvestment = 0.0;
+  double _weeklyInvestment = 0.0;
+  double _dailyInvestment = 0.0;
+
+  // Step2 income values
   double _totalMonthlyAllocation = 0.0;
   double _emergencyFund = 0.0;
   double _pensionSaving = 0.0;
   double _shortTermGoalSaving = 0.0;
-  double _livingExpense = 0.0;
 
   @override
   void initState() {
@@ -75,7 +85,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
     _currentMonth =
         widget.currentMonthNotifier ?? ValueNotifier<DateTime>(DateTime.now());
     _currentMonth.addListener(_onMonthChanged);
-    _calculateAllocations();
+    _calculateAll();
   }
 
   void _onMonthChanged() {
@@ -98,8 +108,29 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
     return double.tryParse(t) ?? 0.0;
   }
 
-  void _calculateAllocations() {
-    // Step2 income
+  void _calculateAll() {
+    // === 1. SalaryCalculationLogic으로 경제적자유 관련 계산 ===
+    final results = SalaryCalculationLogic.calculate(
+      currentAgeController: widget.currentAgeController,
+      retireAgeController: widget.retireAgeController,
+      livingExpenseController: widget.livingExpenseController,
+      snpValueController: widget.snpValueController,
+      expectedReturnController: widget.expectedReturnController,
+      inflationController: widget.inflationController,
+    );
+
+    // 계산 결과 저장
+    _investmentPeriod = results['investmentPeriod']!;
+    _retirementMonthlyExpense = results['retirementMonthlyExpense']!;
+    _economicFreedomAmount = results['economicFreedomAmount']!;
+    _totalRequiredInvestment = results['totalRequiredInvestment']!;
+    _compoundReturnSum = results['compoundReturnSum']!;
+    _annualInvestment = results['annualInvestment']!;
+    _monthlyInvestment = results['monthlyInvestment']!;
+    _weeklyInvestment = results['weeklyInvestment']!;
+    _dailyInvestment = results['dailyInvestment']!;
+
+    // === 2. Step2 수입 계산 ===
     final baseSalary = _parseController(widget.baseSalaryController);
     final overtime = _parseController(widget.overtimeController);
     final bonus = _parseController(widget.bonusController);
@@ -112,34 +143,10 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
     final totalIncome =
         baseSalary + overtime + bonus + incentive + side1 + side2 + side3;
 
-    // Step1 data for calculations
-    final living = _parseController(widget.livingExpenseController);
-    final currentAge = _parseController(widget.currentAgeController);
-    final retireAge = _parseController(widget.retireAgeController);
-    final inflationPercent =
-        _parseController(widget.inflationController) / 100.0;
-
-    final yearsRaw = retireAge - currentAge;
-    final years = yearsRaw > 0 ? yearsRaw : 0.0;
-
-    // Calculate future living expense
-    double monthlyExpense;
-    if (living <= 0) {
-      monthlyExpense = 0.0;
-    } else {
-      final inflation = 1 + inflationPercent;
-      if (inflation <= 0) {
-        monthlyExpense = living;
-      } else {
-        monthlyExpense = (pow(inflation, years) * living).toDouble();
-      }
-    }
-
-    // Allocation logic (simplified example)
-    _emergencyFund = totalIncome * 0.15; // 15% emergency
-    _pensionSaving = retirement; // retirement contribution
-    _shortTermGoalSaving = totalIncome * 0.10; // 10% short term goal
-    _livingExpense = monthlyExpense;
+    // === 3. 월급 분리 로직 ===
+    _emergencyFund = totalIncome * 0.15; // 15% 비상금
+    _pensionSaving = retirement; // 퇴직금 투자금
+    _shortTermGoalSaving = totalIncome * 0.10; // 10% 단기 목표
     _totalMonthlyAllocation = totalIncome;
 
     setState(() {});
@@ -469,7 +476,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                           ),
                         ),
                         Text(
-                          _formatCurrency(_livingExpense),
+                          _formatCurrency(_retirementMonthlyExpense),
                           style: Theme.of(context).textTheme.bodyLarge
                               ?.copyWith(
                                 fontFamily: 'Gmarket_sans',
@@ -505,7 +512,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                           ),
                         ),
                         Text(
-                          _formatCurrency(_livingExpense * 12 * 25),
+                          _formatCurrency(_economicFreedomAmount),
                           style: Theme.of(context).textTheme.bodyLarge
                               ?.copyWith(
                                 fontFamily: 'Gmarket_sans',
@@ -594,7 +601,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
             Gaps.v12,
 
             // Living Expense
-            _buildAllocationItem(context, '생활비', _livingExpense),
+            _buildAllocationItem(context, '월 투자금', _monthlyInvestment),
 
             Gaps.v20,
 
