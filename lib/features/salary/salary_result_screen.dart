@@ -69,14 +69,15 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
   double _totalRequiredInvestment = 0.0;
   double _compoundReturnSum = 0.0;
   double _annualInvestment = 0.0;
-  double _monthlyInvestment = 0.0;
+  double _pensionInvestment = 0.0;
   double _weeklyInvestment = 0.0;
   double _dailyInvestment = 0.0;
+  double _livingExpenseAllocation = 0.0; // 추가: 생활비
 
   // Step2 income values
   double _totalMonthlyAllocation = 0.0;
   double _emergencyFund = 0.0;
-  double _pensionSaving = 0.0;
+  final double _pensionSaving = 0.0;
   double _shortTermGoalSaving = 0.0;
 
   @override
@@ -126,7 +127,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
     _totalRequiredInvestment = results['totalRequiredInvestment']!;
     _compoundReturnSum = results['compoundReturnSum']!;
     _annualInvestment = results['annualInvestment']!;
-    _monthlyInvestment = results['monthlyInvestment']!;
+    _pensionInvestment = results['pensionInvestment']!;
     _weeklyInvestment = results['weeklyInvestment']!;
     _dailyInvestment = results['dailyInvestment']!;
 
@@ -143,10 +144,39 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
     final totalIncome =
         baseSalary + overtime + bonus + incentive + side1 + side2 + side3;
 
-    // === 3. 월급 분리 로직 ===
-    _emergencyFund = totalIncome * 0.15; // 15% 비상금
-    _pensionSaving = retirement; // 퇴직금 투자금
-    _shortTermGoalSaving = totalIncome * 0.10; // 10% 단기 목표
+    double shortTermGoalMonthly = 0.0;
+
+    if (widget.hasShortTermGoal == true) {
+      // Step1에서 입력한 단기 목표 데이터
+      final shortTermTargetAmount = _parseController(
+        widget.shortTermAmountController,
+      ); // 목표 금액
+      final shortTermDurationMonths = _parseController(
+        widget.shortTermDurationController,
+      ); // 목표 기간 (월)
+      final shortTermCurrentSavings = _parseController(
+        widget.shortTermSavedController,
+      ); // 현재 저축액
+
+      // 남은 금액 계산
+      final remainingAmount = shortTermTargetAmount - shortTermCurrentSavings;
+
+      // 월 저축액 계산 = 남은 금액 / 남은 기간
+      if (shortTermDurationMonths > 0 && remainingAmount > 0) {
+        shortTermGoalMonthly = remainingAmount / shortTermDurationMonths;
+      }
+    }
+
+    _shortTermGoalSaving = shortTermGoalMonthly;
+
+    // === 4. 월급 분리 로직 ===
+    _emergencyFund = totalIncome * 0.05; // 5% 비상금
+
+    final livingExpense =
+        totalIncome -
+        (_emergencyFund + _pensionInvestment + _shortTermGoalSaving);
+    _livingExpenseAllocation = livingExpense > 0 ? livingExpense : 0;
+
     _totalMonthlyAllocation = totalIncome;
 
     setState(() {});
@@ -591,7 +621,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
             Gaps.v12,
 
             // Pension Saving
-            _buildAllocationItem(context, '연금 저축', _pensionSaving),
+            _buildAllocationItem(context, '연금 저축', _pensionInvestment),
 
             Gaps.v12,
 
@@ -601,7 +631,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
             Gaps.v12,
 
             // Living Expense
-            _buildAllocationItem(context, '월 투자금', _monthlyInvestment),
+            _buildAllocationItem(context, '생활비', _livingExpenseAllocation),
 
             Gaps.v20,
 
