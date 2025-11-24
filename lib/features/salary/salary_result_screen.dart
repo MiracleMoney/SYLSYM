@@ -406,6 +406,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontFamily: "Gmarket_sans",
             fontWeight: FontWeight.w700,
+            fontSize: Sizes.size24,
           ),
         ),
       ),
@@ -678,22 +679,23 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                     ),
                   ),
                 ),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  alignment: Alignment.topCenter,
-                  child: _isDetailsExpanded
-                      ? Container(
-                          margin: const EdgeInsets.only(top: 8),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade200),
-                          ),
-                          child: _buildDetailsSection(),
-                        )
-                      : const SizedBox.shrink(),
+                ClipRect(
+                  child: AnimatedAlign(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    alignment: Alignment.topCenter,
+                    heightFactor: _isDetailsExpanded ? 1.0 : 0.0,
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: _buildDetailsSection(),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -955,31 +957,32 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
             ),
           ),
         ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          alignment: Alignment.topCenter,
-          child: _isInvestmentExpanded
-              ? Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade200),
+        ClipRect(
+          child: AnimatedAlign(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            heightFactor: _isInvestmentExpanded ? 1.0 : 0.0,
+            child: Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                children: [
+                  _buildInvestmentDetailRow('연금저축', _pensionInvestment),
+                  const SizedBox(height: 12),
+                  _buildInvestmentDetailRow(
+                    '퇴직금 투자 (70%)',
+                    _retirementInvestment * 0.7,
                   ),
-                  child: Column(
-                    children: [
-                      _buildInvestmentDetailRow('연금저축', _pensionInvestment),
-                      const SizedBox(height: 12),
-                      _buildInvestmentDetailRow(
-                        '퇴직금 투자 (70%)',
-                        _retirementInvestment * 0.7,
-                      ),
-                    ],
-                  ),
-                )
-              : const SizedBox.shrink(),
+                ],
+              ),
+            ),
+          ),
         ),
       ],
     );

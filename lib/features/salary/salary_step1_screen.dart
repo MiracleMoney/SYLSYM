@@ -348,6 +348,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontFamily: "Gmarket_sans",
             fontWeight: FontWeight.w700,
+            fontSize: Sizes.size24,
           ),
         ),
       ),
