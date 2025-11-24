@@ -61,6 +61,7 @@ class SalaryResultScreen extends StatefulWidget {
 class _SalaryResultScreenState extends State<SalaryResultScreen> {
   late final ValueNotifier<DateTime> _currentMonth;
   bool _isDetailsExpanded = false;
+  bool _isInvestmentExpanded = false; // 투자 세부 내역 확장 상태
 
   // Calculated values from SalaryCalculationLogic
   double _investmentPeriod = 0.0;
@@ -73,6 +74,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
   double _weeklyInvestment = 0.0;
   double _dailyInvestment = 0.0;
   double _livingExpenseAllocation = 0.0; // 추가: 생활비
+  double _retirementInvestment = 0.0; // 퇴직금 투자액 추가
 
   // Step2 income values
   double _totalMonthlyAllocation = 0.0;
@@ -131,7 +133,13 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
     _weeklyInvestment = results['weeklyInvestment']!;
     _dailyInvestment = results['dailyInvestment']!;
 
-    // === 2. Step2 수입 계산 ===
+    // === 2. 퇴직금 투자액 계산 ===
+    _retirementInvestment = _parseController(widget.retirementController);
+
+    // _pensionInvestment에서 퇴직금의 70%를 뺌
+    _pensionInvestment = _pensionInvestment - (_retirementInvestment * 0.7);
+
+    // === 3. Step2 수입 계산 ===
     final baseSalary = _parseController(widget.baseSalaryController);
     final overtime = _parseController(widget.overtimeController);
     final bonus = _parseController(widget.bonusController);
@@ -621,7 +629,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
             Gaps.v12,
 
             // Pension Saving
-            _buildAllocationItem(context, '연금 저축', _pensionInvestment),
+            _buildExpandableInvestmentItem(),
 
             Gaps.v12,
 
@@ -636,39 +644,59 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
             Gaps.v20,
 
             // Input Details (Expandable)
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _isDetailsExpanded = !_isDetailsExpanded;
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '입력한 세부 정보 보기',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontFamily: 'Gmarket_sans',
-                        fontWeight: FontWeight.w400,
-                      ),
+            Column(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isDetailsExpanded = !_isDetailsExpanded;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    Icon(
-                      _isDetailsExpanded
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '입력한 세부 정보 보기',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontFamily: 'Gmarket_sans',
+                                fontWeight: FontWeight.w400,
+                              ),
+                        ),
+                        Icon(
+                          _isDetailsExpanded
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down,
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  child: _isDetailsExpanded
+                      ? Container(
+                          margin: const EdgeInsets.only(top: 8),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: _buildDetailsSection(),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ],
             ),
-
-            if (_isDetailsExpanded) ...[Gaps.v16, _buildDetailsSection()],
 
             Gaps.v20,
 
@@ -804,79 +832,180 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
   }
 
   Widget _buildDetailsSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch, // 이 줄 추가
+      children: [
+        Text(
+          '경제적자유 목표 설정',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontFamily: 'Gmarket_sans',
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        Gaps.v12,
+        _buildDetailRow('현재 나이', widget.currentAgeController?.text),
+        _buildDetailRow('은퇴 희망 나이', widget.retireAgeController?.text),
+        _buildDetailRow('현재 희망 생활비', widget.livingExpenseController?.text),
+        _buildDetailRow('S&P500 평가금액', widget.snpValueController?.text),
+        _buildDetailRow('기대수익률', widget.expectedReturnController?.text),
+        _buildDetailRow('예상 물가 상승률', widget.inflationController?.text),
+
+        Gaps.v12,
+
+        // 단기 목표 섹션
+        Text(
+          '단기 목표',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontFamily: 'Gmarket_sans',
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Gaps.v8,
+        if (widget.hasShortTermGoal == true) ...[
+          _buildDetailRow('목표', widget.selectedShortTermGoal),
+          _buildDetailRow('목표 금액', widget.shortTermAmountController?.text),
+          _buildDetailRow(
+            '목표 기간 (월)',
+            widget.shortTermDurationController?.text,
+          ),
+          _buildDetailRow('현재 저축액', widget.shortTermSavedController?.text),
+        ] else
           Text(
-            '경제적자유 목표 설정',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            '없음',
+            style: TextStyle(
               fontFamily: 'Gmarket_sans',
-              fontWeight: FontWeight.w700,
+              color: Colors.grey.shade600,
             ),
           ),
-          Gaps.v12,
-          _buildDetailRow('현재 나이', widget.currentAgeController?.text),
-          _buildDetailRow('은퇴 희망 나이', widget.retireAgeController?.text),
-          _buildDetailRow('현재 희망 생활비', widget.livingExpenseController?.text),
-          _buildDetailRow('S&P500 평가금액', widget.snpValueController?.text),
-          _buildDetailRow('기대수익률', widget.expectedReturnController?.text),
-          _buildDetailRow('예상 물가 상승률', widget.inflationController?.text),
 
-          Gaps.v12,
+        Gaps.v20,
 
-          // 단기 목표 섹션
-          Text(
-            '단기 목표',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontFamily: 'Gmarket_sans',
-              fontWeight: FontWeight.w600,
+        Text(
+          '월 수입 세부사항',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontFamily: 'Gmarket_sans',
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        Gaps.v12,
+        _buildDetailRow('월급', widget.baseSalaryController?.text),
+        _buildDetailRow('추가 근무', widget.overtimeController?.text),
+        _buildDetailRow('상여금', widget.bonusController?.text),
+        _buildDetailRow('성과급', widget.incentiveController?.text),
+        _buildDetailRow('추가 수입 1', widget.side1Controller?.text),
+        _buildDetailRow('추가 수입 2', widget.side2Controller?.text),
+        _buildDetailRow('추가 수입 3', widget.side3Controller?.text),
+        _buildDetailRow('퇴직금 투자 금액', widget.retirementController?.text),
+      ],
+    );
+  }
+
+  Widget _buildExpandableInvestmentItem() {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              _isInvestmentExpanded = !_isInvestmentExpanded;
+            });
+          },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    '투자',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontFamily: 'Gmarket_sans',
+                      fontWeight: FontWeight.w400,
+                      height: 1.15,
+                      fontSize: Sizes.size16 + Sizes.size2,
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      _formatCurrency(
+                        _pensionInvestment + (_retirementInvestment * 0.7),
+                      ),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w700,
+                        fontSize: Sizes.size16 + Sizes.size2,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      _isInvestmentExpanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          Gaps.v8,
-          if (widget.hasShortTermGoal == true) ...[
-            _buildDetailRow('목표', widget.selectedShortTermGoal),
-            _buildDetailRow('목표 금액', widget.shortTermAmountController?.text),
-            _buildDetailRow(
-              '목표 기간 (월)',
-              widget.shortTermDurationController?.text,
-            ),
-            _buildDetailRow('현재 저축액', widget.shortTermSavedController?.text),
-          ] else
-            Text(
-              '없음',
-              style: TextStyle(
-                fontFamily: 'Gmarket_sans',
-                color: Colors.grey.shade600,
-              ),
-            ),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          alignment: Alignment.topCenter,
+          child: _isInvestmentExpanded
+              ? Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildInvestmentDetailRow('연금저축', _pensionInvestment),
+                      const SizedBox(height: 12),
+                      _buildInvestmentDetailRow(
+                        '퇴직금 투자 (70%)',
+                        _retirementInvestment * 0.7,
+                      ),
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
 
-          Gaps.v20,
-
-          Text(
-            '월 수입 세부사항',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontFamily: 'Gmarket_sans',
-              fontWeight: FontWeight.w700,
-            ),
+  Widget _buildInvestmentDetailRow(String label, double amount) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Gmarket_sans',
+            color: Colors.grey.shade700,
+            fontSize: Sizes.size14,
           ),
-          Gaps.v12,
-          _buildDetailRow('월급', widget.baseSalaryController?.text),
-          _buildDetailRow('추가 근무', widget.overtimeController?.text),
-          _buildDetailRow('상여금', widget.bonusController?.text),
-          _buildDetailRow('성과급', widget.incentiveController?.text),
-          _buildDetailRow('추가 수입 1', widget.side1Controller?.text),
-          _buildDetailRow('추가 수입 2', widget.side2Controller?.text),
-          _buildDetailRow('추가 수입 3', widget.side3Controller?.text),
-          _buildDetailRow('퇴직금 투자 금액', widget.retirementController?.text),
-        ],
-      ),
+        ),
+        Text(
+          _formatCurrency(amount),
+          style: const TextStyle(
+            fontFamily: 'Gmarket_sans',
+            fontWeight: FontWeight.w600,
+            fontSize: Sizes.size14,
+          ),
+        ),
+      ],
     );
   }
 
