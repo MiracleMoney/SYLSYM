@@ -3,6 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:miraclemoney/constants/sizes.dart';
 import 'package:miraclemoney/constants/gaps.dart';
 import 'salary_calculation_logic.dart';
+// 파일 상단에 import 추가
+import '../../../services/firestore_service.dart';
+import '../../../models/salary_complete_data.dart';
+import '../../../models/salary_step1_data.dart';
+import '../../../models/salary_step2_data.dart';
+import '../../../models/salary_result_data.dart';
 
 class SalaryResultScreen extends StatefulWidget {
   // Step1 data
@@ -59,6 +65,8 @@ class SalaryResultScreen extends StatefulWidget {
 }
 
 class _SalaryResultScreenState extends State<SalaryResultScreen> {
+  final FirestoreService _firestoreService = FirestoreService();
+
   late final ValueNotifier<DateTime> _currentMonth;
   bool _isDetailsExpanded = false;
   bool _isInvestmentExpanded = false; // 투자 세부 내역 확장 상태
@@ -320,16 +328,86 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
   }
 
   Future<void> _saveResult() async {
-    // TODO: Implement save logic
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Result saved (stub)')));
+    try {
+      // 1. Step1 데이터 생성
+      final step1Data = SalaryStep1Data(
+        currentAge: int.tryParse(widget.currentAgeController?.text ?? ''),
+        retireAge: int.tryParse(widget.retireAgeController?.text ?? ''),
+        livingExpense: _parseController(widget.livingExpenseController),
+        snpValue: _parseController(widget.snpValueController),
+        expectedReturn: _parseController(widget.expectedReturnController),
+        inflation: _parseController(widget.inflationController),
+        hasShortTermGoal: widget.hasShortTermGoal ?? false,
+        shortTermGoal: widget.selectedShortTermGoal,
+        shortTermAmount: _parseController(widget.shortTermAmountController),
+        shortTermDuration: int.tryParse(
+          widget.shortTermDurationController?.text ?? '',
+        ),
+        shortTermSaved: _parseController(widget.shortTermSavedController),
+      );
+
+      // 2. Step2 데이터 생성
+      final step2Data = SalaryStep2Data(
+        baseSalary: _parseController(widget.baseSalaryController),
+        overtime: _parseController(widget.overtimeController),
+        bonus: _parseController(widget.bonusController),
+        incentive: _parseController(widget.incentiveController),
+        sideIncome1: _parseController(widget.side1Controller),
+        sideIncome2: _parseController(widget.side2Controller),
+        sideIncome3: _parseController(widget.side3Controller),
+        retirement: _parseController(widget.retirementController),
+      );
+
+      // 3. Result 데이터 생성
+      final resultData = SalaryResultData(
+        emergencyFund: _emergencyFund,
+        pensionInvestment: _pensionInvestment,
+        retirementInvestment: _retirementInvestment * 0.7,
+        shortTermGoalSaving: _shortTermGoalSaving,
+        livingExpense: _livingExpenseAllocation,
+        totalIncome: _totalMonthlyAllocation,
+        retirementMonthlyExpense: _retirementMonthlyExpense,
+        economicFreedomAmount: _economicFreedomAmount,
+      );
+
+      // 4. 전체 데이터 통합
+      final completeData = SalaryCompleteData(
+        step1: step1Data,
+        step2: step2Data,
+        result: resultData,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      // 5. Firebase에 저장
+      await _firestoreService.saveSalaryData(completeData);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ 데이터가 성공적으로 저장되었습니다!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ 저장 실패: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   void _showEditConfirmation() {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => Container(
@@ -714,7 +792,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: _showApplyModal,
+                onPressed: _showEditConfirmation,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: const [

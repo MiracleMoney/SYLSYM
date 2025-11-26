@@ -1,12 +1,20 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:miraclemoney/constants/sizes.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:miraclemoney/features/salary/salary_result_screen.dart';
-
 import 'package:miraclemoney/features/salary/salary_step1_screen.dart';
 import 'package:miraclemoney/features/salary/salary_step2_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'features/auth/login_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Firebase 초기화
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(const MyApp());
 }
 
@@ -82,7 +90,36 @@ class MyApp extends StatelessWidget {
           unselectedLabelColor: Colors.grey.shade500,
         ),
       ),
-      home: SalaryStep1Screen(),
+      home: const AuthGate(),
+    );
+  }
+}
+
+// ✅ 인증 게이트 (로그인 상태 체크)
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // 로딩 중
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        // 로그인 상태 확인
+        if (snapshot.hasData) {
+          // 로그인됨 → 메인 화면
+          return const SalaryStep1Screen();
+        } else {
+          // 로그인 안됨 → 로그인 화면
+          return const LoginScreen();
+        }
+      },
     );
   }
 }

@@ -36,7 +36,18 @@ dependencies:
   cupertino_icons: ^1.0.8
   keyboard_actions: ^4.2.0
   google_fonts: ^6.3.2
-  shared_preferences: ^2.5.3
+  shared_preferences:
+    ^2.5.3
+
+    # Firebase 관련 패키지 추가
+  firebase_core: ^3.8.1
+  cloud_firestore: ^5.5.1
+  firebase_auth:
+    ^5.3.3 # 로그인용
+
+
+    # ✅ 새로 추가
+  google_sign_in: ^6.2.1
 
 dev_dependencies:
   flutter_test:

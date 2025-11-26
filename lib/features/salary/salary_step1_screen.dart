@@ -8,6 +8,7 @@ import 'package:keyboard_actions/keyboard_actions.dart';
 import 'salary_step2_screen.dart'; // same-folde
 import 'widgets/bottom_action_button.dart';
 import 'widgets/number_input_field.dart';
+import '../../../services/firestore_service.dart';
 
 class SalaryStep1Screen extends StatefulWidget {
   const SalaryStep1Screen({super.key});
@@ -17,6 +18,8 @@ class SalaryStep1Screen extends StatefulWidget {
 }
 
 class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
+  final FirestoreService _firestoreService = FirestoreService();
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   // controllers
@@ -99,6 +102,9 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
     for (final c in _allControllers) {
       c.addListener(_onFieldChanged);
     }
+
+    // ✅ 저장된 데이터 불러오기 추가
+    _loadSavedData();
   }
 
   void _onFieldChanged() {
@@ -108,9 +114,79 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
   }
 
   Future<void> _loadSavedData() async {
-    // TODO: DB에서 불러와 controller.text에 세팅
-    // ex) final saved = await MyDbService.loadUserInputs();
-    // _currentAgeController.text = saved.currentAge?.toString() ?? '';
+    try {
+      // 현재 월의 데이터 불러오기
+      final savedData = await _firestoreService.loadSalaryData();
+
+      if (savedData == null) {
+        print('저장된 데이터 없음');
+        return;
+      }
+      // ✅ 숫자 포맷팅 헬퍼 함수
+
+      String formatNumber(double? value) {
+        if (value == null) return '';
+        final intValue = value.toInt();
+        final formatted = intValue.toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
+        return formatted;
+      }
+
+      // Step1 필드에 값 채우기
+      if (savedData.step1.currentAge != null) {
+        _currentAgeController.text = savedData.step1.currentAge.toString();
+      }
+      if (savedData.step1.retireAge != null) {
+        _retireAgeController.text = savedData.step1.retireAge.toString();
+      }
+      if (savedData.step1.livingExpense != null) {
+        _livingExpenseController.text = formatNumber(
+          savedData.step1.livingExpense,
+        ); // ✅ 변경
+      }
+      if (savedData.step1.snpValue != null) {
+        _snpValueController.text = formatNumber(
+          savedData.step1.snpValue,
+        ); // ✅ 변경
+      }
+      if (savedData.step1.expectedReturn != null) {
+        _expectedReturnController.text = savedData.step1.expectedReturn
+            .toString();
+      }
+      if (savedData.step1.inflation != null) {
+        _inflationController.text = savedData.step1.inflation.toString();
+      }
+
+      setState(() {
+        _hasShortTermGoal = savedData.step1.hasShortTermGoal;
+        _selectedShortTermGoal = savedData.step1.shortTermGoal;
+      });
+
+      if (savedData.step1.hasShortTermGoal) {
+        if (savedData.step1.shortTermAmount != null) {
+          _shortTermGoalAmountController.text = formatNumber(
+            savedData.step1.shortTermAmount,
+          ); // ✅ 변경
+        }
+        if (savedData.step1.shortTermDuration != null) {
+          _shortTermGoalDurationController.text = savedData
+              .step1
+              .shortTermDuration
+              .toString();
+        }
+        if (savedData.step1.shortTermSaved != null) {
+          _shortTermSavedController.text = formatNumber(
+            savedData.step1.shortTermSaved,
+          ); // ✅ 변경
+        }
+      }
+
+      print('✅ 저장된 데이터 불러오기 완료');
+    } catch (e) {
+      print('❌ 데이터 불러오기 실패: $e');
+    }
   }
 
   @override

@@ -12,7 +12,20 @@
           "package_name": "com.example.miraclemoney"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "301274263499-r504fq4n88kmfj0lfqihtgca2gns1rcv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.miraclemoney",
+            "certificate_hash": "c1a6534077d8a06078c352b1f63e843d5f186b9b"
+          }
+        },
+        {
+          "client_id": "301274263499-12fa8ncsvv5g2giqmdmoeale23023ln0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDJijl5k2cp0ffvMXBlLY6mucqk54Nr1vc"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "301274263499-12fa8ncsvv5g2giqmdmoeale23023ln0.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "301274263499-6v3b9ka81ok7ih3e7erkeln3an5om8q6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.miraclemoney"
+              }
+            }
+          ]
         }
       }
     }
