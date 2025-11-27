@@ -127,6 +127,11 @@ class FirestoreService {
     }
   }
 
+  // loadSalaryDataByMonth 메서드를 제거하고, 기존 loadSalaryData 사용
+  Future<SalaryCompleteData?> loadSalaryDataByMonth(DateTime month) async {
+    return await loadSalaryData(targetDate: month);
+  }
+
   // ==================== 예산 데이터 (나중에 구현) ====================
 
   Future<void> saveBudget(Map<String, dynamic> budgetData) async {

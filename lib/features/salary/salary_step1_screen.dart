@@ -11,7 +11,14 @@ import 'widgets/number_input_field.dart';
 import '../../../services/firestore_service.dart';
 
 class SalaryStep1Screen extends StatefulWidget {
-  const SalaryStep1Screen({super.key});
+  final void Function(Map<String, dynamic>)? onNavigateToStep2;
+  final ValueNotifier<DateTime>? currentMonthNotifier; // ✅ 추가
+
+  const SalaryStep1Screen({
+    super.key,
+    this.onNavigateToStep2,
+    this.currentMonthNotifier, // ✅ 추가
+  });
 
   @override
   State<SalaryStep1Screen> createState() => _SalaryStep1ScreenState();
@@ -66,9 +73,12 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
 
   @override
   void initState() {
-    super.initState();
-    // 현재 월을 기본값으로 설정 (데이터 저장/로딩은 나중에 구현)
-    _currentMonth = ValueNotifier<DateTime>(DateTime.now());
+    super.initState(); // ✅ 외부에서 전달받으면 사용, 없으면 새로 생성
+    if (widget.currentMonthNotifier != null) {
+      _currentMonth = widget.currentMonthNotifier!;
+    } else {
+      _currentMonth = ValueNotifier<DateTime>(DateTime.now());
+    }
     // ... 기존 코드 (controller 리스너 등) ...
     _allControllers = [
       _currentAgeController,
@@ -199,7 +209,10 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
     for (final f in _allFocusNodes) {
       f.dispose();
     }
-    _currentMonth.dispose(); // ValueNotifier dispose
+    // ✅ 외부에서 전달받지 않은 경우에만 dispose
+    if (widget.currentMonthNotifier == null) {
+      _currentMonth.dispose();
+    } // ValueNotifier dispose
 
     super.dispose();
   }
@@ -237,25 +250,44 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
   }
 
   void _navigateToStep2() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SalaryStep2Screen(
-          // Step1의 컨트롤러들을 전달합니다.
-          currentAgeController: _currentAgeController,
-          retireAgeController: _retireAgeController,
-          livingExpenseController: _livingExpenseController,
-          snpValueController: _snpValueController,
-          expectedReturnController: _expectedReturnController,
-          inflationController: _inflationController,
-          hasShortTermGoal: _hasShortTermGoal,
-          selectedShortTermGoal: _selectedShortTermGoal,
-          shortTermAmountController: _shortTermGoalAmountController,
-          shortTermDurationController: _shortTermGoalDurationController,
-          shortTermSavedController: _shortTermSavedController,
-          currentMonthNotifier: _currentMonth, // 추가: 월 동기화용
+    final controllers = {
+      'currentAgeController': _currentAgeController,
+      'retireAgeController': _retireAgeController,
+      'livingExpenseController': _livingExpenseController,
+      'snpValueController': _snpValueController,
+      'expectedReturnController': _expectedReturnController,
+      'inflationController': _inflationController,
+      'hasShortTermGoal': _hasShortTermGoal,
+      'selectedShortTermGoal': _selectedShortTermGoal,
+      'shortTermAmountController': _shortTermGoalAmountController,
+      'shortTermDurationController': _shortTermGoalDurationController,
+      'shortTermSavedController': _shortTermSavedController,
+    };
+
+    if (widget.onNavigateToStep2 != null) {
+      // TabBar 모드: 콜백 사용
+      widget.onNavigateToStep2!(controllers);
+    } else {
+      // 독립 실행 모드: Navigator 사용
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => SalaryStep2Screen(
+            currentAgeController: _currentAgeController,
+            retireAgeController: _retireAgeController,
+            livingExpenseController: _livingExpenseController,
+            snpValueController: _snpValueController,
+            expectedReturnController: _expectedReturnController,
+            inflationController: _inflationController,
+            hasShortTermGoal: _hasShortTermGoal,
+            selectedShortTermGoal: _selectedShortTermGoal,
+            shortTermAmountController: _shortTermGoalAmountController,
+            shortTermDurationController: _shortTermGoalDurationController,
+            shortTermSavedController: _shortTermSavedController,
+            currentMonthNotifier: _currentMonth,
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   double? _parseDouble(String? s) {
@@ -418,16 +450,6 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          '월급 최적화',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontFamily: "Gmarket_sans",
-            fontWeight: FontWeight.w700,
-            fontSize: Sizes.size24,
-          ),
-        ),
-      ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
 
@@ -437,7 +459,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
             padding: const EdgeInsets.only(
               left: Sizes.size20,
               right: Sizes.size20,
-              top: Sizes.size2,
+              top: Sizes.size12,
               bottom: Sizes.size24,
             ),
             child: Column(

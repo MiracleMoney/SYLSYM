@@ -477,23 +477,12 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
     final cardRadius = BorderRadius.circular(12.0); // 이 줄 추가
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        title: Text(
-          '월급 최적화',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontFamily: "Gmarket_sans",
-            fontWeight: FontWeight.w700,
-            fontSize: Sizes.size24,
-          ),
-        ),
-      ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.only(
           left: Sizes.size20,
           right: Sizes.size20,
-          top: Sizes.size2,
+          top: Sizes.size12,
           bottom: Sizes.size16,
         ),
         child: Column(

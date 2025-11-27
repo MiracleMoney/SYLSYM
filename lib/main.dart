@@ -8,6 +8,7 @@ import 'package:miraclemoney/features/salary/salary_step2_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'features/auth/login_screen.dart';
+import 'features/main_navigation_screen.dart'; // ✅ 변경
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -114,7 +115,7 @@ class AuthGate extends StatelessWidget {
         // 로그인 상태 확인
         if (snapshot.hasData) {
           // 로그인됨 → 메인 화면
-          return const SalaryStep1Screen();
+          return const MainNavigationScreen();
         } else {
           // 로그인 안됨 → 로그인 화면
           return const LoginScreen();

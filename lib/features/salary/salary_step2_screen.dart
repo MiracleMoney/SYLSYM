@@ -9,6 +9,8 @@ import 'dart:math';
 import 'salary_result_screen.dart';
 
 class SalaryStep2Screen extends StatefulWidget {
+  final void Function(Map<String, dynamic>)? onNavigateToResult; // ✅ 타입 변경
+
   final TextEditingController? currentAgeController;
   final TextEditingController? retireAgeController;
   final TextEditingController? livingExpenseController;
@@ -24,6 +26,7 @@ class SalaryStep2Screen extends StatefulWidget {
 
   const SalaryStep2Screen({
     super.key,
+    this.onNavigateToResult,
     this.currentAgeController,
     this.retireAgeController,
     this.livingExpenseController,
@@ -377,44 +380,49 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
 
   // Calculate 버튼 동작: 데모용 간단 계산
   void _onCalculate() async {
-    // 먼저 저장
-    await _saveAllInputs();
-
-    if (!mounted) return;
-
-    // Navigate to result screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SalaryResultScreen(
-          // Step1 data
-          currentAgeController: _s1CurrentAge,
-          retireAgeController: _s1RetireAge,
-          livingExpenseController: _s1LivingExpense,
-          snpValueController: _s1SnpValue,
-          expectedReturnController: _s1ExpectedReturn,
-          inflationController: _s1Inflation,
-          hasShortTermGoal: _s1HasShortTermGoal,
-          selectedShortTermGoal: _s1SelectedShortTerm,
-          shortTermAmountController: _s1ShortAmount,
-          shortTermDurationController: _s1ShortDuration,
-          shortTermSavedController: _s1ShortSaved,
-
-          // Step2 data
-          baseSalaryController: _baseSalaryController,
-          overtimeController: _overtimeController,
-          bonusController: _bonusController,
-          incentiveController: _incentiveController,
-          side1Controller: _side1Controller,
-          side2Controller: _side2Controller,
-          side3Controller: _side3Controller,
-          retirementController: _retirementController,
-
-          // Shared month notifier
-          currentMonthNotifier: _currentMonth,
+    if (widget.onNavigateToResult != null) {
+      // TabBar 모드: Step2 컨트롤러들을 Map으로 전달
+      final step2Controllers = {
+        'baseSalaryController': _baseSalaryController,
+        'overtimeController': _overtimeController,
+        'bonusController': _bonusController,
+        'incentiveController': _incentiveController,
+        'side1Controller': _side1Controller,
+        'side2Controller': _side2Controller,
+        'side3Controller': _side3Controller,
+        'retirementController': _retirementController,
+      };
+      widget.onNavigateToResult!(step2Controllers);
+    } else {
+      // 독립 실행 모드: Navigator 사용
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SalaryResultScreen(
+            currentAgeController: widget.currentAgeController,
+            retireAgeController: widget.retireAgeController,
+            livingExpenseController: widget.livingExpenseController,
+            snpValueController: widget.snpValueController,
+            expectedReturnController: widget.expectedReturnController,
+            inflationController: widget.inflationController,
+            hasShortTermGoal: widget.hasShortTermGoal,
+            selectedShortTermGoal: widget.selectedShortTermGoal,
+            shortTermAmountController: widget.shortTermAmountController,
+            shortTermDurationController: widget.shortTermDurationController,
+            shortTermSavedController: widget.shortTermSavedController,
+            baseSalaryController: _baseSalaryController,
+            overtimeController: _overtimeController,
+            bonusController: _bonusController,
+            incentiveController: _incentiveController,
+            side1Controller: _side1Controller,
+            side2Controller: _side2Controller,
+            side3Controller: _side3Controller,
+            retirementController: _retirementController,
+            currentMonthNotifier: widget.currentMonthNotifier,
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   @override
@@ -422,22 +430,12 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
     final cardRadius = BorderRadius.circular(12.0);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          '월급 최적화',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontFamily: "Gmarket_sans",
-            fontWeight: FontWeight.w700,
-            fontSize: Sizes.size20 + Sizes.size4,
-          ),
-        ),
-      ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.only(
           left: Sizes.size20,
           right: Sizes.size20,
-          top: Sizes.size2,
+          top: Sizes.size12,
           bottom: Sizes.size24,
         ),
         child: Column(
