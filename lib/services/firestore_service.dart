@@ -18,15 +18,19 @@ class FirestoreService {
   // ==================== 월급 최적화 데이터 ====================
 
   /// 월급 데이터 저장 (자동으로 year-month 형식 생성)
-  Future<void> saveSalaryData(SalaryCompleteData data) async {
+  Future<void> saveSalaryData(
+    SalaryCompleteData data, {
+    required DateTime targetDate,
+  }) async {
     final userId = currentUserId;
     if (userId == null) {
       throw Exception('사용자 ID를 가져올 수 없습니다. 로그인이 필요합니다.');
     }
 
+    // ✅ targetDate가 있으면 그것 사용, 없으면 현재 날짜 사용
+    final date = targetDate ?? DateTime.now();
     // 현재 연월을 문서 ID로 사용 (예: "2025-01")
-    final yearMonth =
-        '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}';
+    final yearMonth = '${date.year}-${date.month.toString().padLeft(2, '0')}';
 
     try {
       await _firestore

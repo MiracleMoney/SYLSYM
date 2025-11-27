@@ -379,14 +379,18 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
         updatedAt: DateTime.now(),
       );
 
-      // 5. Firebase에 저장
-      await _firestoreService.saveSalaryData(completeData);
-
+      // 5. Firebase에 저장 - ✅ targetDate 전달
+      await _firestoreService.saveSalaryData(
+        completeData,
+        targetDate: _currentMonth.value, // ✅ 현재 선택된 월로 저장
+      );
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ 데이터가 성공적으로 저장되었습니다!'),
+        SnackBar(
+          content: Text(
+            '✅ ${_currentMonth.value.year}년 ${_currentMonth.value.month}월 데이터가 저장되었습니다!',
+          ),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 2),
         ),

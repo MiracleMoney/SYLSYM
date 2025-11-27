@@ -63,7 +63,7 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
     super.dispose();
   }
 
-  // ✅ 현재 월의 데이터 확인 및 로드
+  // ✅ 현재 월의 데이터 확인 및 로드 (없으면 이전 달 데이터 불러오기)
   Future<void> _checkAndLoadMonthData() async {
     if (!mounted) return;
 
@@ -72,10 +72,30 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
     });
 
     try {
-      // Firestore에서 현재 월 데이터 로드
-      final data = await _firestoreService.loadSalaryDataByMonth(
+      // 1. 현재 선택된 월의 데이터 먼저 시도
+      SalaryCompleteData? data = await _firestoreService.loadSalaryDataByMonth(
         _currentMonth.value,
       );
+
+      // 2. 현재 월 데이터가 없으면 이전 달 데이터 찾기
+      if (data == null) {
+        DateTime checkMonth = DateTime(
+          _currentMonth.value.year,
+          _currentMonth.value.month - 1,
+        );
+        // 최대 12개월 이전까지 검색
+        for (int i = 0; i < 12; i++) {
+          data = await _firestoreService.loadSalaryDataByMonth(checkMonth);
+
+          if (data != null) {
+            print('✅ 이전 달 데이터 발견: ${checkMonth.year}년 ${checkMonth.month}월');
+            break;
+          }
+
+          // 한 달 더 이전으로
+          checkMonth = DateTime(checkMonth.year, checkMonth.month - 1);
+        }
+      }
 
       if (data != null && mounted) {
         // 데이터가 있으면 컨트롤러 생성 및 Result 화면으로 이동
