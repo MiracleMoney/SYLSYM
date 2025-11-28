@@ -77,28 +77,8 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
         _currentMonth.value,
       );
 
-      // 2. 현재 월 데이터가 없으면 이전 달 데이터 찾기
-      if (data == null) {
-        DateTime checkMonth = DateTime(
-          _currentMonth.value.year,
-          _currentMonth.value.month - 1,
-        );
-        // 최대 12개월 이전까지 검색
-        for (int i = 0; i < 12; i++) {
-          data = await _firestoreService.loadSalaryDataByMonth(checkMonth);
-
-          if (data != null) {
-            print('✅ 이전 달 데이터 발견: ${checkMonth.year}년 ${checkMonth.month}월');
-            break;
-          }
-
-          // 한 달 더 이전으로
-          checkMonth = DateTime(checkMonth.year, checkMonth.month - 1);
-        }
-      }
-
       if (data != null && mounted) {
-        // 데이터가 있으면 컨트롤러 생성 및 Result 화면으로 이동
+        // 현재 월 데이터가 있으면 Result 화면으로 이동
         _loadDataToControllers(data);
 
         setState(() {
@@ -106,26 +86,65 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
           _isLoadingData = false;
         });
 
-        // PageController가 준비된 후 이동
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && _salaryPageController.hasClients) {
             _salaryPageController.jumpToPage(2);
           }
         });
       } else {
-        // 데이터가 없으면 Step1 유지
-        setState(() {
-          _currentSalaryPage = 0;
-          _isLoadingData = false;
-          _step1Controllers = {};
-          _step2Controllers = {};
-        });
+        // 2. 현재 월 데이터가 없으면 이전 달 데이터 찾기
+        DateTime checkMonth = DateTime(
+          _currentMonth.value.year,
+          _currentMonth.value.month - 1,
+        );
 
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _salaryPageController.hasClients) {
-            _salaryPageController.jumpToPage(0);
+        SalaryCompleteData? previousData;
+
+        // 최대 12개월 이전까지 검색
+        for (int i = 0; i < 12; i++) {
+          previousData = await _firestoreService.loadSalaryDataByMonth(
+            checkMonth,
+          );
+
+          if (previousData != null) {
+            print('✅ 이전 달 데이터 발견: ${checkMonth.year}년 ${checkMonth.month}월');
+            break;
           }
-        });
+
+          // 한 달 더 이전으로
+          checkMonth = DateTime(checkMonth.year, checkMonth.month - 1);
+        }
+
+        if (previousData != null && mounted) {
+          // ✅ 이전 달 데이터가 있으면 Step1 화면에 표시 (Result 아님!)
+          _loadDataToControllers(previousData);
+
+          setState(() {
+            _currentSalaryPage = 0; // ✅ Step1 페이지로 설정
+            _isLoadingData = false;
+          });
+
+          // PageController가 준비된 후 이동
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _salaryPageController.hasClients) {
+              _salaryPageController.jumpToPage(0); // ✅ Step1으로 이동
+            }
+          });
+        } else {
+          // 데이터가 없으면 Step1 유지
+          setState(() {
+            _currentSalaryPage = 0;
+            _isLoadingData = false;
+            _step1Controllers = {};
+            _step2Controllers = {};
+          });
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _salaryPageController.hasClients) {
+              _salaryPageController.jumpToPage(0);
+            }
+          });
+        }
       }
     } catch (e) {
       print('데이터 로드 실패: $e');

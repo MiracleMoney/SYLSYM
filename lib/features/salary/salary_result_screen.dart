@@ -905,6 +905,39 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
   }
 
   Widget _buildDetailsSection() {
+    // 숫자 포맷팅 헬퍼 함수
+    String formatNumber(String? text) {
+      if (text == null || text.isEmpty) return 'N/A';
+      // 이미 콤마가 있으면 그대로 반환
+      if (text.contains(',')) return text;
+
+      final number = double.tryParse(text.replaceAll(RegExp(r'[^0-9.]'), ''));
+      if (number == null) return text;
+
+      final intPart = number.toInt();
+      return intPart.toString().replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        (Match m) => '${m[1]},',
+      );
+    }
+
+    String formatAge(String? text) {
+      if (text == null || text.isEmpty) return 'N/A';
+      return '$text세';
+    }
+
+    String formatMonths(String? text) {
+      if (text == null || text.isEmpty) return 'N/A';
+      return '$text개월';
+    }
+
+    String formatPercent(String? text) {
+      if (text == null || text.isEmpty) return 'N/A';
+      // 이미 %가 있으면 그대로 반환
+      if (text.contains('%')) return text;
+      return '$text%';
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch, // 이 줄 추가
       children: [
@@ -916,12 +949,27 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
           ),
         ),
         Gaps.v12,
-        _buildDetailRow('현재 나이', widget.currentAgeController?.text),
-        _buildDetailRow('은퇴 희망 나이', widget.retireAgeController?.text),
-        _buildDetailRow('현재 희망 생활비', widget.livingExpenseController?.text),
-        _buildDetailRow('S&P500 평가금액', widget.snpValueController?.text),
-        _buildDetailRow('기대수익률', widget.expectedReturnController?.text),
-        _buildDetailRow('예상 물가 상승률', widget.inflationController?.text),
+        _buildDetailRow('현재 나이', formatAge(widget.currentAgeController?.text)),
+        _buildDetailRow(
+          '은퇴 희망 나이',
+          formatAge(widget.retireAgeController?.text),
+        ),
+        _buildDetailRow(
+          '현재 희망 생활비',
+          formatNumber(widget.livingExpenseController?.text),
+        ),
+        _buildDetailRow(
+          'S&P500 평가금액',
+          formatNumber(widget.snpValueController?.text),
+        ),
+        _buildDetailRow(
+          '기대수익률',
+          formatPercent(widget.expectedReturnController?.text),
+        ),
+        _buildDetailRow(
+          '예상 물가 상승률',
+          formatPercent(widget.inflationController?.text),
+        ),
 
         Gaps.v12,
 
@@ -936,12 +984,18 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
         Gaps.v8,
         if (widget.hasShortTermGoal == true) ...[
           _buildDetailRow('목표', widget.selectedShortTermGoal),
-          _buildDetailRow('목표 금액', widget.shortTermAmountController?.text),
           _buildDetailRow(
-            '목표 기간 (월)',
-            widget.shortTermDurationController?.text,
+            '목표 금액',
+            formatNumber(widget.shortTermAmountController?.text),
           ),
-          _buildDetailRow('현재 저축액', widget.shortTermSavedController?.text),
+          _buildDetailRow(
+            '목표 기간',
+            formatMonths(widget.shortTermDurationController?.text),
+          ),
+          _buildDetailRow(
+            '현재 저축액',
+            formatNumber(widget.shortTermSavedController?.text),
+          ),
         ] else
           Text(
             '없음',
@@ -961,14 +1015,17 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
           ),
         ),
         Gaps.v12,
-        _buildDetailRow('월급', widget.baseSalaryController?.text),
-        _buildDetailRow('추가 근무', widget.overtimeController?.text),
-        _buildDetailRow('상여금', widget.bonusController?.text),
-        _buildDetailRow('성과급', widget.incentiveController?.text),
-        _buildDetailRow('추가 수입 1', widget.side1Controller?.text),
-        _buildDetailRow('추가 수입 2', widget.side2Controller?.text),
-        _buildDetailRow('추가 수입 3', widget.side3Controller?.text),
-        _buildDetailRow('퇴직금 투자 금액', widget.retirementController?.text),
+        _buildDetailRow('월급', formatNumber(widget.baseSalaryController?.text)),
+        _buildDetailRow('추가 근무', formatNumber(widget.overtimeController?.text)),
+        _buildDetailRow('상여금', formatNumber(widget.bonusController?.text)),
+        _buildDetailRow('성과급', formatNumber(widget.incentiveController?.text)),
+        _buildDetailRow('추가 수입 1', formatNumber(widget.side1Controller?.text)),
+        _buildDetailRow('추가 수입 2', formatNumber(widget.side2Controller?.text)),
+        _buildDetailRow('추가 수입 3', formatNumber(widget.side3Controller?.text)),
+        _buildDetailRow(
+          '퇴직금 투자 금액',
+          formatNumber(widget.retirementController?.text),
+        ),
       ],
     );
   }
