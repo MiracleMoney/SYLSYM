@@ -38,11 +38,21 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
 
+    // ✅ 월급최적화 탭으로 돌아올 때 현재 상태 확인 후 적절한 페이지로 복원
     _tabController.addListener(() {
       if (!mounted) return;
-      // 다른 탭으로 이동하면 Step1으로 리셋
-      if (_tabController.index == 0 && _currentSalaryPage != 0) {
-        _resetToStep1();
+
+      // 월급최적화 탭(index 0)으로 돌아왔을 때
+      if (_tabController.index == 0) {
+        // 현재 저장된 페이지 위치로 복원 (리셋하지 않음)
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _salaryPageController.hasClients) {
+            // 애니메이션 없이 즉시 이동
+            if (_salaryPageController.page != _currentSalaryPage.toDouble()) {
+              _salaryPageController.jumpToPage(_currentSalaryPage);
+            }
+          }
+        });
       }
     });
     // ✅ 현재 월 변경 시 데이터 확인
