@@ -230,6 +230,17 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
   }
 
   void _resetToStep1() {
+    // ✅ 기존 컨트롤러들 dispose
+    _step1Controllers.forEach((key, value) {
+      if (value is TextEditingController) {
+        value.dispose();
+      }
+    });
+    _step2Controllers.forEach((key, value) {
+      if (value is TextEditingController) {
+        value.dispose();
+      }
+    });
     setState(() {
       _currentSalaryPage = 0;
       _step1Controllers = {};
@@ -344,9 +355,15 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
                   physics: const NeverScrollableScrollPhysics(),
                   children: [
                     SalaryStep1Screen(
-                      key: const ValueKey('step1'),
+                      key: ValueKey(
+                        'step1_${_step1Controllers.hashCode}',
+                      ), // ✅ 데이터가 바뀔 때마다 새로운 Key
                       onNavigateToStep2: _navigateToStep2,
                       currentMonthNotifier: _currentMonth, // ✅ 전달
+                      // ✅ 로드된 컨트롤러를 전달
+                      initialControllers: _step1Controllers.isNotEmpty
+                          ? _step1Controllers
+                          : null,
                     ),
                     if (_step1Controllers.isNotEmpty)
                       SalaryStep2Screen(

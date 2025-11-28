@@ -13,11 +13,13 @@ import '../../../services/firestore_service.dart';
 class SalaryStep1Screen extends StatefulWidget {
   final void Function(Map<String, dynamic>)? onNavigateToStep2;
   final ValueNotifier<DateTime>? currentMonthNotifier; // ✅ 추가
+  final Map<String, dynamic>? initialControllers; // ✅ 추가
 
   const SalaryStep1Screen({
     super.key,
     this.onNavigateToStep2,
     this.currentMonthNotifier, // ✅ 추가
+    this.initialControllers, // ✅ 추가
   });
 
   @override
@@ -108,6 +110,11 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
       // 버튼 포커스 노드는 포커스 불가로 설정
       (_nextButtonFocus = FocusNode()..canRequestFocus = false),
     ];
+    // ✅ 초기 컨트롤러 값이 있으면 설정
+    if (widget.initialControllers != null &&
+        widget.initialControllers!.isNotEmpty) {
+      _loadInitialData(widget.initialControllers!);
+    }
 
     for (final c in _allControllers) {
       c.addListener(_onFieldChanged);
@@ -115,6 +122,78 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
 
     // ✅ 저장된 데이터 불러오기 추가
     // _loadSavedData();
+  }
+
+  // ✅ 초기 데이터를 컨트롤러에 로드하는 메서드
+  void _loadInitialData(Map<String, dynamic> controllers) {
+    // ✅ 숫자 포맷팅 헬퍼 함수
+    String formatNumber(String text) {
+      if (text.isEmpty) return '';
+
+      // 이미 콤마가 있으면 그대로 반환
+      if (text.contains(',')) return text;
+
+      // 숫자만 추출
+      final number = double.tryParse(text.replaceAll(RegExp(r'[^0-9.]'), ''));
+      if (number == null) return text;
+
+      final intValue = number.toInt();
+      final formatted = intValue.toString().replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        (Match m) => '${m[1]},',
+      );
+      return formatted;
+    }
+
+    if (controllers['currentAgeController'] is TextEditingController) {
+      _currentAgeController.text =
+          (controllers['currentAgeController'] as TextEditingController).text;
+    }
+    if (controllers['retireAgeController'] is TextEditingController) {
+      _retireAgeController.text =
+          (controllers['retireAgeController'] as TextEditingController).text;
+    }
+    if (controllers['livingExpenseController'] is TextEditingController) {
+      final text =
+          (controllers['livingExpenseController'] as TextEditingController)
+              .text;
+      _livingExpenseController.text = formatNumber(text); // ✅ 포맷팅 적용
+    }
+    if (controllers['snpValueController'] is TextEditingController) {
+      final text =
+          (controllers['snpValueController'] as TextEditingController).text;
+      _snpValueController.text = formatNumber(text); // ✅ 포맷팅 적용
+    }
+    if (controllers['expectedReturnController'] is TextEditingController) {
+      _expectedReturnController.text =
+          (controllers['expectedReturnController'] as TextEditingController)
+              .text;
+    }
+    if (controllers['inflationController'] is TextEditingController) {
+      _inflationController.text =
+          (controllers['inflationController'] as TextEditingController).text;
+    }
+
+    _hasShortTermGoal = controllers['hasShortTermGoal'] ?? true;
+    _selectedShortTermGoal = controllers['selectedShortTermGoal'];
+
+    if (controllers['shortTermAmountController'] is TextEditingController) {
+      final text =
+          (controllers['shortTermAmountController'] as TextEditingController)
+              .text;
+      _shortTermGoalAmountController.text = formatNumber(text); // ✅ 포맷팅 적용
+    }
+    if (controllers['shortTermDurationController'] is TextEditingController) {
+      _shortTermGoalDurationController.text =
+          (controllers['shortTermDurationController'] as TextEditingController)
+              .text;
+    }
+    if (controllers['shortTermSavedController'] is TextEditingController) {
+      final text =
+          (controllers['shortTermSavedController'] as TextEditingController)
+              .text;
+      _shortTermSavedController.text = formatNumber(text); // ✅ 포맷팅 적용
+    }
   }
 
   void _onFieldChanged() {
@@ -204,7 +283,10 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
     for (final c in _allControllers) {
       c.removeListener(_onFieldChanged);
 
-      c.dispose();
+      // ✅ TabBar 모드에서는 컨트롤러를 dispose하지 않음 (부모가 관리)
+      if (widget.onNavigateToStep2 == null) {
+        c.dispose(); // 독립 실행 모드에서만 dispose
+      }
     }
     for (final f in _allFocusNodes) {
       f.dispose();
@@ -525,6 +607,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   controller: _currentAgeController,
                   focusNode: _currentAgeFocus,
                   nextFocus: _retireAgeFocus,
+                  suffixText: '세',
                 ),
                 Gaps.v16,
                 NumberInputField(
@@ -533,6 +616,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                   controller: _retireAgeController,
                   focusNode: _retireAgeFocus,
                   nextFocus: _livingExpenseFocus,
+                  suffixText: '세',
                 ),
                 Gaps.v16,
                 NumberInputField(
