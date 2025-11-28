@@ -789,7 +789,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: _showEditConfirmation,
+                onPressed: _showApplyModal,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: const [
