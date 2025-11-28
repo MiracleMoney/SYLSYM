@@ -276,6 +276,17 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
     );
   }
 
+  void _navigateToStep1FromResult() {
+    setState(() {
+      _currentSalaryPage = 0;
+    });
+    _salaryPageController.animateToPage(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   void _goBack() {
     if (_currentSalaryPage > 0) {
       setState(() {
@@ -415,7 +426,9 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
                         side3Controller: _step2Controllers['side3Controller'],
                         retirementController:
                             _step2Controllers['retirementController'],
-                        currentMonthNotifier: _currentMonth, // ✅ 전달
+                        currentMonthNotifier: _currentMonth,
+                        onNavigateToStep1:
+                            _navigateToStep1FromResult, // ✅ 콜백 전달
                       )
                     else
                       const SizedBox.shrink(),

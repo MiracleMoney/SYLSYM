@@ -35,6 +35,7 @@ class SalaryResultScreen extends StatefulWidget {
   final TextEditingController? retirementController;
 
   final ValueNotifier<DateTime>? currentMonthNotifier;
+  final VoidCallback? onNavigateToStep1; // ✅ 추가
 
   const SalaryResultScreen({
     super.key,
@@ -58,6 +59,7 @@ class SalaryResultScreen extends StatefulWidget {
     this.side3Controller,
     this.retirementController,
     this.currentMonthNotifier,
+    this.onNavigateToStep1, // ✅ 추가
   });
 
   @override
@@ -445,8 +447,10 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                   ),
                 ),
                 onPressed: () {
-                  Navigator.pop(context); // Close modal
-                  Navigator.pop(context); // Go back to edit
+                  Navigator.pop(context); // ✅ 모달만 닫기
+                  if (widget.onNavigateToStep1 != null) {
+                    widget.onNavigateToStep1!(); // ✅ Step1으로 이동 콜백 호출
+                  }
                 },
                 child: const Text(
                   '수정',
