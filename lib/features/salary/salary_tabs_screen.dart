@@ -76,11 +76,15 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
   // ✅ 현재 월의 데이터 확인 및 로드 (없으면 이전 달 데이터 불러오기)
   Future<void> _checkAndLoadMonthData() async {
     if (!mounted) return;
+    // ✅ 이미 컨트롤러가 있으면 (탭 전환 시) 로딩 상태 변경하지 않음
+    final bool shouldShowLoading =
+        _step1Controllers.isEmpty && _step2Controllers.isEmpty;
 
-    setState(() {
-      _isLoadingData = true;
-    });
-
+    if (shouldShowLoading) {
+      setState(() {
+        _isLoadingData = true;
+      });
+    }
     try {
       // 1. 현재 선택된 월의 데이터 먼저 시도
       SalaryCompleteData? data = await _firestoreService.loadSalaryDataByMonth(
@@ -121,7 +125,7 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
 
           setState(() {
             _currentSalaryPage = 0; // ✅ Step1 페이지로 설정
-            _isLoadingData = false;
+            if (shouldShowLoading) _isLoadingData = false;
           });
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -133,7 +137,7 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
           // 이전 달 데이터도 없으면 빈 Step1 유지
           setState(() {
             _currentSalaryPage = 0;
-            _isLoadingData = false;
+            if (shouldShowLoading) _isLoadingData = false;
             _step1Controllers = {};
             _step2Controllers = {};
           });
@@ -150,7 +154,7 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
       if (mounted) {
         setState(() {
           _currentSalaryPage = 0;
-          _isLoadingData = false;
+          if (shouldShowLoading) _isLoadingData = false;
         });
       }
     }

@@ -211,7 +211,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
       if (count % 3 == 0 && i != 0) buffer.write(',');
     }
     final formatted = buffer.toString().split('').reversed.join();
-    return '\$$formatted';
+    return '$formatted ₩';
   }
 
   String _monthLabel(DateTime d) {
@@ -919,6 +919,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
       if (number == null) return text;
 
       final intPart = number.toInt();
+
       return intPart.toString().replaceAllMapped(
         RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
         (Match m) => '${m[1]},',
