@@ -92,31 +92,21 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
           }
         });
       } else {
-        // 2. 현재 월 데이터가 없으면 이전 달 데이터 찾기
-        DateTime checkMonth = DateTime(
+        // 2. 현재 월 데이터가 없으면 바로 이전 달 데이터만 확인
+        final previousMonth = DateTime(
           _currentMonth.value.year,
           _currentMonth.value.month - 1,
         );
 
-        SalaryCompleteData? previousData;
-
-        // 최대 12개월 이전까지 검색
-        for (int i = 0; i < 12; i++) {
-          previousData = await _firestoreService.loadSalaryDataByMonth(
-            checkMonth,
-          );
-
-          if (previousData != null) {
-            print('✅ 이전 달 데이터 발견: ${checkMonth.year}년 ${checkMonth.month}월');
-            break;
-          }
-
-          // 한 달 더 이전으로
-          checkMonth = DateTime(checkMonth.year, checkMonth.month - 1);
-        }
+        final previousData = await _firestoreService.loadSalaryDataByMonth(
+          previousMonth,
+        );
 
         if (previousData != null && mounted) {
-          // ✅ 이전 달 데이터가 있으면 Step1 화면에 표시 (Result 아님!)
+          // ✅ 바로 이전 달 데이터가 있으면 Step1에 표시
+          print(
+            '✅ 이전 달 데이터 발견: ${previousMonth.year}년 ${previousMonth.month}월',
+          );
           _loadDataToControllers(previousData);
 
           setState(() {
@@ -124,14 +114,13 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
             _isLoadingData = false;
           });
 
-          // PageController가 준비된 후 이동
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted && _salaryPageController.hasClients) {
               _salaryPageController.jumpToPage(0); // ✅ Step1으로 이동
             }
           });
         } else {
-          // 데이터가 없으면 Step1 유지
+          // 이전 달 데이터도 없으면 빈 Step1 유지
           setState(() {
             _currentSalaryPage = 0;
             _isLoadingData = false;

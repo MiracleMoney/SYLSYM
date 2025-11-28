@@ -114,7 +114,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
     }
 
     // ✅ 저장된 데이터 불러오기 추가
-    _loadSavedData();
+    // _loadSavedData();
   }
 
   void _onFieldChanged() {
