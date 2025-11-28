@@ -18,7 +18,6 @@ class SalaryTabsScreen extends StatefulWidget {
 class _SalaryTabsScreenState extends State<SalaryTabsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final PageController _salaryPageController = PageController();
   int _currentSalaryPage = 0;
 
   // Step1에서 전달받은 컨트롤러들을 저장
@@ -39,22 +38,22 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
     _tabController = TabController(length: 3, vsync: this);
 
     // ✅ 월급최적화 탭으로 돌아올 때 현재 상태 확인 후 적절한 페이지로 복원
-    _tabController.addListener(() {
-      if (!mounted) return;
+    // _tabController.addListener(() {
+    //   if (!mounted) return;
 
-      // 월급최적화 탭(index 0)으로 돌아왔을 때
-      if (_tabController.index == 0) {
-        // 현재 저장된 페이지 위치로 복원 (리셋하지 않음)
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _salaryPageController.hasClients) {
-            // 애니메이션 없이 즉시 이동
-            if (_salaryPageController.page != _currentSalaryPage.toDouble()) {
-              _salaryPageController.jumpToPage(_currentSalaryPage);
-            }
-          }
-        });
-      }
-    });
+    //   // 월급최적화 탭(index 0)으로 돌아왔을 때
+    //   if (_tabController.index == 0) {
+    //     // 현재 저장된 페이지 위치로 복원 (리셋하지 않음)
+    //     WidgetsBinding.instance.addPostFrameCallback((_) {
+    //       if (mounted && _salaryPageController.hasClients) {
+    //         // 애니메이션 없이 즉시 이동
+    //         if (_salaryPageController.page != _currentSalaryPage.toDouble()) {
+    //           _salaryPageController.jumpToPage(_currentSalaryPage);
+    //         }
+    //       }
+    //     });
+    //   }
+    // });
     // ✅ 현재 월 변경 시 데이터 확인
     _currentMonth.addListener(_checkAndLoadMonthData);
 
@@ -67,7 +66,6 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
     _currentMonth.removeListener(_checkAndLoadMonthData);
 
     _tabController.dispose();
-    _salaryPageController.dispose();
     _currentMonth.dispose(); // ✅ 여기서만 dispose
 
     super.dispose();
@@ -99,12 +97,6 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
           _currentSalaryPage = 2; // Result 페이지
           _isLoadingData = false;
         });
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _salaryPageController.hasClients) {
-            _salaryPageController.jumpToPage(2);
-          }
-        });
       } else {
         // 2. 현재 월 데이터가 없으면 바로 이전 달 데이터만 확인
         final previousMonth = DateTime(
@@ -127,12 +119,6 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
             _currentSalaryPage = 0; // ✅ Step1 페이지로 설정
             if (shouldShowLoading) _isLoadingData = false;
           });
-
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && _salaryPageController.hasClients) {
-              _salaryPageController.jumpToPage(0); // ✅ Step1으로 이동
-            }
-          });
         } else {
           // 이전 달 데이터도 없으면 빈 Step1 유지
           setState(() {
@@ -140,12 +126,6 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
             if (shouldShowLoading) _isLoadingData = false;
             _step1Controllers = {};
             _step2Controllers = {};
-          });
-
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && _salaryPageController.hasClients) {
-              _salaryPageController.jumpToPage(0);
-            }
           });
         }
       }
@@ -260,21 +240,13 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
       _step1Controllers = {};
       _step2Controllers = {};
     });
-    if (_salaryPageController.hasClients) {
-      _salaryPageController.jumpToPage(0);
-    }
   }
 
   void _navigateToStep2(Map<String, dynamic> controllers) {
     setState(() {
       _step1Controllers = controllers;
-      _currentSalaryPage = 1;
+      _currentSalaryPage = 1; // ✅ IndexedStack은 setState만으로 충분
     });
-    _salaryPageController.animateToPage(
-      1,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
   }
 
   void _navigateToResult(Map<String, dynamic> step2Controllers) {
@@ -283,22 +255,12 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
       _step2Controllers = step2Controllers;
       _currentSalaryPage = 2;
     });
-    _salaryPageController.animateToPage(
-      2,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
   }
 
   void _navigateToStep1FromResult() {
     setState(() {
       _currentSalaryPage = 0;
     });
-    _salaryPageController.animateToPage(
-      0,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
   }
 
   void _goBack() {
@@ -306,11 +268,6 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
       setState(() {
         _currentSalaryPage--;
       });
-      _salaryPageController.animateToPage(
-        _currentSalaryPage,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
     }
   }
 
@@ -364,9 +321,8 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
               ? const Center(child: CircularProgressIndicator())
               :
                 // 월급최적화 플로우
-                PageView(
-                  controller: _salaryPageController,
-                  physics: const NeverScrollableScrollPhysics(),
+                IndexedStack(
+                  index: _currentSalaryPage,
                   children: [
                     SalaryStep1Screen(
                       key: ValueKey(
