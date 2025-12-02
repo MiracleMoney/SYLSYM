@@ -7,6 +7,7 @@ import 'package:miraclemoney/features/budget/budget_screen.dart';
 import 'package:miraclemoney/features/asset_status/asset_status_screen.dart';
 import 'package:miraclemoney/models/salary_complete_data.dart';
 import 'package:miraclemoney/services/firestore_service.dart';
+import 'package:flutter/foundation.dart'; // 👈 추가
 
 class SalaryTabsScreen extends StatefulWidget {
   const SalaryTabsScreen({super.key});
@@ -110,9 +111,11 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
 
         if (previousData != null && mounted) {
           // ✅ 바로 이전 달 데이터가 있으면 Step1에 표시
-          print(
-            '✅ 이전 달 데이터 발견: ${previousMonth.year}년 ${previousMonth.month}월',
-          );
+          if (kDebugMode) {
+            print(
+              '✅ 이전 달 데이터 발견: ${previousMonth.year}년 ${previousMonth.month}월',
+            );
+          }
           _loadDataToControllers(previousData);
 
           setState(() {
@@ -130,7 +133,9 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
         }
       }
     } catch (e) {
-      print('데이터 로드 실패: $e');
+      if (kDebugMode) {
+        print('❌ 데이터 로드 중 오류 발생: $e');
+      }
       if (mounted) {
         setState(() {
           _currentSalaryPage = 0;

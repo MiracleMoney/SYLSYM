@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart'; // 👈 1. 이 줄 추가
+
 import '../models/salary_complete_data.dart';
 
 class FirestoreService {
@@ -42,10 +44,14 @@ class FirestoreService {
             data.toJson(),
             SetOptions(merge: true),
           ); // merge: 기존 데이터 유지하면서 업데이트
-
-      print('✅ 월급 데이터 저장 성공: $yearMonth');
+      // 👇 2. if (kDebugMode) { } 로 감싸기
+      if (kDebugMode) {
+        print('✅ 월급 데이터 저장 성공: $yearMonth');
+      }
     } catch (e) {
-      print('❌ 월급 데이터 저장 실패: $e');
+      if (kDebugMode) {
+        print('❌ 월급 데이터 저장 실패: $e');
+      }
       rethrow;
     }
   }
@@ -69,14 +75,20 @@ class FirestoreService {
           .get();
 
       if (!doc.exists || doc.data() == null) {
-        print('ℹ️ 데이터 없음: $yearMonth');
+        if (kDebugMode) {
+          print('ℹ️ 데이터 없음: $yearMonth');
+        }
         return null;
       }
 
-      print('✅ 월급 데이터 불러오기 성공: $yearMonth');
+      if (kDebugMode) {
+        print('✅ 월급 데이터 불러오기 성공: $yearMonth');
+      }
       return SalaryCompleteData.fromJson(doc.data()!);
     } catch (e) {
-      print('❌ 월급 데이터 불러오기 실패: $e');
+      if (kDebugMode) {
+        print('❌ 월급 데이터 불러오기 실패: $e');
+      }
       rethrow;
     }
   }
@@ -101,7 +113,9 @@ class FirestoreService {
           .map((doc) => SalaryCompleteData.fromJson(doc.data()))
           .toList();
     } catch (e) {
-      print('❌ 전체 월급 데이터 불러오기 실패: $e');
+      if (kDebugMode) {
+        print('❌ 전체 월급 데이터 불러오기 실패: $e');
+      }
       return [];
     }
   }
@@ -124,9 +138,13 @@ class FirestoreService {
           .doc(yearMonth)
           .delete();
 
-      print('✅ 월급 데이터 삭제 성공: $yearMonth');
+      if (kDebugMode) {
+        print('✅ 월급 데이터 삭제 성공: $yearMonth');
+      }
     } catch (e) {
-      print('❌ 월급 데이터 삭제 실패: $e');
+      if (kDebugMode) {
+        print('❌ 월급 데이터 삭제 실패: $e');
+      }
       rethrow;
     }
   }

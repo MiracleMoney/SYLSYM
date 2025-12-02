@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart'; // 👈 1. 추가
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -18,7 +19,9 @@ class AuthService {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) {
-        print('사용자가 로그인 취소');
+        if (kDebugMode) {
+          print('❌ 로그인 취소됨');
+        }
         return null;
       }
 
@@ -35,10 +38,14 @@ class AuthService {
       // 4. Firebase에 로그인
       final userCredential = await _auth.signInWithCredential(credential);
 
-      print('✅ 로그인 성공: ${userCredential.user?.email}');
+      if (kDebugMode) {
+        print('✅ 로그인 성공: ${userCredential.user?.email}');
+      }
       return userCredential;
     } catch (e) {
-      print('❌ 로그인 실패: $e');
+      if (kDebugMode) {
+        print('❌ 로그인 실패: $e');
+      }
       rethrow;
     }
   }
@@ -48,9 +55,13 @@ class AuthService {
     try {
       await _googleSignIn.signOut();
       await _auth.signOut();
-      print('✅ 로그아웃 성공');
+      if (kDebugMode) {
+        print('✅ 로그아웃 성공');
+      }
     } catch (e) {
-      print('❌ 로그아웃 실패: $e');
+      if (kDebugMode) {
+        print('❌ 로그아웃 실패: $e');
+      }
       rethrow;
     }
   }
@@ -60,9 +71,13 @@ class AuthService {
     try {
       await currentUser?.delete();
       await _googleSignIn.signOut();
-      print('✅ 계정 삭제 성공');
+      if (kDebugMode) {
+        print('✅ 계정 삭제 성공');
+      }
     } catch (e) {
-      print('❌ 계정 삭제 실패: $e');
+      if (kDebugMode) {
+        print('❌ 계정 삭제 실패: $e');
+      }
       rethrow;
     }
   }
