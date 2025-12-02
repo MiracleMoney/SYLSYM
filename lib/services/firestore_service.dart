@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart'; // 👈 1. 이 줄 추가
-
+import 'package:flutter/foundation.dart'; //
 import '../models/salary_complete_data.dart';
+import '../utils/error_handler.dart'; // 👈 추가
+import '../utils/app_error.dart'; // 👈 추가
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -10,10 +11,14 @@ class FirestoreService {
 
   // 현재 로그인된 사용자 ID (임시: 테스트용 하드코딩)
   String? get currentUserId {
-    // ✅ test_user_id 제거 - 로그인한 사용자만 사용 가능
+    //  test_user_id 제거 - 로그인한 사용자만 사용 가능
     final uid = _auth.currentUser?.uid;
     if (uid == null) {
-      throw Exception('로그인이 필요합니다.');
+      throw AppError(
+        // 👈 Exception 대신 AppError
+        userMessage: '로그인이 필요합니다.\n다시 로그인해주세요.',
+        type: ErrorType.permission,
+      );
     }
     return uid;
   }
@@ -24,27 +29,19 @@ class FirestoreService {
     SalaryCompleteData data, {
     required DateTime targetDate,
   }) async {
-    final userId = currentUserId;
-    if (userId == null) {
-      throw Exception('사용자 ID를 가져올 수 없습니다. 로그인이 필요합니다.');
-    }
-
-    // ✅ targetDate가 있으면 그것 사용, 없으면 현재 날짜 사용
-    final date = targetDate ?? DateTime.now();
-    // 현재 연월을 문서 ID로 사용 (예: "2025-01")
-    final yearMonth = '${date.year}-${date.month.toString().padLeft(2, '0')}';
-
     try {
+      final userId = currentUserId; // null이면 AppError 던짐
+
+      final yearMonth =
+          '${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}';
+
       await _firestore
           .collection('users')
-          .doc(currentUserId)
+          .doc(userId)
           .collection('salary_data')
           .doc(yearMonth)
-          .set(
-            data.toJson(),
-            SetOptions(merge: true),
-          ); // merge: 기존 데이터 유지하면서 업데이트
-      // 👇 2. if (kDebugMode) { } 로 감싸기
+          .set(data.toJson(), SetOptions(merge: true));
+
       if (kDebugMode) {
         print('✅ 월급 데이터 저장 성공: $yearMonth');
       }
@@ -52,21 +49,19 @@ class FirestoreService {
       if (kDebugMode) {
         print('❌ 월급 데이터 저장 실패: $e');
       }
-      rethrow;
+
+      // ✅ Firebase 에러를 AppError로 변환
+      throw ErrorHandler.handleFirebaseError(e);
     }
   }
 
   /// 특정 월의 월급 데이터 불러오기
   Future<SalaryCompleteData?> loadSalaryData({DateTime? targetDate}) async {
-    final userId = currentUserId;
-    if (userId == null) {
-      throw Exception('사용자 ID를 가져올 수 없습니다. 로그인이 필요합니다.');
-    }
-
-    final date = targetDate ?? DateTime.now();
-    final yearMonth = '${date.year}-${date.month.toString().padLeft(2, '0')}';
-
     try {
+      final userId = currentUserId;
+      final date = targetDate ?? DateTime.now();
+      final yearMonth = '${date.year}-${date.month.toString().padLeft(2, '0')}';
+
       final doc = await _firestore
           .collection('users')
           .doc(userId)
@@ -78,29 +73,28 @@ class FirestoreService {
         if (kDebugMode) {
           print('ℹ️ 데이터 없음: $yearMonth');
         }
-        return null;
+        return null; // 데이터 없음은 에러가 아님
       }
 
       if (kDebugMode) {
         print('✅ 월급 데이터 불러오기 성공: $yearMonth');
       }
+
       return SalaryCompleteData.fromJson(doc.data()!);
     } catch (e) {
       if (kDebugMode) {
         print('❌ 월급 데이터 불러오기 실패: $e');
       }
-      rethrow;
+
+      throw ErrorHandler.handleFirebaseError(e);
     }
   }
 
   /// 모든 월급 데이터 목록 가져오기 (최근 12개월)
   Future<List<SalaryCompleteData>> loadAllSalaryData({int limit = 12}) async {
-    final userId = currentUserId;
-    if (userId == null) {
-      throw Exception('사용자 ID를 가져올 수 없습니다. 로그인이 필요합니다.');
-    }
-
     try {
+      final userId = currentUserId;
+
       final querySnapshot = await _firestore
           .collection('users')
           .doc(userId)
@@ -116,21 +110,19 @@ class FirestoreService {
       if (kDebugMode) {
         print('❌ 전체 월급 데이터 불러오기 실패: $e');
       }
+
+      // ✅ 실패해도 빈 리스트 반환 (목록 불러오기는 치명적이지 않음)
       return [];
     }
   }
 
   /// 특정 월 데이터 삭제
   Future<void> deleteSalaryData(DateTime targetDate) async {
-    final userId = currentUserId;
-    if (userId == null) {
-      throw Exception('사용자 ID를 가져올 수 없습니다. 로그인이 필요합니다.');
-    }
-
-    final yearMonth =
-        '${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}';
-
     try {
+      final userId = currentUserId;
+      final yearMonth =
+          '${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}';
+
       await _firestore
           .collection('users')
           .doc(userId)
@@ -145,7 +137,8 @@ class FirestoreService {
       if (kDebugMode) {
         print('❌ 월급 데이터 삭제 실패: $e');
       }
-      rethrow;
+
+      throw ErrorHandler.handleFirebaseError(e);
     }
   }
 

@@ -1,4 +1,5 @@
 // lib/features/salary/salary_result_screen.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:miraclemoney/constants/sizes.dart';
 import 'package:miraclemoney/constants/gaps.dart';
@@ -11,6 +12,8 @@ import '../../../models/salary_step2_data.dart';
 import '../../../models/salary_result_data.dart';
 import 'widgets/month_selector.dart';
 import '../../widgets/common/section_header.dart';
+import '../../utils/app_error.dart';
+import '../../utils/error_handler.dart';
 
 class SalaryResultScreen extends StatefulWidget {
   // Step1 data
@@ -331,9 +334,31 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
     );
   }
 
+  /// ✅ 개선된 저장 메서드
   Future<void> _saveResult() async {
+    // 1. 저장 중 표시
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
+            SizedBox(width: 16),
+            Text('저장 중...'),
+          ],
+        ),
+        duration: Duration(seconds: 30),
+      ),
+    );
+
     try {
-      // 1. Step1 데이터 생성
+      // 2. Step1 데이터 생성
       final step1Data = SalaryStep1Data(
         currentAge: int.tryParse(widget.currentAgeController?.text ?? ''),
         retireAge: int.tryParse(widget.retireAgeController?.text ?? ''),
@@ -350,7 +375,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
         shortTermSaved: _parseController(widget.shortTermSavedController),
       );
 
-      // 2. Step2 데이터 생성
+      // 3. Step2 데이터 생성
       final step2Data = SalaryStep2Data(
         baseSalary: _parseController(widget.baseSalaryController),
         overtime: _parseController(widget.overtimeController),
@@ -362,7 +387,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
         retirement: _parseController(widget.retirementController),
       );
 
-      // 3. Result 데이터 생성
+      // 4. Result 데이터 생성
       final resultData = SalaryResultData(
         emergencyFund: _emergencyFund,
         pensionInvestment: _pensionInvestment,
@@ -374,7 +399,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
         economicFreedomAmount: _economicFreedomAmount,
       );
 
-      // 4. 전체 데이터 통합
+      // 5. 전체 데이터 통합
       final completeData = SalaryCompleteData(
         step1: step1Data,
         step2: step2Data,
@@ -383,33 +408,89 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
         updatedAt: DateTime.now(),
       );
 
-      // 5. Firebase에 저장 - ✅ targetDate 전달
+      // 6. Firebase에 저장
       await _firestoreService.saveSalaryData(
         completeData,
-        targetDate: _currentMonth.value, // ✅ 현재 선택된 월로 저장
+        targetDate: _currentMonth.value,
       );
+
+      // 7. 성공 메시지
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '✅ ${_currentMonth.value.year}년 ${_currentMonth.value.month}월 데이터가 저장되었습니다!',
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              '✅ ${_currentMonth.value.year}년 ${_currentMonth.value.month}월 데이터가 저장되었습니다!',
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
           ),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } catch (e) {
+        );
+    } on AppError catch (appError) {
+      // ✅ AppError 처리 (사용자 친화적)
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('❌ 저장 실패: $e'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(appError.userMessage),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            action: _getErrorAction(appError.type),
+          ),
+        );
+
+      // 개발 모드에서만 기술적 메시지 출력
+      if (kDebugMode && appError.technicalMessage != null) {
+        print('기술적 오류: ${appError.technicalMessage}');
+      }
+    } catch (e) {
+      // ✅ 예상치 못한 에러
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('예상치 못한 오류가 발생했습니다.\n앱을 다시 시작해주세요.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+
+      if (kDebugMode) {
+        print('예상치 못한 오류: $e');
+      }
     }
+  }
+
+  /// ✅ 에러 타입에 맞는 액션 버튼 생성
+  SnackBarAction? _getErrorAction(ErrorType type) {
+    final label = ErrorHandler.getActionLabel(type);
+    if (label == null) return null;
+
+    return SnackBarAction(
+      label: label,
+      textColor: Colors.white,
+      onPressed: () {
+        switch (type) {
+          case ErrorType.network:
+            _saveResult(); // 다시 시도
+            break;
+          case ErrorType.permission:
+            // TODO: 로그인 화면으로 이동
+            if (kDebugMode) {
+              print('로그인 화면으로 이동 필요');
+            }
+            break;
+          default:
+            break;
+        }
+      },
+    );
   }
 
   void _showEditConfirmation() {
