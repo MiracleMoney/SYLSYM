@@ -263,56 +263,6 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
     });
   }
 
-  // 모든 Step1 + Step2 값을 모아서 저장하는 스텁 함수
-  Future<void> _saveAllInputs() async {
-    // 데이터를 수집
-    final Map<String, dynamic> payload = {
-      // Step1 values (전달된 컨트롤러 기준)
-      'currentAge': _s1CurrentAge?.text,
-      'retireAge': _s1RetireAge?.text,
-      'livingExpense': _s1LivingExpense?.text,
-      'snpValue': _s1SnpValue?.text,
-      'expectedReturn': _s1ExpectedReturn?.text,
-      'inflation': _s1Inflation?.text,
-      'hasShortTermGoal': _s1HasShortTermGoal,
-      'selectedShortTermGoal': _s1SelectedShortTerm,
-      'shortTermAmount': _s1ShortAmount?.text,
-      'shortTermDuration': _s1ShortDuration?.text,
-      'shortTermSaved': _s1ShortSaved?.text,
-
-      // Step2 values (this screen)
-      'baseSalary': _baseSalaryController.text,
-      'overtime': _overtimeController.text,
-      'bonus': _bonusController.text,
-      'incentive': _incentiveController.text,
-      'side1': _side1Controller.text,
-      'side2': _side2Controller.text,
-      'side3': _side3Controller.text,
-      'retirementContribution': _retirementController.text,
-    };
-
-    // TODO: 실제 저장 로직 (API 호출, SharedPreferences, Firestore 등)
-    // 예시: await MyDb.saveSalaryForm(payload);
-
-    // 임시: 콘솔 출력 + 사용자 안내
-    // ignore: avoid_print
-    print('Saving salary payload: $payload');
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Inputs saved (stub)')));
-  }
-
-  String _monthLabel(DateTime d) {
-    return '${d.year}년 ${d.month}월';
-  }
-
-  // 간단한 숫자 파서 (콤마 제거)
-  double _parseCurrency(String s) {
-    final t = s.replaceAll(RegExp(r'[^0-9.]'), '');
-    return double.tryParse(t) ?? 0.0;
-  }
-
   String _formatCurrency(double value) {
     final intPart = value.round();
     final s = intPart.toString();
