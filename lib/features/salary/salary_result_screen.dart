@@ -9,6 +9,7 @@ import '../../../models/salary_complete_data.dart';
 import '../../../models/salary_step1_data.dart';
 import '../../../models/salary_step2_data.dart';
 import '../../../models/salary_result_data.dart';
+import 'widgets/month_selector.dart';
 
 class SalaryResultScreen extends StatefulWidget {
   // Step1 data
@@ -497,38 +498,22 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Month selector
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: () {
-                    final prev = DateTime(
-                      _currentMonth.value.year,
-                      _currentMonth.value.month - 1,
-                    );
-                    _currentMonth.value = prev;
-                  },
-                ),
-                Text(
-                  _monthLabel(_currentMonth.value),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontFamily: 'Gmarket_sans',
-                    fontSize: Sizes.size16 + Sizes.size2,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: () {
-                    final next = DateTime(
-                      _currentMonth.value.year,
-                      _currentMonth.value.month + 1,
-                    );
-                    _currentMonth.value = next;
-                  },
-                ),
-              ],
+            MonthSelector(
+              currentMonth: _currentMonth.value,
+              onPreviousMonth: () {
+                final prev = DateTime(
+                  _currentMonth.value.year,
+                  _currentMonth.value.month - 1,
+                );
+                _currentMonth.value = prev;
+              },
+              onNextMonth: () {
+                final next = DateTime(
+                  _currentMonth.value.year,
+                  _currentMonth.value.month + 1,
+                );
+                _currentMonth.value = next;
+              },
             ),
 
             Gaps.v12,

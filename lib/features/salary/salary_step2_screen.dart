@@ -7,6 +7,7 @@ import 'widgets/form_widgets.dart';
 import 'widgets/number_input_field.dart';
 import 'dart:math';
 import 'salary_result_screen.dart';
+import 'widgets/month_selector.dart';
 
 class SalaryStep2Screen extends StatefulWidget {
   final void Function(Map<String, dynamic>)? onNavigateToResult; // ✅ 타입 변경
@@ -441,40 +442,22 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: () {
-                    final prev = DateTime(
-                      _currentMonth.value.year,
-                      _currentMonth.value.month - 1,
-                    );
-                    _currentMonth.value = prev; // ValueNotifier 업데이트
-                  },
-                ),
-
-                Text(
-                  _monthLabel(_currentMonth.value),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontFamily: 'Gmarket_sans',
-                    fontSize: Sizes.size16 + Sizes.size2,
-                  ),
-                ),
-
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: () {
-                    final next = DateTime(
-                      _currentMonth.value.year,
-                      _currentMonth.value.month + 1,
-                    );
-                    _currentMonth.value = next; // ValueNotifier 업데이트
-                  },
-                ),
-              ],
+            MonthSelector(
+              currentMonth: _currentMonth.value,
+              onPreviousMonth: () {
+                final prev = DateTime(
+                  _currentMonth.value.year,
+                  _currentMonth.value.month - 1,
+                );
+                _currentMonth.value = prev;
+              },
+              onNextMonth: () {
+                final next = DateTime(
+                  _currentMonth.value.year,
+                  _currentMonth.value.month + 1,
+                );
+                _currentMonth.value = next;
+              },
             ),
 
             Gaps.v12,

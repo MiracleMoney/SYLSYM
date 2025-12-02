@@ -9,6 +9,7 @@ import 'salary_step2_screen.dart'; // same-folde
 import 'widgets/bottom_action_button.dart';
 import 'widgets/number_input_field.dart';
 import '../../../services/firestore_service.dart';
+import 'widgets/month_selector.dart';
 
 class SalaryStep1Screen extends StatefulWidget {
   final void Function(Map<String, dynamic>)? onNavigateToStep2;
@@ -549,38 +550,22 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // ---------- 월 네비게이션 바 (상단) ----------
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left),
-                      onPressed: () {
-                        final prev = DateTime(
-                          _currentMonth.value.year,
-                          _currentMonth.value.month - 1,
-                        );
-                        _changeMonth(prev);
-                      },
-                    ),
-                    Text(
-                      '${_currentMonth.value.year}년 ${_currentMonth.value.month}월',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontFamily: "Gmarket_sans",
-                        fontWeight: FontWeight.w500,
-                        fontSize: Sizes.size16 + Sizes.size2,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.chevron_right),
-                      onPressed: () {
-                        final next = DateTime(
-                          _currentMonth.value.year,
-                          _currentMonth.value.month + 1,
-                        );
-                        _changeMonth(next);
-                      },
-                    ),
-                  ],
+                MonthSelector(
+                  currentMonth: _currentMonth.value,
+                  onPreviousMonth: () {
+                    final prev = DateTime(
+                      _currentMonth.value.year,
+                      _currentMonth.value.month - 1,
+                    );
+                    _changeMonth(prev);
+                  },
+                  onNextMonth: () {
+                    final next = DateTime(
+                      _currentMonth.value.year,
+                      _currentMonth.value.month + 1,
+                    );
+                    _changeMonth(next);
+                  },
                 ),
                 Gaps.v12,
                 Row(
