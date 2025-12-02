@@ -10,6 +10,7 @@ import '../../../models/salary_step1_data.dart';
 import '../../../models/salary_step2_data.dart';
 import '../../../models/salary_result_data.dart';
 import 'widgets/month_selector.dart';
+import '../../widgets/common/section_header.dart';
 
 class SalaryResultScreen extends StatefulWidget {
   // Step1 data
@@ -537,16 +538,10 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                   // header
                   Row(
                     children: [
-                      const Icon(Icons.calculate_outlined, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        '목표 금액',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontFamily: 'Gmarket_sans',
-                              fontWeight: FontWeight.w700,
-                              fontSize: Sizes.size16 + Sizes.size4,
-                            ),
+                      SectionHeader(
+                        icon: Icons.calculate_outlined,
+                        title: '목표 금액',
+                        fontSize: Sizes.size16 + Sizes.size4,
                       ),
                     ],
                   ),
@@ -629,15 +624,10 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
             Gaps.v32,
             Row(
               children: [
-                const Icon(Icons.pie_chart_outline, size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  '월급 분리',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontFamily: 'Gmarket_sans',
-                    fontWeight: FontWeight.w700,
-                    fontSize: Sizes.size16 + Sizes.size4,
-                  ),
+                SectionHeader(
+                  icon: Icons.pie_chart_outline,
+                  title: '월급 분리',
+                  fontSize: Sizes.size16 + Sizes.size4,
                 ),
               ],
             ),

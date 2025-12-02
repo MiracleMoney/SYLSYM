@@ -8,6 +8,7 @@ import 'widgets/number_input_field.dart';
 import 'dart:math';
 import 'salary_result_screen.dart';
 import 'widgets/month_selector.dart';
+import '../../widgets/common/section_header.dart';
 
 class SalaryStep2Screen extends StatefulWidget {
   final void Function(Map<String, dynamic>)? onNavigateToResult; // ✅ 타입 변경
@@ -463,19 +464,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
             Gaps.v12,
             Row(
               children: [
-                const Icon(
-                  Icons.payments_outlined,
-                  size: 18,
-                ), // 또는 Icons.pie_chart
-                const SizedBox(width: 8),
-                Text(
-                  '본업 수입',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontFamily: 'Gmarket_sans',
-                    fontWeight: FontWeight.w700,
-                    fontSize: Sizes.size20,
-                  ),
-                ),
+                SectionHeader(icon: Icons.payments_outlined, title: '본업 수입'),
               ],
             ),
             Gaps.v12,
@@ -518,18 +507,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
 
             Gaps.v32,
             Row(
-              children: [
-                const Icon(Icons.money, size: 18), // 또는 Icons.pie_chart
-                const SizedBox(width: 8),
-                Text(
-                  '추가 수입',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontFamily: 'Gmarket_sans',
-                    fontWeight: FontWeight.w700,
-                    fontSize: Sizes.size20,
-                  ),
-                ),
-              ],
+              children: [SectionHeader(icon: Icons.money, title: '추가 수입')],
             ),
             Gaps.v12,
             NumberInputField(
@@ -563,18 +541,10 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
             // retirement card
             Row(
               children: [
-                const Icon(
-                  Icons.monetization_on_outlined,
-                  size: 18,
-                ), // 또는 Icons.pie_chart
-                const SizedBox(width: 8),
-                Text(
-                  '퇴직금 투자 금액',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontFamily: 'Gmarket_sans',
-                    fontWeight: FontWeight.w700,
-                    fontSize: Sizes.size16 + Sizes.size4,
-                  ),
+                SectionHeader(
+                  icon: Icons.monetization_on_outlined,
+                  title: '퇴직금 투자 금액',
+                  fontSize: Sizes.size16 + Sizes.size4,
                 ),
               ],
             ),

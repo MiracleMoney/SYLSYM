@@ -10,6 +10,7 @@ import 'widgets/bottom_action_button.dart';
 import 'widgets/number_input_field.dart';
 import '../../../services/firestore_service.dart';
 import 'widgets/month_selector.dart';
+import '../../widgets/common/section_header.dart';
 
 class SalaryStep1Screen extends StatefulWidget {
   final void Function(Map<String, dynamic>)? onNavigateToStep2;
@@ -570,18 +571,9 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                 Gaps.v12,
                 Row(
                   children: [
-                    const Icon(
-                      Icons.flag_outlined, // 또는 Icons.trending_up
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '경제적자유 목표 설정',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontFamily: 'Gmarket_sans',
-                        fontWeight: FontWeight.w700,
-                        fontSize: Sizes.size20,
-                      ),
+                    SectionHeader(
+                      icon: Icons.flag_outlined,
+                      title: '경제적자유 목표 설정',
                     ),
                   ],
                 ),
