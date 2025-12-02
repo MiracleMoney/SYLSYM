@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:miraclemoney/features/admin/admin_code_generator_screen.dart';
+import 'package:miraclemoney/features/admin/admin_password_dialog.dart'; // ✅ 추가
 import '../auth/auth_service.dart';
 
 class MyRoomScreen extends StatelessWidget {
@@ -99,6 +101,35 @@ class MyRoomScreen extends StatelessWidget {
               // TODO: 앱 정보 화면
             },
           ),
+
+          // ✅ 관리자만 보이는 버튼
+          if (AdminAuth.isAdmin()) ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(
+                Icons.admin_panel_settings,
+                color: Colors.red,
+              ),
+              title: const Text(
+                '🔐 관리자 페이지',
+                style: TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  color: Colors.red,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              trailing: const Icon(Icons.chevron_right, color: Colors.red),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AdminCodeGeneratorScreen(),
+                  ),
+                );
+              },
+            ),
+          ],
+
           const Divider(),
 
           // 로그아웃
