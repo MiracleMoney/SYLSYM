@@ -91,6 +91,8 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
   String _calculatedFreedomTarget = '\$0';
 
   late final List<TextEditingController> _allStep2Controllers;
+  // ✅ ValueNotifier 추가 (성능 최적화)
+  final ValueNotifier<bool> _allFieldsFilledNotifier = ValueNotifier(false);
 
   @override
   void initState() {
@@ -145,14 +147,17 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
     for (final c in _allStep2Controllers) {
       c.addListener(_onFieldChanged);
     }
+    // ✅ 초기값 설정
+    _allFieldsFilledNotifier.value = _allFieldsFilled;
 
     // 초기 계산 (한 번)
     _recomputeFromStep1();
   }
 
+  // ✅ 수정: setState 대신 ValueNotifier 업데이트
   void _onFieldChanged() {
     if (!mounted) return;
-    setState(() {});
+    _allFieldsFilledNotifier.value = _allFieldsFilled;
   }
 
   // 월 변경 리스너 (Step2 화면 갱신)
@@ -163,6 +168,9 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
 
   @override
   void dispose() {
+    // ✅ ValueNotifier dispose 추가 (제일 먼저)
+    _allFieldsFilledNotifier.dispose();
+
     _baseSalaryController.dispose();
     _overtimeController.dispose();
     _bonusController.dispose();
@@ -412,7 +420,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
             ),
 
             Gaps.v12,
-            Row(
+            const Row(
               children: [
                 SectionHeader(icon: Icons.payments_outlined, title: '본업 수입'),
               ],
@@ -521,12 +529,17 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
         ),
       ),
 
-      // BottomActionButton을 사용하여 동적 버튼 구현
-      bottomNavigationBar: BottomActionButton(
-        allFieldsFilled: _allFieldsFilled,
-        onNext: _onNext,
-        onNavigate: _onCalculate,
-        buttonFocus: _actionButtonFocus,
+      // ✅ ValueListenableBuilder로 감싸서 버튼만 rebuild
+      bottomNavigationBar: ValueListenableBuilder<bool>(
+        valueListenable: _allFieldsFilledNotifier,
+        builder: (context, allFilled, child) {
+          return BottomActionButton(
+            allFieldsFilled: allFilled,
+            onNext: _onNext,
+            onNavigate: _onCalculate,
+            buttonFocus: _actionButtonFocus,
+          );
+        },
       ),
     );
   }
