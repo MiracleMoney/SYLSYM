@@ -1,25 +1,27 @@
-// lib/features/admin/admin_code_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../models/invite_code.dart';
 import '../../services/invite_code_generator.dart';
+import '../../models/invite_code.dart';
 
-class AdminCodeListScreen extends StatefulWidget {
-  const AdminCodeListScreen({super.key});
+class AdminCodeListTab extends StatefulWidget {
+  const AdminCodeListTab({super.key});
 
   @override
-  State<AdminCodeListScreen> createState() => _AdminCodeListScreenState();
+  State<AdminCodeListTab> createState() => _AdminCodeListTabState();
 }
 
-class _AdminCodeListScreenState extends State<AdminCodeListScreen> {
+class _AdminCodeListTabState extends State<AdminCodeListTab>
+    with AutomaticKeepAliveClientMixin {
   final InviteCodeGenerator _generator = InviteCodeGenerator();
   final TextEditingController _searchController = TextEditingController();
 
   List<InviteCode> _allCodes = [];
   List<InviteCode> _filteredCodes = [];
   bool _isLoading = true;
-  String _filterStatus = 'all'; // all, used, unused
+  String _filterStatus = 'all';
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -67,21 +69,36 @@ class _AdminCodeListScreenState extends State<AdminCodeListScreen> {
 
   /// 📊 상태별 필터링 (전체/사용됨/미사용)
   void _applyStatusFilter() {
+    List<InviteCode> baseCodes = _searchController.text.isEmpty
+        ? _allCodes
+        : _allCodes
+              .where(
+                (code) =>
+                    code.code.toLowerCase().contains(
+                      _searchController.text.toLowerCase(),
+                    ) ||
+                    (code.description?.toLowerCase().contains(
+                          _searchController.text.toLowerCase(),
+                        ) ??
+                        false),
+              )
+              .toList();
+
     setState(() {
       switch (_filterStatus) {
         case 'used':
-          _filteredCodes = _filteredCodes
+          _filteredCodes = baseCodes
               .where((code) => code.usageCount >= code.maxUsage)
               .toList();
           break;
         case 'unused':
-          _filteredCodes = _filteredCodes
+          _filteredCodes = baseCodes
               .where((code) => code.usageCount < code.maxUsage)
               .toList();
           break;
         case 'all':
         default:
-          // 이미 _filteredCodes에 반영됨
+          _filteredCodes = baseCodes;
           break;
       }
     });
@@ -119,7 +136,7 @@ class _AdminCodeListScreenState extends State<AdminCodeListScreen> {
       try {
         await _generator.deactivateCode(code.code);
         _showSnackBar('✅ ${code.code} 비활성화 완료', Colors.green);
-        _loadCodes(); // 목록 새로고침
+        _loadCodes();
       } catch (e) {
         _showSnackBar('❌ 비활성화 실패: $e', Colors.red);
       }
@@ -148,164 +165,158 @@ class _AdminCodeListScreenState extends State<AdminCodeListScreen> {
   }
 
   void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: color,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: color,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final stats = _getStatistics();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          '📊 초대 코드 관리',
-          style: TextStyle(fontFamily: 'Gmarket_sans'),
+    return Column(
+      children: [
+        // 📊 통계 카드
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildStatItem('전체', stats['total']!, Colors.blue),
+                  _buildStatItem('사용됨', stats['used']!, Colors.green),
+                  _buildStatItem('미사용', stats['unused']!, Colors.orange),
+                  _buildStatItem('비활성', stats['inactive']!, Colors.red),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: stats['total']! > 0
+                      ? stats['used']! / stats['total']!
+                      : 0,
+                  minHeight: 8,
+                  backgroundColor: Colors.grey.shade300,
+                  valueColor: const AlwaysStoppedAnimation(Colors.green),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '사용률: ${stats['total']! > 0 ? ((stats['used']! / stats['total']!) * 100).toStringAsFixed(1) : 0}%',
+                style: TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  fontSize: 12,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+            ],
+          ),
         ),
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadCodes,
-            tooltip: '새로고침',
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // 📊 통계 카드
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatItem('전체', stats['total']!, Colors.blue),
-                    _buildStatItem('사용됨', stats['used']!, Colors.green),
-                    _buildStatItem('미사용', stats['unused']!, Colors.orange),
-                    _buildStatItem('비활성', stats['inactive']!, Colors.red),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // 진행률 바
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(
-                    value: stats['total']! > 0
-                        ? stats['used']! / stats['total']!
-                        : 0,
-                    minHeight: 8,
-                    backgroundColor: Colors.grey.shade300,
-                    valueColor: const AlwaysStoppedAnimation(Colors.green),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '사용률: ${stats['total']! > 0 ? ((stats['used']! / stats['total']!) * 100).toStringAsFixed(1) : 0}%',
-                  style: TextStyle(
-                    fontFamily: 'Gmarket_sans',
-                    fontSize: 12,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-              ],
-            ),
-          ),
 
-          // 🔍 검색 & 필터
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                // 검색창
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: '코드 또는 설명 검색',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _searchController.clear();
-                              _filterCodes('');
-                            },
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+        // 🔍 검색 & 필터
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: '코드 또는 설명 검색',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _filterCodes('');
+                                },
+                              )
+                            : null,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onChanged: _filterCodes,
                     ),
                   ),
-                  onChanged: _filterCodes,
-                ),
-                const SizedBox(height: 12),
-                // 상태 필터 버튼
-                Row(
-                  children: [
-                    _buildFilterChip('전체', 'all'),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('사용됨', 'used'),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('미사용', 'unused'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // 📋 코드 목록
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _filteredCodes.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 64,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          '코드가 없습니다',
-                          style: TextStyle(
-                            fontFamily: 'Gmarket_sans',
-                            fontSize: 16,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _filteredCodes.length,
-                    itemBuilder: (context, index) {
-                      final code = _filteredCodes[index];
-                      return _buildCodeCard(code);
-                    },
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: _loadCodes,
+                    tooltip: '새로고침',
                   ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _buildFilterChip('전체', 'all'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('사용됨', 'used'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('미사용', 'unused'),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+
+        // 📋 코드 목록
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _filteredCodes.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.search_off,
+                        size: 64,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        '코드가 없습니다',
+                        style: TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontSize: 16,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: _filteredCodes.length,
+                  itemBuilder: (context, index) {
+                    final code = _filteredCodes[index];
+                    return _buildCodeCard(code);
+                  },
+                ),
+        ),
+      ],
     );
   }
 
-  /// 📊 통계 아이템 위젯
   Widget _buildStatItem(String label, int value, Color color) {
     return Column(
       children: [
@@ -331,7 +342,6 @@ class _AdminCodeListScreenState extends State<AdminCodeListScreen> {
     );
   }
 
-  /// 🔘 필터 칩 위젯
   Widget _buildFilterChip(String label, String value) {
     final isSelected = _filterStatus == value;
     return FilterChip(
@@ -340,7 +350,7 @@ class _AdminCodeListScreenState extends State<AdminCodeListScreen> {
       onSelected: (selected) {
         setState(() {
           _filterStatus = value;
-          _filterCodes(_searchController.text);
+          _applyStatusFilter();
         });
       },
       selectedColor: Colors.black,
@@ -352,7 +362,6 @@ class _AdminCodeListScreenState extends State<AdminCodeListScreen> {
     );
   }
 
-  /// 🎫 코드 카드 위젯
   Widget _buildCodeCard(InviteCode code) {
     final isUsed = code.usageCount >= code.maxUsage;
     final isExpired =
@@ -370,11 +379,9 @@ class _AdminCodeListScreenState extends State<AdminCodeListScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 코드 & 상태
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // 코드
                   Expanded(
                     child: Text(
                       code.code,
@@ -386,7 +393,6 @@ class _AdminCodeListScreenState extends State<AdminCodeListScreen> {
                       ),
                     ),
                   ),
-                  // 상태 배지
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -421,8 +427,6 @@ class _AdminCodeListScreenState extends State<AdminCodeListScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-
-              // 사용 현황
               Row(
                 children: [
                   Icon(Icons.people, size: 16, color: Colors.grey.shade600),
@@ -452,8 +456,6 @@ class _AdminCodeListScreenState extends State<AdminCodeListScreen> {
                   ),
                 ],
               ),
-
-              // 설명
               if (code.description != null) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -466,8 +468,6 @@ class _AdminCodeListScreenState extends State<AdminCodeListScreen> {
                   ),
                 ),
               ],
-
-              // 만료일
               if (code.expiresAt != null) ...[
                 const SizedBox(height: 8),
                 Row(
@@ -489,8 +489,6 @@ class _AdminCodeListScreenState extends State<AdminCodeListScreen> {
                   ],
                 ),
               ],
-
-              // 버튼들
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -532,7 +530,6 @@ class _AdminCodeListScreenState extends State<AdminCodeListScreen> {
     );
   }
 
-  /// 📅 날짜 포맷
   String _formatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }

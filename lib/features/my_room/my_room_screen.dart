@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:miraclemoney/features/admin/admin_code_generator_screen.dart';
-import 'package:miraclemoney/features/admin/admin_password_dialog.dart'; // ✅ 추가
+import 'package:miraclemoney/features/admin/admin_home_screen.dart'; // ✅ 변경
+import 'package:miraclemoney/features/admin/admin_password_dialog.dart';
 import '../auth/auth_service.dart';
 
 class MyRoomScreen extends StatelessWidget {
@@ -123,7 +123,7 @@ class MyRoomScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const AdminCodeGeneratorScreen(),
+                    builder: (context) => const AdminHomeScreen(),
                   ),
                 );
               },
