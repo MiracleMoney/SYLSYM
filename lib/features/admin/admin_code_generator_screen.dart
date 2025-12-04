@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../services/invite_code_generator.dart';
 import '../../models/invite_code.dart';
 import 'admin_password_dialog.dart'; // AdminAuth 사용
+import 'admin_code_list_screen.dart';
 
 class AdminCodeGeneratorScreen extends StatefulWidget {
   const AdminCodeGeneratorScreen({super.key});
@@ -282,6 +283,18 @@ class _AdminCodeGeneratorScreenState extends State<AdminCodeGeneratorScreen> {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.list_alt),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AdminCodeListScreen(),
+                ),
+              );
+            },
+            tooltip: '코드 목록',
+          ),
           // 현재 관리자 이메일 표시
           Padding(
             padding: const EdgeInsets.only(right: 16),
