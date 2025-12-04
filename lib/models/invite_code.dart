@@ -11,6 +11,7 @@ class InviteCode {
   final DateTime createdAt; // 생성일
   final String? description; // 설명 (예: "1월 프로모션")
   final DateTime? expiresAt; // 만료일 (선택)
+  final bool? isConfirmed; // ✨ 추가
 
   InviteCode({
     required this.code,
@@ -20,6 +21,7 @@ class InviteCode {
     required this.createdAt,
     this.description,
     this.expiresAt,
+    this.isConfirmed, // ✨ 추가
   });
 
   /// Firestore에서 읽기

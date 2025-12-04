@@ -1,22 +1,161 @@
-//2️⃣ 코드 생성 서비스 - 무작위 + 중복 방지
-
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import '../models/invite_code.dart';
 
-/// 초대 코드 생성 및 관리 서비스
 class InviteCodeGenerator {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static const String _chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   final Random _random = Random();
 
-  /// 🔐 혼동 방지 문자셋 (I, O, 0, 1 제외)
-  /// - I와 1 헷갈림 방지
-  /// - O와 0 헷갈림 방지
-  static const String _chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  /// 🎫 대량 코드 생성
+  Future<List<InviteCode>> generateBulkCodes({
+    required int count,
+    int maxUsage = 1,
+    String? description,
+    bool markAsUnconfirmed = false,
+    Function(int current, int total)? onProgress,
+  }) async {
+    final codes = <InviteCode>[];
+    final batch = _firestore.batch();
 
-  /// 📝 8자리 무작위 코드 생성
-  /// 예시: A3K9M7H2, ZP4R8N3Q
+    for (int i = 0; i < count; i++) {
+      final code = await generateCode(
+        maxUsage: maxUsage,
+        description: description,
+        saveToDB: false,
+      );
+
+      codes.add(code);
+
+      final docRef = _firestore.collection('invite_codes').doc(code.code);
+      final data = {
+        'code': code.code,
+        'isActive': code.isActive,
+        'usageCount': code.usageCount,
+        'maxUsage': code.maxUsage,
+        'createdAt': code.createdAt,
+        'expiresAt': code.expiresAt,
+        'description': code.description,
+      };
+
+      if (markAsUnconfirmed) {
+        data['isConfirmed'] = false;
+        data['batchId'] = DateTime.now().millisecondsSinceEpoch.toString();
+      }
+
+      batch.set(docRef, data);
+
+      if (onProgress != null) {
+        onProgress(i + 1, count);
+      }
+    }
+
+    await batch.commit();
+    return codes;
+  }
+
+  /// 📋 모든 코드 가져오기
+  Future<List<InviteCode>> getAllCodes() async {
+    final snapshot = await _firestore
+        .collection('invite_codes')
+        .orderBy('createdAt', descending: true)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return InviteCode(
+        code: data['code'] as String,
+        isActive: data['isActive'] as bool? ?? true,
+        usageCount: data['usageCount'] as int? ?? 0,
+        maxUsage: data['maxUsage'] as int? ?? 1,
+        createdAt: (data['createdAt'] as Timestamp).toDate(),
+        expiresAt: data['expiresAt'] != null
+            ? (data['expiresAt'] as Timestamp).toDate()
+            : null,
+        description: data['description'] as String?,
+        isConfirmed: data['isConfirmed'] as bool?, // ✨ 추가
+      );
+    }).toList();
+  }
+
+  /// 💾 미확인 코드 불러오기
+  Future<List<InviteCode>> getUnconfirmedCodes() async {
+    final snapshot = await _firestore
+        .collection('invite_codes')
+        .where('isConfirmed', isEqualTo: false)
+        .orderBy('createdAt', descending: true)
+        .limit(1000)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return InviteCode(
+        code: data['code'] as String,
+        isActive: data['isActive'] as bool? ?? true,
+        usageCount: data['usageCount'] as int? ?? 0,
+        maxUsage: data['maxUsage'] as int? ?? 1,
+        createdAt: (data['createdAt'] as Timestamp).toDate(),
+        expiresAt: data['expiresAt'] != null
+            ? (data['expiresAt'] as Timestamp).toDate()
+            : null,
+        description: data['description'] as String?,
+        isConfirmed: false, // ✨ 미확인
+      );
+    }).toList();
+  }
+
+  /// ✅ 코드를 확인됨으로 표시
+  Future<void> markCodesAsConfirmed(List<InviteCode> codes) async {
+    final batch = _firestore.batch();
+
+    for (final code in codes) {
+      final docRef = _firestore.collection('invite_codes').doc(code.code);
+      batch.update(docRef, {'isConfirmed': true});
+    }
+
+    await batch.commit();
+  }
+
+  /// 🎟️ 단일 코드 생성
+  Future<InviteCode> generateCode({
+    int maxUsage = 1,
+    DateTime? expiresAt,
+    String? description,
+    bool saveToDB = true,
+  }) async {
+    String code;
+
+    do {
+      code = _generateRandomCode();
+    } while (await _isCodeExists(code));
+
+    final inviteCode = InviteCode(
+      code: code,
+      isActive: true,
+      usageCount: 0,
+      maxUsage: maxUsage,
+      createdAt: DateTime.now(),
+      expiresAt: expiresAt,
+      description: description,
+    );
+
+    if (saveToDB) {
+      await _firestore.collection('invite_codes').doc(code).set({
+        'code': inviteCode.code,
+        'isActive': inviteCode.isActive,
+        'usageCount': inviteCode.usageCount,
+        'maxUsage': inviteCode.maxUsage,
+        'createdAt': inviteCode.createdAt,
+        'expiresAt': inviteCode.expiresAt,
+        'description': inviteCode.description,
+        'isConfirmed': true,
+      });
+    }
+
+    return inviteCode;
+  }
+
+  /// 🎲 8자리 무작위 코드 생성
   String _generateRandomCode() {
     return List.generate(
       8,
@@ -24,153 +163,58 @@ class InviteCodeGenerator {
     ).join();
   }
 
-  /// ✅ 중복 확인 (Firestore에 이미 존재하는지)
-  Future<bool> _codeExists(String code) async {
-    try {
-      final doc = await _db.collection('invite_codes').doc(code).get();
-      return doc.exists;
-    } catch (e) {
-      if (kDebugMode) {
-        print('코드 중복 확인 실패: $e');
-      }
-      return true; // 에러 발생 시 중복으로 간주 (안전)
+  /// ✅ 코드 존재 여부 확인
+  Future<bool> _isCodeExists(String code) async {
+    final doc = await _firestore.collection('invite_codes').doc(code).get();
+    return doc.exists;
+  }
+
+  /// 🔄 코드 활성/비활성 토글
+  Future<void> toggleCodeActive(String code) async {
+    final docRef = _firestore.collection('invite_codes').doc(code);
+    final doc = await docRef.get();
+
+    if (doc.exists) {
+      final isActive = doc.data()?['isActive'] as bool? ?? true;
+      await docRef.update({'isActive': !isActive});
     }
   }
 
-  /// 🔄 중복되지 않는 고유 코드 생성 (최대 20회 시도)
-  Future<String> _generateUniqueCode() async {
-    for (int attempt = 0; attempt < 20; attempt++) {
-      final code = _generateRandomCode();
-
-      // 중복 확인
-      if (!await _codeExists(code)) {
-        if (kDebugMode) {
-          print('✅ 고유 코드 생성 성공: $code (시도 ${attempt + 1}회)');
-        }
-        return code;
-      }
-
-      if (kDebugMode) {
-        print('⚠️ 코드 중복: $code (재시도 ${attempt + 1}/20)');
-      }
-    }
-
-    // 20회 시도 후에도 실패하면 타임스탬프 추가
-    final fallbackCode =
-        _generateRandomCode().substring(0, 6) +
-        DateTime.now().millisecondsSinceEpoch.toString().substring(11);
-
-    if (kDebugMode) {
-      print('⚠️ 20회 시도 실패, 타임스탬프 코드 생성: $fallbackCode');
-    }
-
-    return fallbackCode;
+  /// 🗑️ 코드 삭제
+  Future<void> deleteCode(String code) async {
+    await _firestore.collection('invite_codes').doc(code).delete();
   }
 
-  /// 🎫 단일 코드 생성
-  Future<InviteCode> generateSingleCode({
-    required int maxUsage,
-    String? description,
-    DateTime? expiresAt,
-  }) async {
-    final code = await _generateUniqueCode();
-    final inviteCode = InviteCode(
-      code: code,
-      isActive: true,
-      maxUsage: maxUsage,
-      usageCount: 0,
-      createdAt: DateTime.now(),
-      description: description,
-      expiresAt: expiresAt,
-    );
+  /// 📊 코드 통계 가져오기
+  Future<Map<String, dynamic>> getCodeStats() async {
+    final snapshot = await _firestore.collection('invite_codes').get();
 
-    // Firestore에 저장
-    await _db
-        .collection('invite_codes')
-        .doc(code)
-        .set(inviteCode.toFirestore());
+    int totalCodes = snapshot.docs.length;
+    int activeCodes = 0;
+    int usedCodes = 0;
+    int availableCodes = 0;
 
-    if (kDebugMode) {
-      print('✅ 단일 코드 생성 완료: $code');
-    }
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final isActive = data['isActive'] as bool? ?? false;
+      final usageCount = data['usageCount'] as int? ?? 0;
+      final maxUsage = data['maxUsage'] as int? ?? 1;
 
-    return inviteCode;
-  }
-
-  /// 🎫🎫🎫 대량 코드 생성
-  Future<List<InviteCode>> generateBulkCodes({
-    required int count,
-    required int maxUsage,
-    String? description,
-    DateTime? expiresAt,
-    Function(int current, int total)? onProgress,
-  }) async {
-    final List<InviteCode> generatedCodes = [];
-
-    for (int i = 1; i <= count; i++) {
-      try {
-        final code = await _generateUniqueCode();
-        final inviteCode = InviteCode(
-          code: code,
-          isActive: true,
-          maxUsage: maxUsage,
-          usageCount: 0,
-          createdAt: DateTime.now(),
-          description: description ?? '대량 생성 $i/$count',
-          expiresAt: expiresAt,
-        );
-
-        // Firestore에 저장
-        await _db
-            .collection('invite_codes')
-            .doc(code)
-            .set(inviteCode.toFirestore());
-
-        generatedCodes.add(inviteCode);
-
-        // 진행 상황 콜백
-        if (onProgress != null) {
-          onProgress(i, count);
-        }
-
-        if (kDebugMode) {
-          print('[$i/$count] 생성: $code');
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          print('❌ [$i/$count] 생성 실패: $e');
+      if (isActive) {
+        activeCodes++;
+        if (usageCount < maxUsage) {
+          availableCodes++;
+        } else {
+          usedCodes++;
         }
       }
     }
 
-    if (kDebugMode) {
-      print('✅ 총 ${generatedCodes.length}개 코드 생성 완료');
-    }
-
-    return generatedCodes;
-  }
-
-  /// 📊 전체 코드 조회
-  Future<List<InviteCode>> getAllCodes() async {
-    try {
-      final querySnapshot = await _db
-          .collection('invite_codes')
-          .orderBy('createdAt', descending: true)
-          .get();
-
-      return querySnapshot.docs
-          .map((doc) => InviteCode.fromFirestore(doc))
-          .toList();
-    } catch (e) {
-      if (kDebugMode) {
-        print('코드 조회 실패: $e');
-      }
-      return [];
-    }
-  }
-
-  /// 🗑️ 코드 비활성화
-  Future<void> deactivateCode(String code) async {
-    await _db.collection('invite_codes').doc(code).update({'isActive': false});
+    return {
+      'total': totalCodes,
+      'active': activeCodes,
+      'used': usedCodes,
+      'available': availableCodes,
+    };
   }
 }

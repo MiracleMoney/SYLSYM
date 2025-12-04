@@ -21,6 +21,28 @@ class _AdminCodeGeneratorTabState extends State<AdminCodeGeneratorTab> {
   List<InviteCode> _generatedCodes = [];
   bool _isLoading = false;
   String _progressText = '';
+  bool _isCodesConfirmed = false; // ✨ 코드 복사 완료 여부
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnconfirmedCodes(); // ✨ 저장된 코드 불러오기
+  }
+
+  /// 💾 미확인 코드 불러오기 ✨
+  Future<void> _loadUnconfirmedCodes() async {
+    try {
+      final codes = await _generator.getUnconfirmedCodes();
+      if (codes.isNotEmpty) {
+        setState(() {
+          _generatedCodes = codes;
+          _isCodesConfirmed = false;
+        });
+      }
+    } catch (e) {
+      print('코드 로드 실패: $e');
+    }
+  }
 
   /// 🎫 대량 코드 생성
   Future<void> _generateBulkCodes() async {
@@ -42,6 +64,7 @@ class _AdminCodeGeneratorTabState extends State<AdminCodeGeneratorTab> {
       _isLoading = true;
       _progressText = '생성 준비 중...';
       _generatedCodes = [];
+      _isCodesConfirmed = false;
     });
 
     try {
@@ -49,6 +72,7 @@ class _AdminCodeGeneratorTabState extends State<AdminCodeGeneratorTab> {
         count: count,
         maxUsage: maxUsage,
         description: description.isEmpty ? null : description,
+        markAsUnconfirmed: true, // ✨ 미확인 상태로 저장
         onProgress: (current, total) {
           if (mounted) {
             setState(() {
@@ -69,6 +93,49 @@ class _AdminCodeGeneratorTabState extends State<AdminCodeGeneratorTab> {
       setState(() => _isLoading = false);
       _showSnackBar('❌ 생성 실패: $e', Colors.red);
     }
+  }
+
+  /// ✅ 복사 완료 처리 ✨
+  Future<void> _confirmCodes() async {
+    try {
+      await _generator.markCodesAsConfirmed(_generatedCodes);
+      setState(() {
+        _isCodesConfirmed = true;
+      });
+      _showSnackBar('✅ 코드 복사 완료 처리됨!', Colors.green);
+    } catch (e) {
+      _showSnackBar('❌ 처리 실패: $e', Colors.red);
+    }
+  }
+
+  /// 🗑️ 코드 목록 초기화 ✨
+  void _clearCodes() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('코드 목록 초기화'),
+        content: const Text(
+          '생성된 코드 목록을 삭제하시겠습니까?\n\n(Firestore의 코드는 삭제되지 않습니다)',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                _generatedCodes = [];
+                _isCodesConfirmed = false;
+              });
+              _showSnackBar('🗑️ 코드 목록 초기화 완료', Colors.grey);
+            },
+            child: const Text('삭제', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
   }
 
   /// 📋 전체 코드 복사 (텍스트)
@@ -196,6 +263,10 @@ class _AdminCodeGeneratorTabState extends State<AdminCodeGeneratorTab> {
                 Text('✅ 중복 자동 방지'),
                 Text('✅ 혼동 문자 제외 (I, O, 0, 1)'),
                 Text('✅ CSV 형식 엑셀 복사'),
+                Text(
+                  '✅ 페이지 이동 시에도 유지',
+                  style: TextStyle(color: Colors.blue),
+                ), // ✨
               ],
             ),
           ),
@@ -280,6 +351,35 @@ class _AdminCodeGeneratorTabState extends State<AdminCodeGeneratorTab> {
 
           // 생성된 코드 목록
           if (_generatedCodes.isNotEmpty) ...[
+            // ✨ 상태 표시 배너
+            if (!_isCodesConfirmed)
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.shade300),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber, color: Colors.orange.shade700),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        '⚠️ 코드를 복사한 후 "복사 완료" 버튼을 눌러주세요',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // 헤더
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -290,28 +390,83 @@ class _AdminCodeGeneratorTabState extends State<AdminCodeGeneratorTab> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                IconButton(
+                  onPressed: _showEmailGuide,
+                  icon: const Icon(Icons.help_outline),
+                  tooltip: '이메일 발송 가이드',
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // ✨ 버튼 그룹 (UI 오버플로우 해결)
+            Column(
+              children: [
                 Row(
                   children: [
-                    IconButton(
-                      onPressed: _showEmailGuide,
-                      icon: const Icon(Icons.help_outline),
-                      tooltip: '이메일 발송 가이드',
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _copyAllCodesAsText,
+                        icon: const Icon(Icons.copy_all, size: 18),
+                        label: const Text('텍스트 복사'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
                     ),
-                    TextButton.icon(
-                      onPressed: _copyAllCodesAsCSV,
-                      icon: const Icon(Icons.table_chart),
-                      label: const Text('CSV 복사'),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _copyAllCodesAsCSV,
+                        icon: const Icon(Icons.table_chart, size: 18),
+                        label: const Text('CSV 복사'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
                     ),
-                    TextButton.icon(
-                      onPressed: _copyAllCodesAsText,
-                      icon: const Icon(Icons.copy_all),
-                      label: const Text('텍스트 복사'),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _isCodesConfirmed ? null : _confirmCodes,
+                        icon: Icon(
+                          _isCodesConfirmed ? Icons.check_circle : Icons.check,
+                          size: 18,
+                        ),
+                        label: Text(_isCodesConfirmed ? '복사 완료됨' : '복사 완료'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _isCodesConfirmed
+                              ? Colors.grey
+                              : Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _clearCodes,
+                        icon: const Icon(Icons.delete_outline, size: 18),
+                        label: const Text('목록 지우기'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+
+            const SizedBox(height: 16),
+
+            // 코드 목록
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
