@@ -3,7 +3,8 @@ import 'admin_password_dialog.dart';
 import 'admin_dashboard_tab.dart';
 import 'admin_code_generator_tab.dart';
 import 'admin_code_list_tab.dart';
-import 'admin_user_list_tab.dart'; // ✅ 추가
+import 'admin_user_list_tab.dart'; //
+import 'admin_finance_stats_tab.dart'; // ✅ 추가
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -135,6 +136,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           AdminCodeGeneratorTab(),
           AdminCodeListTab(),
           AdminUserListTab(), // ✅ 추가
+          AdminFinanceStatsTab(), // ✅ 추가
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -156,6 +158,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: '사용자 목록',
+          ), // ✅ 추가
+          BottomNavigationBarItem(
+            icon: Icon(Icons.attach_money),
+            label: '금융 통계',
           ), // ✅ 추가
         ],
       ),
