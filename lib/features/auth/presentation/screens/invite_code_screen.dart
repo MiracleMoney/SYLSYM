@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:miraclemoney/core/constants/gaps.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
 import 'package:miraclemoney/features/auth/data/auth_service.dart';
+import 'package:miraclemoney/features/navigation/main_navigation_screen.dart';
 
 class InviteCodeScreen extends StatefulWidget {
   const InviteCodeScreen({super.key});
@@ -25,7 +26,7 @@ class _InviteCodeScreenState extends State<InviteCodeScreen> {
     });
   }
 
-  /// 🎫 초대코드 검증
+  /// 🎫 초대코드 검증 (✨ 여기를 수정)
   Future<void> _verifyInviteCode() async {
     final code = _codeController.text.trim().toUpperCase();
 
@@ -45,8 +46,10 @@ class _InviteCodeScreenState extends State<InviteCodeScreen> {
       await _authService.verifyAndSaveInviteCode(code);
 
       if (mounted) {
-        _showSnackBar('✅ 초대코드 인증 완료!', Colors.green);
-        // AuthGate가 자동으로 MainNavigationScreen으로 이동
+        // ✨ 성공 시 MainNavigationScreen으로 직접 이동
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+        );
       }
     } catch (e) {
       setState(() => _isLoading = false);

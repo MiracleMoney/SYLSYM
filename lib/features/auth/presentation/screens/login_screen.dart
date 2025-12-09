@@ -72,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Gaps.v20,
 
               Text(
-                '월급 최적화로\n경제적 자유를 향해',
+                'Save Your Money,\nSave Your Life.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   fontFamily: 'Gmarket_sans',
