@@ -1,11 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:miraclemoney/constants/sizes.dart';
+import 'package:miraclemoney/core/constants/sizes.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:miraclemoney/features/auth/data/auth_service.dart';
+import 'package:miraclemoney/features/auth/presentation/screens/invite_code_screen.dart';
 import 'firebase_options.dart';
-import 'features/auth/login_screen.dart';
-import 'features/main_navigation_screen.dart'; // ✅ 변경
+import 'features/auth/presentation/screens/login_screen.dart';
+import 'features/navigation/main_navigation_screen.dart'; // ✅ 변경
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,9 +26,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Miracle Money',
+      debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.system,
       theme: ThemeData(
         fontFamily: "Gmarket_sans",
+        useMaterial3: true,
 
         // Google Fonts Roboto로 전체 텍스트 테마 설정
         // textTheme: GoogleFonts.robotoTextTheme().copyWith(
@@ -63,8 +67,9 @@ class MyApp extends StatelessWidget {
         // ),
         brightness: Brightness.light,
         scaffoldBackgroundColor: Colors.white,
+        // 색상 스킴
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xffe46d1fd),
+          seedColor: Colors.black,
           brightness: Brightness.light,
         ),
         textSelectionTheme: const TextSelectionThemeData(
@@ -93,7 +98,10 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// ✅ 인증 게이트 (로그인 상태 체크)
+/// ✨ 인증 게이트 (3단계 라우팅)
+/// 1. 로그인 여부 확인
+/// 2. 초대코드 입력 여부 확인
+/// 3. 적절한 화면으로 이동
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
@@ -102,21 +110,62 @@ class AuthGate extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // 로딩 중
+        // 🔄 로딩 중
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: Center(
+              child: CircularProgressIndicator(
+                color: Colors.black,
+                strokeWidth: 3,
+              ),
+            ),
           );
         }
 
-        // 로그인 상태 확인
-        if (snapshot.hasData) {
-          // 로그인됨 → 메인 화면
-          return const MainNavigationScreen();
-        } else {
-          // 로그인 안됨 → 로그인 화면
+        // ❌ 로그인 안 됨 → 로그인 화면
+        if (!snapshot.hasData || snapshot.data == null) {
           return const LoginScreen();
         }
+
+        // ✅ 로그인 됨 → 초대코드 확인
+        return FutureBuilder<bool>(
+          future: AuthService().hasInviteCode(),
+          builder: (context, codeSnapshot) {
+            // 🔄 초대코드 확인 중
+            if (codeSnapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        color: Colors.black,
+                        strokeWidth: 3,
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        '잠시만 기다려주세요...',
+                        style: TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontSize: 14,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            // ❌ 초대코드 없음 → 초대코드 입력 화면
+            if (codeSnapshot.data == false) {
+              return const InviteCodeScreen();
+            }
+
+            // ✅ 초대코드 있음 → 홈 화면 (멤버십 활성화됨)
+            return const MainNavigationScreen();
+          },
+        );
       },
     );
   }
