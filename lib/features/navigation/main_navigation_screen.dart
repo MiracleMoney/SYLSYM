@@ -17,7 +17,7 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final AuthService _authService = AuthService(); // ✨ 추가
 
-  int _selectedIndex = 0;
+  int _selectedIndex = 1;
 
   final List<Widget> _screens = [
     const DashboardScreen(),

@@ -54,6 +54,26 @@ class AuthService {
     }
   }
 
+  /// ✨ 약관 동의 여부 확인
+  Future<bool> hasAgreedToTerms() async {
+    if (currentUser == null) return false;
+
+    try {
+      final userDoc = await _firestore
+          .collection('users')
+          .doc(currentUser!.uid)
+          .get();
+
+      if (!userDoc.exists) return false;
+
+      final termsAgreed = userDoc.data()?['termsAgreed'] as bool? ?? false;
+      return termsAgreed;
+    } catch (e) {
+      if (kDebugMode) print('❌ 약관 동의 확인 실패: $e');
+      return false;
+    }
+  }
+
   /// ✨ 사용자 정보 입력 완료 여부 확인
   Future<bool> hasUserInfo() async {
     if (currentUser == null) return false;
