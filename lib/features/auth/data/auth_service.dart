@@ -54,6 +54,30 @@ class AuthService {
     }
   }
 
+  /// ✨ 사용자 정보 입력 완료 여부 확인
+  Future<bool> hasUserInfo() async {
+    if (currentUser == null) return false;
+
+    try {
+      final userDoc = await _firestore
+          .collection('users')
+          .doc(currentUser!.uid)
+          .get();
+
+      if (!userDoc.exists) return false;
+
+      final data = userDoc.data();
+      final birthdate = data?['birthdate'];
+      final gender = data?['gender'];
+
+      // birthdate와 gender가 모두 있어야 true
+      return birthdate != null && gender != null;
+    } catch (e) {
+      if (kDebugMode) print('❌ 사용자 정보 확인 실패: $e');
+      return false;
+    }
+  }
+
   /// 🔐 구글 로그인
   Future<UserCredential?> signInWithGoogle() async {
     try {

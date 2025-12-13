@@ -5,9 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:miraclemoney/features/auth/data/auth_service.dart';
 import 'package:miraclemoney/features/auth/presentation/screens/invite_code_screen.dart';
+import 'package:miraclemoney/features/auth/presentation/screens/user_info_screen.dart';
 import 'firebase_options.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
-import 'features/navigation/main_navigation_screen.dart'; // ✅ 변경
+import 'features/navigation/main_navigation_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -98,10 +99,11 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// ✨ 인증 게이트 (3단계 라우팅)
+/// ✨ 인증 게이트 (4단계 라우팅)
 /// 1. 로그인 여부 확인
 /// 2. 초대코드 입력 여부 확인
-/// 3. 적절한 화면으로 이동
+/// 3. 사용자 정보(생년월일/성별) 입력 여부 확인
+/// 4. 적절한 화면으로 이동
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
@@ -162,8 +164,46 @@ class AuthGate extends StatelessWidget {
               return const InviteCodeScreen();
             }
 
-            // ✅ 초대코드 있음 → 홈 화면 (멤버십 활성화됨)
-            return const MainNavigationScreen();
+            // ✅ 초대코드 있음 → 사용자 정보 확인
+            return FutureBuilder<bool>(
+              future: AuthService().hasUserInfo(),
+              builder: (context, userInfoSnapshot) {
+                // 🔄 사용자 정보 확인 중
+                if (userInfoSnapshot.connectionState ==
+                    ConnectionState.waiting) {
+                  return const Scaffold(
+                    body: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            color: Colors.black,
+                            strokeWidth: 3,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            '잠시만 기다려주세요...',
+                            style: TextStyle(
+                              fontFamily: 'Gmarket_sans',
+                              fontSize: 14,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                // ❌ 사용자 정보 없음 → 사용자 정보 입력 화면
+                if (userInfoSnapshot.data == false) {
+                  return const UserInfoScreen();
+                }
+
+                // ✅ 모든 정보 완료 → 홈 화면
+                return const MainNavigationScreen();
+              },
+            );
           },
         );
       },
