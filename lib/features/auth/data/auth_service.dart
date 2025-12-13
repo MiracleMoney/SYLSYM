@@ -14,6 +14,46 @@ class AuthService {
   /// 인증 상태 스트림
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
+  /// ✨ 초대코드 유효성 한 번 확인 (간단 버전)
+  Future<bool> checkInviteCodeValidity() async {
+    if (currentUser == null) return false;
+
+    try {
+      final userDoc = await _firestore
+          .collection('users')
+          .doc(currentUser!.uid)
+          .get();
+
+      if (!userDoc.exists) return false;
+
+      final inviteCode = userDoc.data()?['inviteCode'] as String?;
+
+      if (inviteCode == null || inviteCode.isEmpty) return false;
+
+      final codeDoc = await _firestore
+          .collection('invite_codes')
+          .doc(inviteCode)
+          .get();
+
+      if (!codeDoc.exists) {
+        if (kDebugMode) print('❌ 코드가 삭제됨: $inviteCode');
+        return false;
+      }
+
+      final isActive = codeDoc.data()?['isActive'] as bool? ?? false;
+
+      if (!isActive) {
+        if (kDebugMode) print('❌ 코드가 비활성화됨: $inviteCode');
+        return false;
+      }
+
+      return true;
+    } catch (e) {
+      if (kDebugMode) print('❌ 코드 검증 실패: $e');
+      return false;
+    }
+  }
+
   /// 🔐 구글 로그인
   Future<UserCredential?> signInWithGoogle() async {
     try {
