@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:miraclemoney/core/constants/gaps.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
 import 'package:miraclemoney/features/auth/data/auth_service.dart';
-import 'package:miraclemoney/features/navigation/main_navigation_screen.dart';
+import 'package:miraclemoney/features/auth/presentation/screens/user_info_screen.dart';
 
 class InviteCodeScreen extends StatefulWidget {
   const InviteCodeScreen({super.key});
@@ -46,9 +46,9 @@ class _InviteCodeScreenState extends State<InviteCodeScreen> {
       await _authService.verifyAndSaveInviteCode(code);
 
       if (mounted) {
-        // ✨ 성공 시 MainNavigationScreen으로 직접 이동
+        // ✨ 성공 시 UserInfoScreen으로 이동
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+          MaterialPageRoute(builder: (context) => const UserInfoScreen()),
         );
       }
     } catch (e) {
