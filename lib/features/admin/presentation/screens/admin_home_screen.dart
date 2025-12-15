@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:miraclemoney/features/admin/presentation/tabs/admin_code_tab.dart';
 import '../widgets/admin_password_dialog.dart';
 import '../tabs/admin_dashboard_tab.dart';
 import '../tabs/admin_code_generator_tab.dart';
@@ -132,9 +133,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       body: IndexedStack(
         index: _selectedIndex,
         children: const [
-          AdminDashboardTab(),
-          AdminCodeGeneratorTab(),
-          AdminCodeListTab(),
+          AdminCodeTab(),
           AdminUserListTab(), // ✅ 추가
           AdminFinanceStatsTab(), // ✅ 추가
         ],
@@ -152,9 +151,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         type: BottomNavigationBarType.fixed, // ✅ 4개 이상일 때 필수
 
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: '대시보드'),
-          BottomNavigationBarItem(icon: Icon(Icons.add_box), label: '코드 생성'),
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: '코드 목록'),
+          BottomNavigationBarItem(icon: Icon(Icons.code), label: '코드'),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: '사용자 목록',
