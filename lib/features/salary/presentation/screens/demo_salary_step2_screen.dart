@@ -343,6 +343,18 @@ class _DemoSalaryStep2ScreenState extends State<DemoSalaryStep2Screen> {
     final cardRadius = BorderRadius.circular(12.0);
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('월급 최적화'),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          color: Colors.black,
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -355,7 +367,6 @@ class _DemoSalaryStep2ScreenState extends State<DemoSalaryStep2Screen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Gaps.v12,
               const Row(
                 children: [
                   SectionHeader(icon: Icons.payments_outlined, title: '본업 수입'),

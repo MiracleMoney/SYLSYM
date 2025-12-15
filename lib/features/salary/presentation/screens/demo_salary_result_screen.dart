@@ -195,6 +195,12 @@ class _DemoSalaryResultScreenState extends State<DemoSalaryResultScreen> {
     final cardRadius = BorderRadius.circular(12.0);
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('월급 최적화'),
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+      ),
+
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -207,7 +213,6 @@ class _DemoSalaryResultScreenState extends State<DemoSalaryResultScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Gaps.v12,
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(borderRadius: cardRadius),

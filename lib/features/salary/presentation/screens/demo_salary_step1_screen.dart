@@ -400,6 +400,7 @@ class _DemoSalaryStep1ScreenState extends State<DemoSalaryStep1Screen> {
     );
 
     return Scaffold(
+      appBar: AppBar(title: const Text('월급 최적화'), centerTitle: true),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -416,7 +417,6 @@ class _DemoSalaryStep1ScreenState extends State<DemoSalaryStep1Screen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Gaps.v12,
                   Row(
                     children: const [
                       SectionHeader(
@@ -529,7 +529,7 @@ class _DemoSalaryStep1ScreenState extends State<DemoSalaryStep1Screen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        tileColor: Colors.transparent,
+                        tileColor: Colors.black,
                       ),
                     ),
                   ),

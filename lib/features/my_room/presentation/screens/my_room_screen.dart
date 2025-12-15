@@ -52,11 +52,11 @@ class MyRoomScreen extends StatelessWidget {
                           fontSize: 20,
                         ),
                       ),
-                      TextButton(
-                        onPressed: () => throw Exception(),
-                        child: const Text("Throw Test Exception"),
-                      ),
 
+                      // TextButton(
+                      //   onPressed: () => throw Exception(),
+                      //   child: const Text("Throw Test Exception"),
+                      // ),
                       const SizedBox(height: 4),
                       Text(
                         user?.email ?? '',
