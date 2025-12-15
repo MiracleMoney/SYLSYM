@@ -299,7 +299,31 @@ class _InviteCodeScreenState extends State<InviteCodeScreen> {
               ),
             ),
             Gaps.v16,
-
+            // ✨ "코드 없이 사용" 버튼 추가
+            OutlinedButton(
+              onPressed: () {
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/demo_salary_step1',
+                  (route) => false,
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 56),
+                side: const BorderSide(color: Colors.black, width: 1),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                '코드 없이 사용',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Gaps.v16,
             // 도움말
             Container(
               padding: const EdgeInsets.all(Sizes.size16),

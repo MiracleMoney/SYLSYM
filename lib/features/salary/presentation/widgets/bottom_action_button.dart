@@ -36,35 +36,8 @@ class BottomActionButton extends StatelessWidget {
         child: SizedBox(
           width: double.infinity,
           child: allFieldsFilled
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTapDown: (_) => onNavigate(),
-                        child: ElevatedButton(
-                          focusNode: buttonFocus,
-                          style: ElevatedButton.styleFrom(
-                            textStyle: const TextStyle(
-                              fontSize: Sizes.size16 + Sizes.size2,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            backgroundColor: Colors.black,
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size.fromHeight(56),
-                          ),
-                          onPressed: onNavigate,
-                          child: Text(navigateButtonText),
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTapDown: (_) => onNext(),
+              ? SizedBox(
+                  width: double.infinity,
                   child: ElevatedButton(
                     focusNode: buttonFocus,
                     style: ElevatedButton.styleFrom(
@@ -76,9 +49,23 @@ class BottomActionButton extends StatelessWidget {
                       foregroundColor: Colors.white,
                       minimumSize: const Size.fromHeight(56),
                     ),
-                    onPressed: onNext,
-                    child: Text(nextButtonText),
+                    onPressed: onNavigate, // ✅ 중복 onTapDown 제거
+                    child: Text(navigateButtonText),
                   ),
+                )
+              : ElevatedButton(
+                  focusNode: buttonFocus,
+                  style: ElevatedButton.styleFrom(
+                    textStyle: const TextStyle(
+                      fontSize: Sizes.size16 + Sizes.size2,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(56),
+                  ),
+                  onPressed: onNext, // ✅ 중복 onTapDown 제거
+                  child: Text(nextButtonText),
                 ),
         ),
       ),

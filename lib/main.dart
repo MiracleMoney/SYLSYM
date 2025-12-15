@@ -10,6 +10,10 @@ import 'package:miraclemoney/features/auth/data/auth_service.dart';
 import 'package:miraclemoney/features/auth/presentation/screens/terms_agreement_screen.dart';
 import 'package:miraclemoney/features/auth/presentation/screens/invite_code_screen.dart';
 import 'package:miraclemoney/features/auth/presentation/screens/user_info_screen.dart';
+import 'package:miraclemoney/features/salary/presentation/screens/demo_salary_step1_screen.dart';
+import 'package:miraclemoney/features/salary/presentation/screens/demo_salary_step2_screen.dart';
+import 'package:miraclemoney/features/salary/presentation/screens/demo_salary_result_screen.dart';
+import 'package:miraclemoney/features/salary/presentation/screens/salary_result_screen.dart';
 import 'firebase_options.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/navigation/main_navigation_screen.dart';
@@ -112,6 +116,13 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: const AuthGate(),
+      // ✨ routes 추가
+      routes: {
+        '/demo_salary_step1': (context) => const DemoSalaryStep1Screen(),
+        '/demo_salary_step2': (context) => const DemoSalaryStep2Screen(),
+        '/demo_salary_result': (context) => const DemoSalaryResultScreen(),
+        '/invite_code': (context) => const InviteCodeScreen(),
+      },
     );
   }
 }
