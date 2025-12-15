@@ -38,6 +38,7 @@ class MyRoomScreen extends StatelessWidget {
                     color: Colors.grey.shade700,
                   ),
                 ),
+
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -51,6 +52,11 @@ class MyRoomScreen extends StatelessWidget {
                           fontSize: 20,
                         ),
                       ),
+                      TextButton(
+                        onPressed: () => throw Exception(),
+                        child: const Text("Throw Test Exception"),
+                      ),
+
                       const SizedBox(height: 4),
                       Text(
                         user?.email ?? '',
