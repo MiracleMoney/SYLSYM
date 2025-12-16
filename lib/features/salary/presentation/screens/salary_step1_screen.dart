@@ -625,9 +625,9 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade100),
+                      border: Border.all(color: Colors.grey.shade300),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -643,11 +643,16 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                         ),
                         Gaps.v10,
                         DropdownButtonFormField<String>(
+                          dropdownColor: Colors.white,
                           focusNode: _shortTermDropdownFocus,
                           decoration: InputDecoration(
                             filled: true,
-                            fillColor: Colors.grey.shade200,
+                            fillColor: Colors.grey.shade50,
                             enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(Sizes.size8),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(Sizes.size8),
                               borderSide: BorderSide.none,
                             ),

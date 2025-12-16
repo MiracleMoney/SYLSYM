@@ -225,6 +225,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
 
   void _showApplyModal() {
     showModalBottomSheet(
+      backgroundColor: Colors.white,
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -500,6 +501,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => Container(
+        color: Colors.white,
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -634,7 +636,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade200),
+                      border: Border.all(color: Colors.grey.shade300),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -670,7 +672,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade200),
+                      border: Border.all(color: Colors.grey.shade300),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -935,7 +937,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

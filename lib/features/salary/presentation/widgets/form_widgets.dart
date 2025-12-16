@@ -92,7 +92,7 @@ class LabeledTextFormField extends StatelessWidget {
           onFieldSubmitted: onFieldSubmitted,
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.grey.shade200,
+            fillColor: Colors.grey.shade50,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(Sizes.size8),
               borderSide: BorderSide.none,

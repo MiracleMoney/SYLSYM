@@ -81,6 +81,7 @@ class _InviteCodeScreenState extends State<InviteCodeScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('로그아웃', style: TextStyle(fontFamily: 'Gmarket_sans')),
         content: const Text(
