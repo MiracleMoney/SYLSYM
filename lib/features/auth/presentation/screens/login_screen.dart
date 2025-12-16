@@ -122,18 +122,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              Gaps.v24,
-
-              Text(
-                '로그인하면 서비스 약관 및\n개인정보 처리방침에 동의하는 것으로 간주됩니다.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Gmarket_sans',
-                  fontSize: Sizes.size12,
-                  color: Colors.grey.shade500,
-                  height: 1.5,
-                ),
-              ),
+              Gaps.v64,
+              Gaps.v64,
             ],
           ),
         ),
