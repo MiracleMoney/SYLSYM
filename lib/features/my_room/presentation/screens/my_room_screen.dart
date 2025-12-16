@@ -196,7 +196,24 @@ class MyRoomScreen extends StatelessWidget {
               );
 
               if (confirm == true && context.mounted) {
-                await AuthService().signOut();
+                try {
+                  await AuthService().signOut();
+                  if (context.mounted) {
+                    // 로그아웃 후 Navigator를 초기화하여 로그인 화면으로 이동
+                    Navigator.of(
+                      context,
+                    ).pushNamedAndRemoveUntil('/', (route) => false);
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('로그아웃 실패: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
               }
             },
           ),

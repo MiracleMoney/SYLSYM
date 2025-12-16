@@ -72,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Gaps.v20,
 
               Text(
-                'Save Your Money,\nSave Your Life.',
+                'Save Your Money,\nSave Your Life',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   fontFamily: 'Gmarket_sans',
@@ -123,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
 
               Gaps.v64,
-              Gaps.v64,
+              Gaps.v32,
             ],
           ),
         ),

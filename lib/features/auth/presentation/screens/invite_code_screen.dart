@@ -103,7 +103,19 @@ class _InviteCodeScreenState extends State<InviteCodeScreen> {
     );
 
     if (confirm == true && mounted) {
-      await _authService.signOut();
+      try {
+        await _authService.signOut();
+        if (mounted) {
+          // 로그아웃 후 Navigator를 초기화하여 로그인 화면으로 이동
+          Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('로그아웃 실패: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
     }
   }
 
