@@ -836,37 +836,36 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
             Gaps.v20,
 
             // Apply to Budget Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: _showApplyModal,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.arrow_forward, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      '예산에 적용하기',
-                      style: TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            Gaps.v16,
+            // SizedBox(
+            //   width: double.infinity,
+            //   child: ElevatedButton(
+            //     style: ElevatedButton.styleFrom(
+            //       backgroundColor: Colors.black,
+            //       foregroundColor: Colors.white,
+            //       minimumSize: const Size.fromHeight(56),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(12),
+            //       ),
+            //     ),
+            //     onPressed: _showApplyModal,
+            //     child: Row(
+            //       mainAxisAlignment: MainAxisAlignment.center,
+            //       children: const [
+            //         Icon(Icons.arrow_forward, size: 20),
+            //         SizedBox(width: 8),
+            //         Text(
+            //           '예산에 적용하기',
+            //           style: TextStyle(
+            //             fontFamily: 'Gmarket_sans',
+            //             fontSize: 18,
+            //             fontWeight: FontWeight.w700,
+            //           ),
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+            // ),
+            // Gaps.v16,
 
             // Bottom buttons row
             Row(
@@ -897,7 +896,8 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.black,
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
                       minimumSize: const Size.fromHeight(56),
                       side: BorderSide(color: Colors.grey.shade300),
                       shape: RoundedRectangleBorder(
@@ -919,7 +919,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
               ],
             ),
 
-            Gaps.v24,
+            Gaps.v12,
           ],
         ),
       ),
