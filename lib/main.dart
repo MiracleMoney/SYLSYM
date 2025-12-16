@@ -17,6 +17,7 @@ import 'package:miraclemoney/features/salary/presentation/screens/salary_result_
 import 'firebase_options.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/navigation/main_navigation_screen.dart';
+import 'features/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -115,9 +116,11 @@ class MyApp extends StatelessWidget {
           unselectedLabelColor: Colors.grey.shade500,
         ),
       ),
-      home: const AuthGate(),
+      initialRoute: '/splash',
       // ✨ routes 추가
       routes: {
+        '/splash': (context) => const SplashScreen(),
+        '/': (context) => const AuthGate(),
         '/demo_salary_step1': (context) => const DemoSalaryStep1Screen(),
         '/demo_salary_step2': (context) => const DemoSalaryStep2Screen(),
         '/demo_salary_result': (context) => const DemoSalaryResultScreen(),

@@ -424,7 +424,7 @@ class _DemoSalaryResultScreenState extends State<DemoSalaryResultScreen> {
                       Icon(Icons.arrow_forward, size: 20),
                       SizedBox(width: 8),
                       Text(
-                        '코드 입력하고 데이터 저장하기',
+                        '코드 입력하기',
                         style: TextStyle(
                           fontFamily: 'Gmarket_sans',
                           fontSize: 18,
@@ -450,17 +450,25 @@ class _DemoSalaryResultScreenState extends State<DemoSalaryResultScreen> {
                       ),
                       onPressed: () async {
                         final Uri googleFormUrl = Uri.parse(
-                          'https://docs.google.com/forms/d/e/1FAIpQLScuZW_JS9c7oIxRqtwqC1VOi11XBdgEw11n3AdzF80Fsjgevw/viewform?usp=sharing', // ✅ 구글폼 ID 입력
+                          'https://docs.google.com/forms/d/e/1FAIpQLScuZW_JS9c7oIxRqtwqC1VOi11XBdgEw11n3AdzF80Fsjgevw/viewform?usp=sharing',
                         );
-                        if (await canLaunchUrl(googleFormUrl)) {
-                          await launchUrl(
+                        // 외부 브라우저로 열기
+                        try {
+                          final opened = await launchUrl(
                             googleFormUrl,
                             mode: LaunchMode.externalApplication,
                           );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('구글폼을 열 수 없습니다')),
-                          );
+                          if (!opened && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('구글폼을 열 수 없습니다')),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('브라우저를 열 수 없습니다: $e')),
+                            );
+                          }
                         }
                       },
                       icon: const Icon(Icons.send_outlined),
