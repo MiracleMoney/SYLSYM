@@ -97,6 +97,10 @@ class LabeledTextFormField extends StatelessWidget {
               borderRadius: BorderRadius.circular(Sizes.size8),
               borderSide: BorderSide.none,
             ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(Sizes.size8),
+              borderSide: BorderSide.none,
+            ),
             hintText: hint,
             suffixText: suffixText,
             border: OutlineInputBorder(

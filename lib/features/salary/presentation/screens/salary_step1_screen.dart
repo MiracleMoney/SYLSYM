@@ -594,6 +594,18 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                             ),
                       ),
                       value: _hasShortTermGoal,
+                      activeThumbColor: const Color(0xFFE9435A),
+                      activeTrackColor: Colors.transparent,
+                      trackOutlineColor: WidgetStateProperty.resolveWith((
+                        states,
+                      ) {
+                        if (states.contains(WidgetState.selected)) {
+                          return Colors.grey.shade400;
+                        }
+                        return Colors.grey.shade400;
+                      }),
+                      inactiveThumbColor: Colors.black,
+                      inactiveTrackColor: Colors.transparent,
                       onChanged: (val) {
                         Future.microtask(() {
                           if (!mounted) return;
