@@ -2,10 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
 import 'package:miraclemoney/core/constants/gaps.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../data/salary_calculation_logic.dart';
 import '../widgets/month_selector.dart';
 import '../../../../shared/widgets/loading/section_header.dart';
+import '../../../../shared/widgets/google_form_button.dart';
 
 class DemoSalaryResultScreen extends StatefulWidget {
   final TextEditingController? currentAgeController;
@@ -436,54 +436,7 @@ class _DemoSalaryResultScreenState extends State<DemoSalaryResultScreen> {
                 ),
               ),
               Gaps.v16,
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.black,
-                        minimumSize: const Size.fromHeight(56),
-                        side: BorderSide(color: Colors.grey.shade300),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: () async {
-                        final Uri googleFormUrl = Uri.parse(
-                          'https://docs.google.com/forms/d/e/1FAIpQLScuZW_JS9c7oIxRqtwqC1VOi11XBdgEw11n3AdzF80Fsjgevw/viewform?usp=sharing',
-                        );
-                        // 외부 브라우저로 열기
-                        try {
-                          final opened = await launchUrl(
-                            googleFormUrl,
-                            mode: LaunchMode.externalApplication,
-                          );
-                          if (!opened && mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('구글폼을 열 수 없습니다')),
-                            );
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('브라우저를 열 수 없습니다: $e')),
-                            );
-                          }
-                        }
-                      },
-                      icon: const Icon(Icons.send_outlined),
-                      label: const Text(
-                        '코드 신청하기',
-                        style: TextStyle(
-                          fontFamily: 'Gmarket_sans',
-                          fontWeight: FontWeight.w700,
-                          fontSize: Sizes.size16 + Sizes.size2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              Row(children: [const GoogleFormButton(label: '코드 신청하기')]),
               Gaps.v24,
             ],
           ),

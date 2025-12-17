@@ -3,7 +3,7 @@ import 'package:miraclemoney/core/constants/gaps.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
 import 'package:miraclemoney/features/auth/data/auth_service.dart';
 import 'package:miraclemoney/features/auth/presentation/screens/user_info_screen.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:miraclemoney/shared/widgets/google_form_button.dart';
 
 class InviteCodeScreen extends StatefulWidget {
   const InviteCodeScreen({super.key});
@@ -339,49 +339,10 @@ class _InviteCodeScreenState extends State<InviteCodeScreen> {
                   ),
                 ),
                 SizedBox(width: Sizes.size16),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.black,
-                      minimumSize: const Size.fromHeight(56),
-                      side: BorderSide(color: Colors.black, width: 1),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: () async {
-                      final Uri googleFormUrl = Uri.parse(
-                        'https://docs.google.com/forms/d/e/1FAIpQLScuZW_JS9c7oIxRqtwqC1VOi11XBdgEw11n3AdzF80Fsjgevw/viewform?usp=sharing',
-                      );
-                      // 외부 브라우저로 열기
-                      try {
-                        final opened = await launchUrl(
-                          googleFormUrl,
-                          mode: LaunchMode.externalApplication,
-                        );
-                        if (!opened && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('구글폼을 열 수 없습니다')),
-                          );
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('브라우저를 열 수 없습니다: $e')),
-                          );
-                        }
-                      }
-                    },
-                    icon: const Icon(Icons.send_outlined),
-                    label: const Text(
-                      '코드 신청',
-                      style: TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontWeight: FontWeight.w700,
-                        fontSize: Sizes.size16,
-                      ),
-                    ),
-                  ),
+                GoogleFormButton(
+                  label: '코드 신청',
+                  borderSide: const BorderSide(color: Colors.black, width: 1),
+                  borderRadius: 8,
                 ),
               ],
             ),
