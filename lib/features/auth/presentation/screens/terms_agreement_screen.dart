@@ -35,10 +35,16 @@ class _TermsAgreementScreenState extends State<TermsAgreementScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('로그인 정보가 없습니다');
 
-      await _firestore.collection('users').doc(user.uid).update({
+      await _firestore.collection('users').doc(user.uid).set({
+        'uid': user.uid,
+        'email': user.email,
+        'displayName': user.displayName,
+        'photoURL': user.photoURL,
+        'isAdmin': false,
+        'inviteCode': null,
         'termsAgreed': true,
         'termsAgreedAt': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
 
       if (mounted) {
         Navigator.of(context).pushReplacement(

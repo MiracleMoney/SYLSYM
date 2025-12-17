@@ -3,6 +3,7 @@ import 'package:miraclemoney/core/constants/gaps.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
 import 'package:miraclemoney/features/auth/data/auth_service.dart';
 import 'package:miraclemoney/features/auth/presentation/screens/user_info_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class InviteCodeScreen extends StatefulWidget {
   const InviteCodeScreen({super.key});
@@ -20,10 +21,6 @@ class _InviteCodeScreenState extends State<InviteCodeScreen> {
   @override
   void initState() {
     super.initState();
-    // 자동 포커스
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _codeFocusNode.requestFocus();
-    });
   }
 
   /// 🎫 초대코드 검증 (✨ 여기를 수정)
@@ -206,6 +203,7 @@ class _InviteCodeScreenState extends State<InviteCodeScreen> {
             TextField(
               controller: _codeController,
               focusNode: _codeFocusNode,
+              autofocus: true,
               enabled: !_isLoading,
               decoration: InputDecoration(
                 hintText: 'ABC12345',
@@ -312,31 +310,83 @@ class _InviteCodeScreenState extends State<InviteCodeScreen> {
               ),
             ),
             Gaps.v16,
-            // ✨ "코드 없이 사용" 버튼 추가
-            OutlinedButton(
-              onPressed: () {
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  '/demo_salary_step1',
-                  (route) => false,
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 56),
-                side: const BorderSide(color: Colors.black, width: 1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            // ✨ "코드 없이 사용" 및 "코드 신청하기" 버튼
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        '/demo_salary_step1',
+                        (route) => false,
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(56),
+                      side: const BorderSide(color: Colors.black, width: 1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      '코드 없이 사용',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              child: const Text(
-                '코드 없이 사용',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                SizedBox(width: Sizes.size16),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.black,
+                      minimumSize: const Size.fromHeight(56),
+                      side: BorderSide(color: Colors.black, width: 1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: () async {
+                      final Uri googleFormUrl = Uri.parse(
+                        'https://docs.google.com/forms/d/e/1FAIpQLScuZW_JS9c7oIxRqtwqC1VOi11XBdgEw11n3AdzF80Fsjgevw/viewform?usp=sharing',
+                      );
+                      // 외부 브라우저로 열기
+                      try {
+                        final opened = await launchUrl(
+                          googleFormUrl,
+                          mode: LaunchMode.externalApplication,
+                        );
+                        if (!opened && mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('구글폼을 열 수 없습니다')),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('브라우저를 열 수 없습니다: $e')),
+                          );
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.send_outlined),
+                    label: const Text(
+                      '코드 신청',
+                      style: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w700,
+                        fontSize: Sizes.size16,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
             Gaps.v16,
+
             // 도움말
             Container(
               padding: const EdgeInsets.all(Sizes.size16),

@@ -5,6 +5,7 @@ import 'package:miraclemoney/core/constants/sizes.dart';
 import '../widgets/form_widgets.dart';
 import 'package:keyboard_actions/keyboard_actions.dart';
 import 'demo_salary_step2_screen.dart';
+import '../../../auth/presentation/screens/invite_code_screen.dart';
 import '../widgets/bottom_action_button.dart';
 import '../widgets/number_input_field.dart';
 import '../widgets/month_selector.dart';
@@ -400,7 +401,18 @@ class _DemoSalaryStep1ScreenState extends State<DemoSalaryStep1Screen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('월급 최적화'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('월급 최적화'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const InviteCodeScreen()),
+            );
+          },
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),

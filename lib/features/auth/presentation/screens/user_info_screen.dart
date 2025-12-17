@@ -328,7 +328,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                       onTap: () => setState(() => _selectedGender = '남성'),
                     ),
                   ),
-                  Gaps.v12,
+                  SizedBox(width: Sizes.size16),
                   Expanded(
                     child: _GenderButton(
                       label: '여성',
