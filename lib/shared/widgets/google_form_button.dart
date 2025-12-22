@@ -23,8 +23,7 @@ class GoogleFormButton extends StatelessWidget {
   });
 
   /// 구글폼 URL (여기만 수정하면 모든 곳에 반영됨)
-  static const String googleFormUrl =
-      'https://docs.google.com/forms/d/e/1FAIpQLScuZW_JS9c7oIxRqtwqC1VOi11XBdgEw11n3AdzF80Fsjgevw/viewform?usp=sharing';
+  static const String googleFormUrl = 'https://forms.gle/PDoV8NSzHvv3eMao7';
 
   Future<void> _openGoogleForm(BuildContext context) async {
     final Uri url = Uri.parse(googleFormUrl);

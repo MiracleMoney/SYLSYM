@@ -110,13 +110,13 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
         );
 
         if (previousData != null && mounted) {
-          // ✅ 바로 이전 달 데이터가 있으면 Step1에 표시
+          // ✅ 바로 이전 달 데이터가 있으면 Step1에만 표시 (Step2는 빈 상태)
           if (kDebugMode) {
             print(
               '✅ 이전 달 데이터 발견: ${previousMonth.year}년 ${previousMonth.month}월',
             );
           }
-          _loadDataToControllers(previousData);
+          _loadDataToControllersStep1Only(previousData); // ✅ Step1만 로드
 
           setState(() {
             _currentSalaryPage = 0; // ✅ Step1 페이지로 설정
@@ -145,7 +145,7 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
     }
   }
 
-  // ✅ Firestore 데이터를 컨트롤러로 변환
+  // ✅ Firestore 데이터를 컨트롤러로 변환 (전체)
   void _loadDataToControllers(SalaryCompleteData data) {
     // Step1 컨트롤러 생성
     final currentAgeController = TextEditingController(
@@ -226,6 +226,55 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
       'side3Controller': side3Controller,
       'retirementController': retirementController,
     };
+  }
+
+  // ✅ Step1만 로드 (이전 달 데이터 참고용)
+  void _loadDataToControllersStep1Only(SalaryCompleteData data) {
+    // Step1 컨트롤러 생성
+    final currentAgeController = TextEditingController(
+      text: data.step1.currentAge?.toString() ?? '',
+    );
+    final retireAgeController = TextEditingController(
+      text: data.step1.retireAge?.toString() ?? '',
+    );
+    final livingExpenseController = TextEditingController(
+      text: data.step1.livingExpense?.toString() ?? '',
+    );
+    final snpValueController = TextEditingController(
+      text: data.step1.snpValue?.toString() ?? '',
+    );
+    final expectedReturnController = TextEditingController(
+      text: data.step1.expectedReturn?.toString() ?? '',
+    );
+    final inflationController = TextEditingController(
+      text: data.step1.inflation?.toString() ?? '',
+    );
+    final shortTermAmountController = TextEditingController(
+      text: data.step1.shortTermAmount?.toString() ?? '',
+    );
+    final shortTermDurationController = TextEditingController(
+      text: data.step1.shortTermDuration?.toString() ?? '',
+    );
+    final shortTermSavedController = TextEditingController(
+      text: data.step1.shortTermSaved?.toString() ?? '',
+    );
+
+    _step1Controllers = {
+      'currentAgeController': currentAgeController,
+      'retireAgeController': retireAgeController,
+      'livingExpenseController': livingExpenseController,
+      'snpValueController': snpValueController,
+      'expectedReturnController': expectedReturnController,
+      'inflationController': inflationController,
+      'hasShortTermGoal': data.step1.hasShortTermGoal,
+      'selectedShortTermGoal': data.step1.shortTermGoal,
+      'shortTermAmountController': shortTermAmountController,
+      'shortTermDurationController': shortTermDurationController,
+      'shortTermSavedController': shortTermSavedController,
+    };
+
+    // ✅ Step2는 빈 상태 유지 (사용자가 직접 입력)
+    _step2Controllers = {};
   }
 
   void _resetToStep1() {

@@ -103,7 +103,108 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
     _currentMonth =
         widget.currentMonthNotifier ?? ValueNotifier<DateTime>(DateTime.now());
     _currentMonth.addListener(_onMonthChanged);
+
+    // 모든 컨트롤러에 리스너 추가
+    _addControllersListener();
+
     _calculateAll();
+  }
+
+  /// 모든 컨트롤러에 리스너 추가
+  void _addControllersListener() {
+    // Step2 컨트롤러
+    widget.baseSalaryController?.addListener(_onControllerChanged);
+    widget.overtimeController?.addListener(_onControllerChanged);
+    widget.bonusController?.addListener(_onControllerChanged);
+    widget.incentiveController?.addListener(_onControllerChanged);
+    widget.side1Controller?.addListener(_onControllerChanged);
+    widget.side2Controller?.addListener(_onControllerChanged);
+    widget.side3Controller?.addListener(_onControllerChanged);
+    widget.retirementController?.addListener(_onControllerChanged);
+
+    // Step1 컨트롤러
+    widget.livingExpenseController?.addListener(_onControllerChanged);
+    widget.currentAgeController?.addListener(_onControllerChanged);
+    widget.retireAgeController?.addListener(_onControllerChanged);
+    widget.snpValueController?.addListener(_onControllerChanged);
+    widget.expectedReturnController?.addListener(_onControllerChanged);
+    widget.inflationController?.addListener(_onControllerChanged);
+    widget.shortTermAmountController?.addListener(_onControllerChanged);
+    widget.shortTermDurationController?.addListener(_onControllerChanged);
+    widget.shortTermSavedController?.addListener(_onControllerChanged);
+  }
+
+  /// 컨트롤러 값 변경 시 호출
+  void _onControllerChanged() {
+    if (kDebugMode) {
+      print('🔄 컨트롤러 값 변경 감지 - 재계산 시작');
+    }
+    setState(() {
+      _calculateAll();
+    });
+  }
+
+  @override
+  void didUpdateWidget(SalaryResultScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // ✅ 컨트롤러가 변경되었으면 (수정 후 재진입) 재계산
+    if (_hasControllersChanged(oldWidget)) {
+      if (kDebugMode) {
+        print('🔄 컨트롤러 값 변경 감지 - 재계산 시작');
+      }
+      _calculateAll();
+    }
+  }
+
+  /// 컨트롤러 값이 변경되었는지 확인
+  bool _hasControllersChanged(SalaryResultScreen oldWidget) {
+    // Step2 컨트롤러 비교 (수입 관련)
+    if (widget.baseSalaryController?.text !=
+        oldWidget.baseSalaryController?.text)
+      return true;
+    if (widget.overtimeController?.text != oldWidget.overtimeController?.text)
+      return true;
+    if (widget.bonusController?.text != oldWidget.bonusController?.text)
+      return true;
+    if (widget.incentiveController?.text != oldWidget.incentiveController?.text)
+      return true;
+    if (widget.side1Controller?.text != oldWidget.side1Controller?.text)
+      return true;
+    if (widget.side2Controller?.text != oldWidget.side2Controller?.text)
+      return true;
+    if (widget.side3Controller?.text != oldWidget.side3Controller?.text)
+      return true;
+    if (widget.retirementController?.text !=
+        oldWidget.retirementController?.text)
+      return true;
+
+    // Step1 컨트롤러 비교
+    if (widget.livingExpenseController?.text !=
+        oldWidget.livingExpenseController?.text)
+      return true;
+    if (widget.currentAgeController?.text !=
+        oldWidget.currentAgeController?.text)
+      return true;
+    if (widget.retireAgeController?.text != oldWidget.retireAgeController?.text)
+      return true;
+    if (widget.snpValueController?.text != oldWidget.snpValueController?.text)
+      return true;
+    if (widget.expectedReturnController?.text !=
+        oldWidget.expectedReturnController?.text)
+      return true;
+    if (widget.inflationController?.text != oldWidget.inflationController?.text)
+      return true;
+    if (widget.shortTermAmountController?.text !=
+        oldWidget.shortTermAmountController?.text)
+      return true;
+    if (widget.shortTermDurationController?.text !=
+        oldWidget.shortTermDurationController?.text)
+      return true;
+    if (widget.shortTermSavedController?.text !=
+        oldWidget.shortTermSavedController?.text)
+      return true;
+
+    return false;
   }
 
   void _onMonthChanged() {
@@ -112,12 +213,41 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
   }
 
   @override
+  @override
   void dispose() {
     _currentMonth.removeListener(_onMonthChanged);
     if (widget.currentMonthNotifier == null) {
       _currentMonth.dispose();
     }
+
+    // 모든 컨트롤러 리스너 제거
+    _removeControllersListener();
+
     super.dispose();
+  }
+
+  /// 모든 컨트롤러 리스너 제거
+  void _removeControllersListener() {
+    // Step2 컨트롤러
+    widget.baseSalaryController?.removeListener(_onControllerChanged);
+    widget.overtimeController?.removeListener(_onControllerChanged);
+    widget.bonusController?.removeListener(_onControllerChanged);
+    widget.incentiveController?.removeListener(_onControllerChanged);
+    widget.side1Controller?.removeListener(_onControllerChanged);
+    widget.side2Controller?.removeListener(_onControllerChanged);
+    widget.side3Controller?.removeListener(_onControllerChanged);
+    widget.retirementController?.removeListener(_onControllerChanged);
+
+    // Step1 컨트롤러
+    widget.livingExpenseController?.removeListener(_onControllerChanged);
+    widget.currentAgeController?.removeListener(_onControllerChanged);
+    widget.retireAgeController?.removeListener(_onControllerChanged);
+    widget.snpValueController?.removeListener(_onControllerChanged);
+    widget.expectedReturnController?.removeListener(_onControllerChanged);
+    widget.inflationController?.removeListener(_onControllerChanged);
+    widget.shortTermAmountController?.removeListener(_onControllerChanged);
+    widget.shortTermDurationController?.removeListener(_onControllerChanged);
+    widget.shortTermSavedController?.removeListener(_onControllerChanged);
   }
 
   double _parseController(TextEditingController? c) {
