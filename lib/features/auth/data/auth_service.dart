@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'dart:io' show Platform;
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -125,6 +127,42 @@ class AuthService {
       return userCredential;
     } catch (e) {
       if (kDebugMode) print('❌ 로그인 실패: $e');
+      rethrow;
+    }
+  }
+
+  /// 🍎 Apple 로그인 가능 여부 확인
+  Future<bool> isAppleSignInAvailable() async {
+    if (Platform.isIOS || Platform.isMacOS) {
+      return await SignInWithApple.isAvailable();
+    }
+    return false;
+  }
+
+  /// 🍎 Apple 로그인
+  Future<UserCredential?> signInWithApple() async {
+    try {
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      final oauthCredential = OAuthProvider('apple.com').credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      final userCredential = await _auth.signInWithCredential(oauthCredential);
+
+      // ✨ 신규/기존 사용자 모두 문서 확인 및 생성
+      await _ensureUserDocument(userCredential.user!);
+
+      if (kDebugMode) print('✅ Apple 로그인 성공: ${userCredential.user?.email}');
+      return userCredential;
+    } catch (e) {
+      if (kDebugMode) print('❌ Apple 로그인 실패: $e');
       rethrow;
     }
   }

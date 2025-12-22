@@ -64,9 +64,11 @@ class DefaultFirebaseOptions {
     messagingSenderId: '301274263499',
     projectId: 'miraclemoney-9924c',
     storageBucket: 'miraclemoney-9924c.firebasestorage.app',
-    androidClientId: '301274263499-r504fq4n88kmfj0lfqihtgca2gns1rcv.apps.googleusercontent.com',
-    iosClientId: '301274263499-6v3b9ka81ok7ih3e7erkeln3an5om8q6.apps.googleusercontent.com',
-    iosBundleId: 'com.example.miraclemoney',
+    androidClientId:
+        '301274263499-r504fq4n88kmfj0lfqihtgca2gns1rcv.apps.googleusercontent.com',
+    iosClientId:
+        '301274263499-6v3b9ka81ok7ih3e7erkeln3an5om8q6.apps.googleusercontent.com',
+    iosBundleId: 'com.miraclemoney.app',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -75,8 +77,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '301274263499',
     projectId: 'miraclemoney-9924c',
     storageBucket: 'miraclemoney-9924c.firebasestorage.app',
-    androidClientId: '301274263499-r504fq4n88kmfj0lfqihtgca2gns1rcv.apps.googleusercontent.com',
-    iosClientId: '301274263499-6v3b9ka81ok7ih3e7erkeln3an5om8q6.apps.googleusercontent.com',
+    androidClientId:
+        '301274263499-r504fq4n88kmfj0lfqihtgca2gns1rcv.apps.googleusercontent.com',
+    iosClientId:
+        '301274263499-6v3b9ka81ok7ih3e7erkeln3an5om8q6.apps.googleusercontent.com',
     iosBundleId: 'com.example.miraclemoney',
   );
 
@@ -89,5 +93,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'miraclemoney-9924c.firebasestorage.app',
     measurementId: 'G-3NB239CR9W',
   );
-
 }

@@ -13,6 +13,22 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
   bool _isLoading = false;
+  bool _showAppleSignIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAppleSignInAvailability();
+  }
+
+  Future<void> _checkAppleSignInAvailability() async {
+    final isAvailable = await _authService.isAppleSignInAvailable();
+    if (mounted) {
+      setState(() {
+        _showAppleSignIn = isAvailable;
+      });
+    }
+  }
 
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
@@ -47,13 +63,45 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _handleAppleSignIn() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final userCredential = await _authService.signInWithApple();
+
+      if (userCredential != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Apple 로그인 성공!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Apple 로그인 실패: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Sizes.size32),
+          padding: const EdgeInsets.symmetric(horizontal: Sizes.size24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -89,8 +137,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 56,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
                     elevation: 2,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -121,6 +169,52 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                 ),
               ),
+
+              // Apple 로그인 버튼 (iOS/macOS만)
+              if (_showAppleSignIn) ...[
+                Gaps.v16,
+                SizedBox(
+                  height: 56,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Colors.grey.shade300),
+                      ),
+                    ),
+                    onPressed: _isLoading ? null : _handleAppleSignIn,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.apple, size: 24),
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Apple 계정으로 시작하기',
+                                style: TextStyle(
+                                  fontFamily: 'Gmarket_sans',
+                                  fontSize: Sizes.size16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ],
 
               Gaps.v64,
               Gaps.v32,

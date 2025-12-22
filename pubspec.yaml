@@ -50,6 +50,7 @@ dependencies:
 
     # ✅ 새로 추가
   google_sign_in: ^6.2.1
+  sign_in_with_apple: ^6.1.3 # Apple 로그인
   firebase_crashlytics: ^4.3.10
   firebase_analytics: ^11.6.0
   firebase_performance: ^0.10.1+10
