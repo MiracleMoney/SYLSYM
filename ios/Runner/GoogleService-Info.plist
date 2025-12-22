@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>301274263499-6v3b9ka81ok7ih3e7erkeln3an5om8q6.apps.googleusercontent.com</string>
+	<string>301274263499-5de19tnn2n5eq0hbnrc2vbtm87as229t.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.301274263499-6v3b9ka81ok7ih3e7erkeln3an5om8q6</string>
+	<string>com.googleusercontent.apps.301274263499-5de19tnn2n5eq0hbnrc2vbtm87as229t</string>
 	<key>ANDROID_CLIENT_ID</key>
-	<string>301274263499-r504fq4n88kmfj0lfqihtgca2gns1rcv.apps.googleusercontent.com</string>
+	<string>301274263499-7fhlaf55pts0ji2m9k40vm9v5p60h11n.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
 	<string>AIzaSyCDmXY1OUSulOs48Qpn91PcWPqXjnMNBDU</string>
 	<key>GCM_SENDER_ID</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.miraclemoney</string>
+	<string>com.miraclemoney.app</string>
 	<key>PROJECT_ID</key>
 	<string>miraclemoney-9924c</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:301274263499:ios:463a9609e5a84234d8904e</string>
+	<string>1:301274263499:ios:65fac2ac2ebad630d8904e</string>
 </dict>
 </plist>
