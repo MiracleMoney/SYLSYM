@@ -7,18 +7,18 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:301274263499:android:8027e26f566c3050d8904e",
+        "mobilesdk_app_id": "1:301274263499:android:42f081f3cb2bd738d8904e",
         "android_client_info": {
-          "package_name": "com.example.miraclemoney"
+          "package_name": "com.miraclemoney.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "301274263499-r504fq4n88kmfj0lfqihtgca2gns1rcv.apps.googleusercontent.com",
+          "client_id": "301274263499-fujbpbjv4mjj4lbptmufj3j6alsi84ib.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.miraclemoney",
-            "certificate_hash": "c1a6534077d8a06078c352b1f63e843d5f186b9b"
+            "package_name": "com.miraclemoney.app",
+            "certificate_hash": "49ffcb32062767ec8259b2837b0d887115b7774d"
           }
         },
         {
@@ -39,10 +39,10 @@
               "client_type": 3
             },
             {
-              "client_id": "301274263499-6v3b9ka81ok7ih3e7erkeln3an5om8q6.apps.googleusercontent.com",
+              "client_id": "301274263499-5de19tnn2n5eq0hbnrc2vbtm87as229t.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.miraclemoney"
+                "bundle_id": "com.miraclemoney.app"
               }
             }
           ]
