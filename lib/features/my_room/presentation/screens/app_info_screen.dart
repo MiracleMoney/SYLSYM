@@ -17,7 +17,7 @@ class AppInfoScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          '도움말',
+          '앱 정보',
           style: TextStyle(
             fontFamily: 'Gmarket_sans',
             fontWeight: FontWeight.bold,

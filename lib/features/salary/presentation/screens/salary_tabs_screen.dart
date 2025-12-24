@@ -36,7 +36,7 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 1, vsync: this);
 
     // ✅ 월급최적화 탭으로 돌아올 때 현재 상태 확인 후 적절한 페이지로 복원
     // _tabController.addListener(() {
@@ -337,137 +337,101 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
             ? IconButton(icon: const Icon(Icons.arrow_back), onPressed: _goBack)
             : null,
         title: const Text(
-          '자산 관리',
+          '월급최적화',
           style: TextStyle(
             fontFamily: 'Gmarket_sans',
             fontWeight: FontWeight.w700,
             fontSize: Sizes.size24,
           ),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.black,
-          unselectedLabelColor: Colors.grey.shade600,
-          indicatorColor: const Color(0xFFE9435A),
-          labelStyle: const TextStyle(
-            fontFamily: 'Gmarket_sans',
-            fontWeight: FontWeight.w400,
-            fontSize: 18,
-          ),
-          unselectedLabelStyle: const TextStyle(
-            fontFamily: 'Gmarket_sans',
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
-          ),
-          tabs: const [
-            Tab(text: '월급최적화'),
-            Tab(text: '예산'),
-            Tab(text: '자산현황'),
-          ],
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        physics: const NeverScrollableScrollPhysics(),
-        children: [
-          // ✅ 로딩 중에는 로딩 인디케이터 표시
-          _isLoadingData
-              ? const Center(child: CircularProgressIndicator())
-              :
-                // 월급최적화 플로우
-                IndexedStack(
-                  index: _currentSalaryPage,
-                  children: [
-                    SalaryStep1Screen(
-                      key: ValueKey(
-                        'step1_${_step1Controllers.hashCode}',
-                      ), // ✅ 데이터가 바뀔 때마다 새로운 Key
-                      onNavigateToStep2: _navigateToStep2,
-                      currentMonthNotifier: _currentMonth, // ✅ 전달
-                      // ✅ 로드된 컨트롤러를 전달
-                      initialControllers: _step1Controllers.isNotEmpty
-                          ? _step1Controllers
-                          : null,
-                    ),
-                    if (_step1Controllers.isNotEmpty)
-                      SalaryStep2Screen(
-                        key: ValueKey('step2'),
-                        currentAgeController:
-                            _step1Controllers['currentAgeController'],
-                        retireAgeController:
-                            _step1Controllers['retireAgeController'],
-                        livingExpenseController:
-                            _step1Controllers['livingExpenseController'],
-                        snpValueController:
-                            _step1Controllers['snpValueController'],
-                        expectedReturnController:
-                            _step1Controllers['expectedReturnController'],
-                        inflationController:
-                            _step1Controllers['inflationController'],
-                        hasShortTermGoal: _step1Controllers['hasShortTermGoal'],
-                        selectedShortTermGoal:
-                            _step1Controllers['selectedShortTermGoal'],
-                        shortTermAmountController:
-                            _step1Controllers['shortTermAmountController'],
-                        shortTermDurationController:
-                            _step1Controllers['shortTermDurationController'],
-                        shortTermSavedController:
-                            _step1Controllers['shortTermSavedController'],
-                        currentMonthNotifier: _currentMonth, // ✅ 전달
-
-                        onNavigateToResult: _navigateToResult, // ✅ 파라미터 전달
-                      )
-                    else
-                      const SizedBox.shrink(),
-                    if (_step1Controllers.isNotEmpty &&
-                        _step2Controllers.isNotEmpty)
-                      SalaryResultScreen(
-                        key: const ValueKey('result'),
-                        currentAgeController:
-                            _step1Controllers['currentAgeController'],
-                        retireAgeController:
-                            _step1Controllers['retireAgeController'],
-                        livingExpenseController:
-                            _step1Controllers['livingExpenseController'],
-                        snpValueController:
-                            _step1Controllers['snpValueController'],
-                        expectedReturnController:
-                            _step1Controllers['expectedReturnController'],
-                        inflationController:
-                            _step1Controllers['inflationController'],
-                        hasShortTermGoal: _step1Controllers['hasShortTermGoal'],
-                        selectedShortTermGoal:
-                            _step1Controllers['selectedShortTermGoal'],
-                        shortTermAmountController:
-                            _step1Controllers['shortTermAmountController'],
-                        shortTermDurationController:
-                            _step1Controllers['shortTermDurationController'],
-                        shortTermSavedController:
-                            _step1Controllers['shortTermSavedController'],
-                        baseSalaryController:
-                            _step2Controllers['baseSalaryController'],
-                        overtimeController:
-                            _step2Controllers['overtimeController'],
-                        bonusController: _step2Controllers['bonusController'],
-                        incentiveController:
-                            _step2Controllers['incentiveController'],
-                        side1Controller: _step2Controllers['side1Controller'],
-                        side2Controller: _step2Controllers['side2Controller'],
-                        side3Controller: _step2Controllers['side3Controller'],
-                        retirementController:
-                            _step2Controllers['retirementController'],
-                        currentMonthNotifier: _currentMonth,
-                        onNavigateToStep1:
-                            _navigateToStep1FromResult, // ✅ 콜백 전달
-                      )
-                    else
-                      const SizedBox.shrink(),
-                  ],
+      body: _isLoadingData
+          ? const Center(child: CircularProgressIndicator())
+          : IndexedStack(
+              index: _currentSalaryPage,
+              children: [
+                SalaryStep1Screen(
+                  key: ValueKey(
+                    'step1_${_step1Controllers.hashCode}',
+                  ), // ✅ 데이터가 바뀔 때마다 새로운 Key
+                  onNavigateToStep2: _navigateToStep2,
+                  currentMonthNotifier: _currentMonth, // ✅ 전달
+                  // ✅ 로드된 컨트롤러를 전달
+                  initialControllers: _step1Controllers.isNotEmpty
+                      ? _step1Controllers
+                      : null,
                 ),
-          const BudgetScreen(),
-          const AssetStatusScreen(),
-        ],
-      ),
+                if (_step1Controllers.isNotEmpty)
+                  SalaryStep2Screen(
+                    key: ValueKey('step2'),
+                    currentAgeController:
+                        _step1Controllers['currentAgeController'],
+                    retireAgeController:
+                        _step1Controllers['retireAgeController'],
+                    livingExpenseController:
+                        _step1Controllers['livingExpenseController'],
+                    snpValueController: _step1Controllers['snpValueController'],
+                    expectedReturnController:
+                        _step1Controllers['expectedReturnController'],
+                    inflationController:
+                        _step1Controllers['inflationController'],
+                    hasShortTermGoal: _step1Controllers['hasShortTermGoal'],
+                    selectedShortTermGoal:
+                        _step1Controllers['selectedShortTermGoal'],
+                    shortTermAmountController:
+                        _step1Controllers['shortTermAmountController'],
+                    shortTermDurationController:
+                        _step1Controllers['shortTermDurationController'],
+                    shortTermSavedController:
+                        _step1Controllers['shortTermSavedController'],
+                    currentMonthNotifier: _currentMonth, // ✅ 전달
+
+                    onNavigateToResult: _navigateToResult, // ✅ 파라미터 전달
+                  )
+                else
+                  const SizedBox.shrink(),
+                if (_step1Controllers.isNotEmpty &&
+                    _step2Controllers.isNotEmpty)
+                  SalaryResultScreen(
+                    key: const ValueKey('result'),
+                    currentAgeController:
+                        _step1Controllers['currentAgeController'],
+                    retireAgeController:
+                        _step1Controllers['retireAgeController'],
+                    livingExpenseController:
+                        _step1Controllers['livingExpenseController'],
+                    snpValueController: _step1Controllers['snpValueController'],
+                    expectedReturnController:
+                        _step1Controllers['expectedReturnController'],
+                    inflationController:
+                        _step1Controllers['inflationController'],
+                    hasShortTermGoal: _step1Controllers['hasShortTermGoal'],
+                    selectedShortTermGoal:
+                        _step1Controllers['selectedShortTermGoal'],
+                    shortTermAmountController:
+                        _step1Controllers['shortTermAmountController'],
+                    shortTermDurationController:
+                        _step1Controllers['shortTermDurationController'],
+                    shortTermSavedController:
+                        _step1Controllers['shortTermSavedController'],
+                    baseSalaryController:
+                        _step2Controllers['baseSalaryController'],
+                    overtimeController: _step2Controllers['overtimeController'],
+                    bonusController: _step2Controllers['bonusController'],
+                    incentiveController:
+                        _step2Controllers['incentiveController'],
+                    side1Controller: _step2Controllers['side1Controller'],
+                    side2Controller: _step2Controllers['side2Controller'],
+                    side3Controller: _step2Controllers['side3Controller'],
+                    retirementController:
+                        _step2Controllers['retirementController'],
+                    currentMonthNotifier: _currentMonth,
+                    onNavigateToStep1: _navigateToStep1FromResult, // ✅ 콜백 전달
+                  )
+                else
+                  const SizedBox.shrink(),
+              ],
+            ),
     );
   }
 }

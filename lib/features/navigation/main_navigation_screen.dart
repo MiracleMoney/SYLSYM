@@ -17,14 +17,11 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final AuthService _authService = AuthService(); // ✨ 추가
 
-  int _selectedIndex = 1;
+  int _selectedIndex = 0; // 월급최적화부터 시작
 
   final List<Widget> _screens = [
-    const DashboardScreen(),
-    const SalaryTabsScreen(), // 월급최적화, 예산, 자산현황 탭
-    const SpendingScreen(),
+    const SalaryTabsScreen(), // 월급최적화만 노출
     const CommunityScreen(),
-
     const MyRoomScreen(),
   ];
   @override
@@ -119,19 +116,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         ),
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard),
-            label: '대시보드',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.account_balance_wallet_outlined),
             activeIcon: Icon(Icons.account_balance_wallet),
-            label: '자산',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_outlined),
-            activeIcon: Icon(Icons.receipt_long),
-            label: '지출',
+            label: '월급최적화',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.forum_outlined),

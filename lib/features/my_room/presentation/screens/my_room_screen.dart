@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:miraclemoney/features/admin/presentation/screens/admin_home_screen.dart'; // ✅ 변경
 import 'package:miraclemoney/features/admin/presentation/widgets/admin_password_dialog.dart';
 import 'package:miraclemoney/features/my_room/presentation/screens/app_info_screen.dart';
+import 'package:miraclemoney/features/my_room/presentation/screens/help_screen.dart';
 import '../../../auth/data/auth_service.dart';
 
 class MyRoomScreen extends StatelessWidget {
@@ -93,7 +94,12 @@ class MyRoomScreen extends StatelessWidget {
               style: TextStyle(fontFamily: 'Gmarket_sans'),
             ),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const HelpScreen()),
+              );
+            },
           ),
           ListTile(
             leading: const Icon(Icons.info_outline),

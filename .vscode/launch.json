@@ -20,24 +20,6 @@
       "request": "launch",
       "type": "dart",
       "flutterMode": "release"
-    },
-    {
-      "name": "iPhone",
-      "request": "launch",
-      "type": "dart",
-      "deviceId": "Iphone"
-    },
-    {
-      "name": "Android",
-      "request": "launch",
-      "type": "dart",
-      "deviceId": "Android"
-    }
-  ],
-  "compounds": [
-    {
-      "name": "All Devices",
-      "configurations": ["iPhone", "Android"]
     }
   ]
 }
