@@ -21,6 +21,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   final List<Widget> _screens = [
     const SalaryTabsScreen(), // 월급최적화만 노출
+    const SpendingScreen(), // 지출
     const CommunityScreen(),
     const MyRoomScreen(),
   ];
@@ -119,6 +120,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             icon: Icon(Icons.account_balance_wallet_outlined),
             activeIcon: Icon(Icons.account_balance_wallet),
             label: '월급최적화',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long_outlined),
+            activeIcon: Icon(Icons.receipt_long),
+            label: '지출',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.forum_outlined),
