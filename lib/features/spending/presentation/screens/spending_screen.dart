@@ -60,7 +60,7 @@ class _SpendingScreenState extends State<SpendingScreen>
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           '지출',
           style: TextStyle(
             fontFamily: 'Gmarket_sans',
@@ -72,14 +72,6 @@ class _SpendingScreenState extends State<SpendingScreen>
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.arrow_forward_ios, size: 20),
-            onPressed: () {
-              // 상세 화면으로 이동 (나중에 구현)
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [

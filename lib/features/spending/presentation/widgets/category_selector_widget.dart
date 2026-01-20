@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:miraclemoney/core/constants/sizes.dart';
 import 'package:miraclemoney/features/spending/data/constants/expense_category.dart';
 
 class CategorySelectorWidget extends StatefulWidget {
@@ -36,50 +37,60 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Category',
+          '카테고리',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             fontFamily: 'Gmarket_sans',
             fontWeight: FontWeight.w700,
+            fontSize: Sizes.size16 + Sizes.size2,
           ),
         ),
         const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Row(
             children: ExpenseCategory.allCategories.map((category) {
               final isSelected = category == _selectedCategory;
-              return Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedCategory = category;
-                        _selectedSubcategory = null;
-                      });
-                    },
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFFE9435A)
-                            : Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        ExpenseCategory.getCategoryLabel(category),
-                        style: TextStyle(
-                          fontFamily: 'Gmarket_sans',
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          fontSize: 12,
-                          color: isSelected ? Colors.white : Colors.black,
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _selectedCategory = category;
+                          _selectedSubcategory = null;
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 140),
+                        curve: Curves.easeInOut,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Color(0xFFE9435A)
+                              : Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          ExpenseCategory.getCategoryLabel(category),
+                          style: TextStyle(
+                            fontFamily: 'Gmarket_sans',
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            fontSize: 12,
+                            color: isSelected
+                                ? Colors.white
+                                : Colors.grey.shade700,
+                          ),
                         ),
                       ),
                     ),
@@ -126,11 +137,9 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
             borderRadius: BorderRadius.circular(12),
             child: Container(
               decoration: BoxDecoration(
-                color: isSelected ? Colors.blue.shade50 : Colors.grey.shade50,
+                color: isSelected ? Colors.grey.shade50 : Colors.grey.shade50,
                 border: Border.all(
-                  color: isSelected
-                      ? const Color(0xFF5B7EFF)
-                      : Colors.grey.shade200,
+                  color: isSelected ? Color(0xFFE9435A) : Colors.grey.shade200,
                   width: isSelected ? 2 : 1,
                 ),
                 borderRadius: BorderRadius.circular(12),
@@ -142,7 +151,7 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
                     icon,
                     size: 28,
                     color: isSelected
-                        ? const Color(0xFF5B7EFF)
+                        ? Color(0xFFE9435A)
                         : Colors.grey.shade600,
                   ),
                   const SizedBox(height: 8),
@@ -155,9 +164,7 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
                           ? FontWeight.w700
                           : FontWeight.w500,
                       fontSize: 11,
-                      color: isSelected
-                          ? const Color(0xFF5B7EFF)
-                          : Colors.black,
+                      color: isSelected ? Color(0xFFE9435A) : Colors.black,
                     ),
                   ),
                 ],

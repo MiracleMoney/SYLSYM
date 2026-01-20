@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:miraclemoney/core/constants/sizes.dart';
 import 'package:miraclemoney/features/spending/data/models/expense_model.dart';
 import 'package:miraclemoney/features/spending/presentation/widgets/calendar_widget.dart';
 import 'package:miraclemoney/features/spending/presentation/widgets/category_selector_widget.dart';
@@ -75,6 +76,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      backgroundColor: Colors.grey.shade100,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       insetPadding: const EdgeInsets.all(16),
       child: Container(
@@ -95,7 +97,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                     onPressed: () => Navigator.pop(context),
                   ),
                   Text(
-                    'Add Expense',
+                    '추가 지출',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontFamily: 'Gmarket_sans',
                       fontWeight: FontWeight.w700,
@@ -136,28 +138,28 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Amount *',
+                            '금액 *',
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   fontFamily: 'Gmarket_sans',
                                   fontWeight: FontWeight.w700,
+                                  fontSize: Sizes.size16 + Sizes.size2,
                                 ),
                           ),
                           const SizedBox(height: 8),
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey.shade200),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(Sizes.size8),
                             ),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
-                              vertical: 12,
+                              vertical: 4,
                             ),
                             child: Row(
                               children: [
                                 Text(
-                                  '\$ ',
+                                  '₩ ',
                                   style: TextStyle(
                                     fontFamily: 'Gmarket_sans',
                                     fontWeight: FontWeight.w700,
@@ -210,11 +212,12 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Description *',
+                          '세부내용',
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 fontFamily: 'Gmarket_sans',
                                 fontWeight: FontWeight.w700,
+                                fontSize: Sizes.size16 + Sizes.size2,
                               ),
                         ),
                         const SizedBox(height: 8),
@@ -227,7 +230,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                           child: TextField(
                             controller: _descriptionController,
                             decoration: const InputDecoration(
-                              hintText: 'Enter description...',
+                              hintText: '예: 회사 점심 식대 등',
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.all(16),
                             ),
@@ -245,7 +248,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
                     // 카테고리 선택
                     CategorySelectorWidget(
@@ -273,13 +276,13 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                 child: ElevatedButton(
                   onPressed: _saveExpense,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5B7EFF),
+                    backgroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: const Text(
-                    'Save Expense',
+                    '저장',
                     style: TextStyle(
                       fontFamily: 'Gmarket_sans',
                       fontWeight: FontWeight.w700,

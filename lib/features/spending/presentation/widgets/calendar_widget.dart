@@ -18,7 +18,7 @@ class CalendarWidget extends StatefulWidget {
 class _CalendarWidgetState extends State<CalendarWidget> {
   late DateTime _focusedDate;
   bool isWeekly = true;
-  static const _days = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+  static const _days = ['월 ', '화', '수', '목', '금', '토', '일'];
 
   @override
   void initState() {
@@ -85,7 +85,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
             blurRadius: 10,
-            offset: const Offset(0, 2),
+            offset: const Offset(5, 2),
           ),
         ],
       ),
@@ -99,7 +99,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Select Date',
+                '날짜 선택',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontFamily: 'Gmarket_sans',
                   fontWeight: FontWeight.w700,
@@ -113,7 +113,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                 child: Row(
                   children: [
                     _buildCalendarToggleButton(
-                      label: 'Weekly',
+                      label: '주간',
                       isSelected: isWeekly,
                       onTap: () {
                         setState(() {
@@ -122,7 +122,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                       },
                     ),
                     _buildCalendarToggleButton(
-                      label: 'Monthly',
+                      label: '월간',
                       isSelected: !isWeekly,
                       onTap: () {
                         setState(() {
@@ -145,7 +145,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
           // 선택된 날짜 표시
           Center(
             child: Text(
-              DateFormat('EEE, MMM d, yyyy').format(widget.selectedDate),
+              DateFormat('EEE, M/d/y', 'ko_KR').format(widget.selectedDate),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontFamily: 'Gmarket_sans',
                 color: Colors.grey.shade600,
@@ -285,7 +285,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
           borderRadius: BorderRadius.circular(8),
           child: Container(
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF5B7EFF) : Colors.transparent,
+              color: isSelected ? Color(0xFFE9435A) : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
             ),
             alignment: Alignment.center,
