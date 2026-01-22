@@ -2,23 +2,6 @@ import 'package:flutter/material.dart';
 
 // 지출 카테고리
 class ExpenseCategory {
-  // 고정비 카테고리
-  static const fixedExpenses = 'FixedExpenses';
-  static const fixedExpensesSubcategories = {
-    'CarInsurance': 'Car Insurance',
-    'CarLoan': 'Car Loan',
-    'HealthInsurance': 'Health Insurance',
-    'ManagementFee': 'Management Fee',
-    'MobileBill': 'Mobile Bill',
-    'RentLease': 'Rent/Lease',
-    'Transportation': 'Transportation',
-    'Utilities': 'Utilities',
-    'CreditLoan': 'Credit Loan',
-    'JeonseLoan': 'Jeonse Loan',
-    'Mortgage': 'Mortgage',
-    'Other': 'Other',
-  };
-
   // 생활비 카테고리
   static const livingExpenses = 'LivingExpenses';
   static const livingExpensesSubcategories = {
@@ -32,6 +15,24 @@ class ExpenseCategory {
     'Gathering': 'Gathering',
     'Groceries': 'Groceries',
     'Shoes': 'Shoes',
+  };
+
+  // 고정비 카테고리
+  static const fixedExpenses = 'FixedExpenses';
+  static const fixedExpensesSubcategories = {
+    'HealthInsurance': '보험',
+    'MobileBill': '통신비',
+    'Transportation': '대중교통',
+    'CarLoan': '자동차 할부',
+    'CarInsurance': '자동차 보험',
+    'GasOil': '주유',
+    'RentLease': '월세',
+    'Utilities': '공과금',
+    'ManagementFee': '관리비',
+    'CreditLoan': '신용 대출',
+    'JeonseLoan': '전세 대출',
+    'Mortgage': '주택 담보 대출',
+    'Other': '기타',
   };
 
   // 투자 카테고리
@@ -63,16 +64,16 @@ class ExpenseCategory {
 
   // 모든 카테고리
   static const allCategories = [
-    'FixedExpenses',
     'LivingExpenses',
+    'FixedExpenses',
     'InvestmentExpenses',
     'SavingExpenses',
     'InterestExpenses',
   ];
 
   static const categoryLabels = {
-    'FixedExpenses': '고정비',
     'LivingExpenses': '생활비',
+    'FixedExpenses': '고정비',
     'InvestmentExpenses': '투자',
     'SavingExpenses': '저축',
     'InterestExpenses': '이자',
