@@ -26,7 +26,7 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
   void initState() {
     super.initState();
     _selectedCategory =
-        widget.selectedCategory ?? ExpenseCategory.fixedExpenses;
+        widget.selectedCategory ?? ExpenseCategory.livingExpenses;
     _selectedSubcategory = widget.selectedSubcategory;
   }
 

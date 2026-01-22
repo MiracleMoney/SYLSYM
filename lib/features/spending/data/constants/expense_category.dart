@@ -5,16 +5,29 @@ class ExpenseCategory {
   // 생활비 카테고리
   static const livingExpenses = 'LivingExpenses';
   static const livingExpensesSubcategories = {
-    'Alcohol': 'Alcohol',
-    'Cigarettes': 'Cigarettes',
-    'Clothes': 'Clothes',
-    'DailyGoods': 'Daily Goods',
-    'Delivery': 'Delivery',
-    'Drinks': 'Drinks',
-    'EatingOut': 'Eating Out',
-    'Gathering': 'Gathering',
-    'Groceries': 'Groceries',
-    'Shoes': 'Shoes',
+    'Groceries': '식비',
+    'EatingOut': '외식',
+    'Delivery': '배달 음식',
+
+    'Drinks': '음료',
+    'Alcohol': '술',
+    'Coffee': '커피',
+
+    'DailyGoods': '생필품',
+    'Cigarettes': '담배',
+    'Beauty': '미용',
+
+    'Clothes': '옷',
+    'Shoes': '신발',
+    'Accessories': '액세서리',
+
+    'Culture': '문화 생활',
+    'Gathering': '모임 회비',
+    'Hobby': '취미',
+
+    'OTT': 'OTT',
+    'Subscription': '그 외 구독 서비스',
+    'Other': '기타',
   };
 
   // 고정비 카테고리
@@ -85,10 +98,11 @@ class ExpenseCategory {
 
   static String getSubcategoryLabel(String category, String subcategory) {
     switch (category) {
-      case fixedExpenses:
-        return fixedExpensesSubcategories[subcategory] ?? subcategory;
       case livingExpenses:
         return livingExpensesSubcategories[subcategory] ?? subcategory;
+      case fixedExpenses:
+        return fixedExpensesSubcategories[subcategory] ?? subcategory;
+
       case investmentExpenses:
         return investmentExpensesSubcategories[subcategory] ?? subcategory;
       case savingExpenses:
@@ -102,10 +116,11 @@ class ExpenseCategory {
 
   static Map<String, String> getSubcategories(String category) {
     switch (category) {
-      case fixedExpenses:
-        return fixedExpensesSubcategories;
       case livingExpenses:
         return livingExpensesSubcategories;
+      case fixedExpenses:
+        return fixedExpensesSubcategories;
+
       case investmentExpenses:
         return investmentExpensesSubcategories;
       case savingExpenses:
@@ -144,6 +159,8 @@ class ExpenseCategory {
           return Icons.apartment;
         case 'Mortgage':
           return Icons.home;
+        case 'GasOil':
+          return Icons.local_gas_station;
         default:
           return Icons.receipt;
       }
@@ -160,7 +177,7 @@ class ExpenseCategory {
         case 'DailyGoods':
           return Icons.shopping_cart;
         case 'Delivery':
-          return Icons.local_shipping;
+          return Icons.motorcycle_outlined;
         case 'Drinks':
           return Icons.local_cafe;
         case 'EatingOut':
@@ -169,8 +186,26 @@ class ExpenseCategory {
           return Icons.people;
         case 'Groceries':
           return Icons.shopping_cart;
+
         case 'Shoes':
           return Icons.checkroom;
+        case 'Coffee':
+          return Icons.coffee;
+        case 'Accessories':
+          return Icons.watch;
+        case 'Culture':
+          return Icons.theater_comedy;
+        case 'Hobby':
+          return Icons.sports_esports;
+        case 'Beauty':
+          return Icons.brush;
+        case 'OTT':
+          return Icons.tv;
+        case 'Subscription':
+          return Icons.subscriptions;
+        case 'Other':
+          return Icons.category;
+
         default:
           return Icons.receipt;
       }
