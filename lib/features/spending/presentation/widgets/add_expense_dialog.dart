@@ -20,6 +20,8 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
   late TextEditingController _descriptionController;
   String? _selectedCategory;
   String? _selectedSubcategory;
+  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
   @override
   void initState() {
@@ -46,9 +48,9 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
 
   void _saveExpense() {
     if (!_isFormValid()) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('모든 필드를 입력해주세요.')));
+      _scaffoldMessengerKey.currentState?.showSnackBar(
+        const SnackBar(content: Text('모든 필드를 입력해주세요.')),
+      );
       return;
     }
 
@@ -76,224 +78,245 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       insetPadding: const EdgeInsets.all(16),
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.95,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 헤더
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  Text(
-                    '추가 지출',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontFamily: 'Gmarket_sans',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.check),
-                    onPressed: _saveExpense,
-                  ),
-                ],
+      child: ScaffoldMessenger(
+        key: _scaffoldMessengerKey,
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Builder(
+            builder: (scaffoldContext) => Container(
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(24),
               ),
-            ),
-
-            // 콘텐츠
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 캘린더
-                    CalendarWidget(
-                      selectedDate: _selectedDate,
-                      onDateSelected: (date) {
-                        setState(() {
-                          _selectedDate = date;
-                        });
-                      },
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.95,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 헤더
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        Text(
+                          '추가 지출',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                fontFamily: 'Gmarket_sans',
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.check),
+                          onPressed: _saveExpense,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 24),
+                  ),
 
-                    // 금액 입력
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                  // 콘텐츠
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '금액 *',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  fontFamily: 'Gmarket_sans',
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: Sizes.size16 + Sizes.size2,
-                                ),
+                          // 캘린더
+                          CalendarWidget(
+                            selectedDate: _selectedDate,
+                            onDateSelected: (date) {
+                              setState(() {
+                                _selectedDate = date;
+                              });
+                            },
                           ),
-                          const SizedBox(height: 8),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(Sizes.size8),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            child: Row(
+                          const SizedBox(height: 24),
+
+                          // 금액 입력
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '₩ ',
-                                  style: TextStyle(
-                                    fontFamily: 'Gmarket_sans',
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 16,
-                                    color: Colors.grey.shade600,
-                                  ),
+                                  '금액 *',
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        fontFamily: 'Gmarket_sans',
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: Sizes.size16 + Sizes.size2,
+                                      ),
                                 ),
-                                Expanded(
-                                  child: TextField(
-                                    controller: _amountController,
-                                    keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(
-                                      hintText: '0',
-                                      border: InputBorder.none,
-                                      contentPadding: EdgeInsets.zero,
+                                const SizedBox(height: 8),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(
+                                      Sizes.size8,
                                     ),
-                                    style: const TextStyle(
-                                      fontFamily: 'Gmarket_sans',
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 16,
-                                    ),
-                                    onChanged: (value) {
-                                      final formatted = _formatAmount(value);
-                                      if (formatted != value) {
-                                        _amountController
-                                            .value = TextEditingValue(
-                                          text: formatted,
-                                          selection: TextSelection.fromPosition(
-                                            TextPosition(
-                                              offset: formatted.length,
-                                            ),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 4,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        '₩ ',
+                                        style: TextStyle(
+                                          fontFamily: 'Gmarket_sans',
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 16,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: TextField(
+                                          controller: _amountController,
+                                          keyboardType: TextInputType.number,
+                                          decoration: const InputDecoration(
+                                            hintText: '0',
+                                            border: InputBorder.none,
+                                            contentPadding: EdgeInsets.zero,
                                           ),
-                                        );
-                                      }
-                                      setState(() {});
-                                    },
+                                          style: const TextStyle(
+                                            fontFamily: 'Gmarket_sans',
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 16,
+                                          ),
+                                          onChanged: (value) {
+                                            final formatted = _formatAmount(
+                                              value,
+                                            );
+                                            if (formatted != value) {
+                                              _amountController
+                                                  .value = TextEditingValue(
+                                                text: formatted,
+                                                selection:
+                                                    TextSelection.fromPosition(
+                                                      TextPosition(
+                                                        offset:
+                                                            formatted.length,
+                                                      ),
+                                                    ),
+                                              );
+                                            }
+                                            setState(() {});
+                                          },
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
+                          const SizedBox(height: 20),
+
+                          // 설명 입력
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '세부내용',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      fontFamily: 'Gmarket_sans',
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: Sizes.size16 + Sizes.size2,
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.grey.shade200,
+                                  ),
+                                ),
+                                child: TextField(
+                                  controller: _descriptionController,
+                                  decoration: const InputDecoration(
+                                    hintText: '예: 회사 점심 식대 등',
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.all(16),
+                                  ),
+                                  style: const TextStyle(
+                                    fontFamily: 'Gmarket_sans',
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
+                                  minLines: 3,
+                                  maxLines: 3,
+                                  onChanged: (value) {
+                                    setState(() {});
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+
+                          // 카테고리 선택
+                          CategorySelectorWidget(
+                            selectedCategory: _selectedCategory,
+                            selectedSubcategory: _selectedSubcategory,
+                            onCategorySelected: (category, subcategory) {
+                              setState(() {
+                                _selectedCategory = category;
+                                _selectedSubcategory = subcategory;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 24),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                  ),
 
-                    // 설명 입력
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '세부내용',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                fontFamily: 'Gmarket_sans',
-                                fontWeight: FontWeight.w700,
-                                fontSize: Sizes.size16 + Sizes.size2,
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
+                  // 저장 버튼
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: _saveExpense,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade200),
-                          ),
-                          child: TextField(
-                            controller: _descriptionController,
-                            decoration: const InputDecoration(
-                              hintText: '예: 회사 점심 식대 등',
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.all(16),
-                            ),
-                            style: const TextStyle(
-                              fontFamily: 'Gmarket_sans',
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                            ),
-                            minLines: 3,
-                            maxLines: 3,
-                            onChanged: (value) {
-                              setState(() {});
-                            },
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    // 카테고리 선택
-                    CategorySelectorWidget(
-                      selectedCategory: _selectedCategory,
-                      selectedSubcategory: _selectedSubcategory,
-                      onCategorySelected: (category, subcategory) {
-                        setState(() {
-                          _selectedCategory = category;
-                          _selectedSubcategory = subcategory;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-            ),
-
-            // 저장 버튼
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _saveExpense,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                        child: const Text(
+                          '저장',
+                          style: TextStyle(
+                            fontFamily: 'Gmarket_sans',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  child: const Text(
-                    '저장',
-                    style: TextStyle(
-                      fontFamily: 'Gmarket_sans',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
