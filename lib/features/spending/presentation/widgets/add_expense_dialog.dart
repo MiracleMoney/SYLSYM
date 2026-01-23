@@ -39,7 +39,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
   bool _isFormValid() {
     return _amountController.text.isNotEmpty &&
         _amountController.text != '0' &&
-        _descriptionController.text.isNotEmpty &&
+        // _descriptionController.text.isNotEmpty &&
         _selectedCategory != null &&
         _selectedSubcategory != null;
   }
