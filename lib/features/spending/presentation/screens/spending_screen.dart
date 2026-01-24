@@ -113,43 +113,36 @@ class _SpendingScreenState extends State<SpendingScreen>
                     selectedMonth: _selectedMonth,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 5),
 
                 // 탭바
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 0),
                   child: TabBar(
                     controller: _tabController,
-                    indicator: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          blurRadius: 4,
-                        ),
-                      ],
+                    indicator: _CenteredUnderlineTabIndicator(
+                      borderSide: BorderSide(
+                        color: Color(0xFFE9435A),
+                        width: 1.5,
+                      ),
+                      widthFraction: 0.5,
                     ),
-                    indicatorPadding: const EdgeInsets.all(4),
+                    indicatorSize: TabBarIndicatorSize.tab,
                     labelColor: Colors.black,
                     unselectedLabelColor: Colors.grey.shade600,
                     labelStyle: const TextStyle(
                       fontFamily: 'Gmarket_sans',
                       fontWeight: FontWeight.w700,
-                      fontSize: 14,
+                      fontSize: Sizes.size16,
                     ),
                     unselectedLabelStyle: const TextStyle(
                       fontFamily: 'Gmarket_sans',
                       fontWeight: FontWeight.w500,
-                      fontSize: 14,
+                      fontSize: Sizes.size16,
                     ),
                     tabs: const [
-                      Tab(text: 'Spends'),
-                      Tab(text: 'Categories'),
+                      Tab(text: '지출 내역'),
+                      Tab(text: '예산 대비 지출'),
                     ],
                   ),
                 ),
@@ -163,7 +156,7 @@ class _SpendingScreenState extends State<SpendingScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
-                // Spends 탭
+                // 지출 내역 탭
                 monthExpenses.isEmpty
                     ? const ExpenseEmptyState()
                     : SingleChildScrollView(
@@ -174,7 +167,7 @@ class _SpendingScreenState extends State<SpendingScreen>
                         child: ExpenseListWidget(expenses: monthExpenses),
                       ),
 
-                // Categories 탭
+                // 예산 대비 지출 탭
                 SingleChildScrollView(
                   child: CategoryBudgetWidget(expenses: monthExpenses),
                 ),
@@ -190,5 +183,53 @@ class _SpendingScreenState extends State<SpendingScreen>
         child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
     );
+  }
+}
+
+class _CenteredUnderlineTabIndicator extends Decoration {
+  final BorderSide borderSide;
+  final double widthFraction;
+
+  const _CenteredUnderlineTabIndicator({
+    required this.borderSide,
+    this.widthFraction = 0.7,
+  });
+
+  @override
+  BoxPainter createBoxPainter([VoidCallback? onChanged]) {
+    return _CenteredUnderlinePainter(
+      borderSide: borderSide,
+      widthFraction: widthFraction,
+      onChanged: onChanged,
+    );
+  }
+}
+
+class _CenteredUnderlinePainter extends BoxPainter {
+  final BorderSide borderSide;
+  final double widthFraction;
+
+  _CenteredUnderlinePainter({
+    required this.borderSide,
+    required this.widthFraction,
+    VoidCallback? onChanged,
+  }) : super(onChanged);
+
+  @override
+  void paint(Canvas canvas, Offset offset, ImageConfiguration configuration) {
+    assert(configuration.size != null);
+    final width = configuration.size!.width;
+    final indicatorWidth = width * widthFraction;
+    final horizontalInset = (width - indicatorWidth) / 2;
+
+    final rect =
+        Offset(
+          offset.dx + horizontalInset,
+          configuration.size!.height - borderSide.width,
+        ) &
+        Size(indicatorWidth, borderSide.width);
+
+    final paint = borderSide.toPaint();
+    canvas.drawRect(rect, paint);
   }
 }
