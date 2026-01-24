@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:miraclemoney/core/constants/sizes.dart';
 import 'dart:math' as math;
 import 'package:miraclemoney/features/spending/data/models/expense_model.dart';
 import 'package:miraclemoney/features/spending/data/constants/expense_category.dart';
@@ -58,11 +59,11 @@ class SemiCircleGaugeChart extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Monthly Spending',
+            '내 지출 현황',
             style: TextStyle(
               fontFamily: 'Gmarket_sans',
               fontWeight: FontWeight.w500,
-              fontSize: 14,
+              fontSize: Sizes.size16,
               color: Colors.grey.shade600,
             ),
           ),
@@ -77,12 +78,14 @@ class SemiCircleGaugeChart extends StatelessWidget {
               ),
               child: Center(
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 40),
+                  padding: const EdgeInsets.only(
+                    top: Sizes.size80 + Sizes.size28,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '\$${NumberFormat('#,###').format(total.toInt())}',
+                        '₩${NumberFormat('#,###').format(total.toInt())}',
                         style: const TextStyle(
                           fontFamily: 'Gmarket_sans',
                           fontWeight: FontWeight.w700,
@@ -125,7 +128,7 @@ class _SemiCircleGaugePainter extends CustomPainter {
         ..color = Colors.grey.shade200
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
+        ..strokeCap = StrokeCap.butt;
 
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
@@ -146,7 +149,7 @@ class _SemiCircleGaugePainter extends CustomPainter {
         ..color = colors[colorIndex % colors.length]
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
+        ..strokeCap = StrokeCap.butt;
 
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),

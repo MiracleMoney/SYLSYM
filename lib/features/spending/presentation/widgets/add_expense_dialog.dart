@@ -49,7 +49,12 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
   void _saveExpense() {
     if (!_isFormValid()) {
       _scaffoldMessengerKey.currentState?.showSnackBar(
-        const SnackBar(content: Text('모든 필드를 입력해주세요.')),
+        const SnackBar(
+          content: Text(
+            '모든 필드를 입력해주세요.',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
       );
       return;
     }

@@ -3,7 +3,7 @@ import 'package:miraclemoney/core/constants/sizes.dart';
 import 'package:miraclemoney/features/spending/data/models/expense_model.dart';
 import 'package:miraclemoney/features/spending/presentation/widgets/add_expense_dialog.dart';
 import 'package:miraclemoney/features/spending/presentation/widgets/semi_circle_gauge_chart.dart';
-import 'package:miraclemoney/features/spending/presentation/widgets/month_selector_widget.dart';
+import 'package:miraclemoney/features/salary/presentation/widgets/month_selector.dart';
 import 'package:miraclemoney/features/spending/presentation/widgets/expense_list_widget.dart';
 import 'package:miraclemoney/features/spending/presentation/widgets/expense_empty_state.dart';
 import 'package:miraclemoney/features/spending/presentation/widgets/category_budget_widget.dart';
@@ -68,7 +68,7 @@ class _SpendingScreenState extends State<SpendingScreen>
             fontSize: Sizes.size24,
           ),
         ),
-        centerTitle: false,
+        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black,
@@ -81,13 +81,27 @@ class _SpendingScreenState extends State<SpendingScreen>
             child: Column(
               children: [
                 // 월 선택
-                MonthSelectorWidget(
-                  selectedMonth: _selectedMonth,
-                  onMonthChanged: (month) {
-                    setState(() {
-                      _selectedMonth = month;
-                    });
-                  },
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: MonthSelector(
+                    currentMonth: _selectedMonth,
+                    onPreviousMonth: () {
+                      setState(() {
+                        _selectedMonth = DateTime(
+                          _selectedMonth.year,
+                          _selectedMonth.month - 1,
+                        );
+                      });
+                    },
+                    onNextMonth: () {
+                      setState(() {
+                        _selectedMonth = DateTime(
+                          _selectedMonth.year,
+                          _selectedMonth.month + 1,
+                        );
+                      });
+                    },
+                  ),
                 ),
                 const SizedBox(height: 10),
 
