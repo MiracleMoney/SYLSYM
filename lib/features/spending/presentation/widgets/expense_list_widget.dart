@@ -26,7 +26,10 @@ class ExpenseListWidget extends StatelessWidget {
         final dateKey = entry.key;
         final dateExpenses = entry.value;
         final date = DateTime.parse(dateKey);
-        final dateLabel = DateFormat('EEE, MMM d, yyyy').format(date);
+        final weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+        final weekday = weekdays[date.weekday - 1];
+        final dateLabel =
+            '${date.year}년 ${date.month}월 ${date.day}일 ($weekday)';
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,7 +116,7 @@ class ExpenseListWidget extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            '- \$ ${NumberFormat('#,###.##').format(expense.amount)}',
+            '- ₩${NumberFormat('#,###').format(expense.amount.toInt())}',
             style: const TextStyle(
               fontFamily: 'Gmarket_sans',
               fontWeight: FontWeight.w700,

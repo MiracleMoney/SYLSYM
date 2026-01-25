@@ -17,7 +17,7 @@ class ExpenseEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'No expenses yet',
+              '아직 기록된 지출이 없어요',
               style: TextStyle(
                 fontFamily: 'Gmarket_sans',
                 fontWeight: FontWeight.w700,
@@ -27,7 +27,7 @@ class ExpenseEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Add your first expense by tapping the + button',
+              '+ 버튼을 눌러 첫 지출을 추가해보세요!',
               style: TextStyle(
                 fontFamily: 'Gmarket_sans',
                 fontWeight: FontWeight.w500,

@@ -129,7 +129,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '\$${NumberFormat('#,###').format(actual.toInt())}',
+                          '₩${NumberFormat('#,###').format(actual.toInt())}',
                           style: TextStyle(
                             fontFamily: 'Gmarket_sans',
                             fontWeight: FontWeight.w500,
@@ -144,7 +144,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '\$${NumberFormat('#,###').format(budget.toInt())}',
+                        '₩${NumberFormat('#,###').format(budget.toInt())}',
                         style: const TextStyle(
                           fontFamily: 'Gmarket_sans',
                           fontWeight: FontWeight.w700,
