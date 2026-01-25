@@ -163,7 +163,7 @@ class CategoryBudgetWidget extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Budget vs Actual',
+                '예산 기능은 곧 제공될 예정입니다',
                 style: TextStyle(
                   fontFamily: 'Gmarket_sans',
                   fontWeight: FontWeight.w500,
