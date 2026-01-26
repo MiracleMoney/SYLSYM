@@ -7,8 +7,17 @@ import 'package:intl/intl.dart';
 
 class AddExpenseDialog extends StatefulWidget {
   final Function(ExpenseModel) onExpenseAdded;
+  final Function(ExpenseModel)? onExpenseUpdated;
+  final Function(String)? onExpenseDeleted;
+  final ExpenseModel? existingExpense;
 
-  const AddExpenseDialog({super.key, required this.onExpenseAdded});
+  const AddExpenseDialog({
+    super.key,
+    required this.onExpenseAdded,
+    this.onExpenseUpdated,
+    this.onExpenseDeleted,
+    this.existingExpense,
+  });
 
   @override
   State<AddExpenseDialog> createState() => _AddExpenseDialogState();
@@ -26,9 +35,25 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
   @override
   void initState() {
     super.initState();
-    _selectedDate = DateTime.now();
-    _amountController = TextEditingController();
-    _descriptionController = TextEditingController();
+
+    // 기존 지출이 있으면 수정 모드, 없으면 추가 모드
+    if (widget.existingExpense != null) {
+      _selectedDate = widget.existingExpense!.date;
+      _amountController = TextEditingController(
+        text: NumberFormat(
+          '#,###',
+        ).format(widget.existingExpense!.amount.toInt()),
+      );
+      _descriptionController = TextEditingController(
+        text: widget.existingExpense!.description,
+      );
+      _selectedCategory = widget.existingExpense!.category;
+      _selectedSubcategory = widget.existingExpense!.subcategory;
+    } else {
+      _selectedDate = DateTime.now();
+      _amountController = TextEditingController();
+      _descriptionController = TextEditingController();
+    }
   }
 
   @override
@@ -60,17 +85,78 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
     }
 
     final expense = ExpenseModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id:
+          widget.existingExpense?.id ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
       date: _selectedDate,
       amount: double.parse(_amountController.text.replaceAll(',', '')),
       description: _descriptionController.text,
       category: _selectedCategory!,
       subcategory: _selectedSubcategory!,
-      createdAt: DateTime.now(),
+      createdAt: widget.existingExpense?.createdAt ?? DateTime.now(),
     );
 
-    widget.onExpenseAdded(expense);
+    // 수정 모드면 onExpenseUpdated, 추가 모드면 onExpenseAdded 호출
+    if (widget.existingExpense != null) {
+      widget.onExpenseUpdated?.call(expense);
+    } else {
+      widget.onExpenseAdded(expense);
+    }
+
     Navigator.pop(context);
+  }
+
+  void _deleteExpense() {
+    if (widget.existingExpense == null) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text(
+            '지출 삭제',
+            style: TextStyle(
+              fontFamily: 'Gmarket_sans',
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          content: const Text(
+            '이 지출을 삭제하시겠습니까?',
+            style: TextStyle(
+              fontFamily: 'Gmarket_sans',
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text(
+                '취소',
+                style: TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                widget.onExpenseDeleted?.call(widget.existingExpense!.id);
+                Navigator.pop(context);
+              },
+              child: const Text(
+                '삭제',
+                style: TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  fontWeight: FontWeight.w700,
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   String _formatAmount(String value) {
@@ -113,17 +199,26 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                           onPressed: () => Navigator.pop(context),
                         ),
                         Text(
-                          '추가 지출',
+                          widget.existingExpense != null ? '지출 수정' : '추가 지출',
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 fontFamily: 'Gmarket_sans',
                                 fontWeight: FontWeight.w700,
                               ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.check),
-                          onPressed: _saveExpense,
-                        ),
+                        // 수정 모드일 때 삭제 버튼, 아니면 체크 버튼
+                        widget.existingExpense != null
+                            ? IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red,
+                                ),
+                                onPressed: _deleteExpense,
+                              )
+                            : IconButton(
+                                icon: const Icon(Icons.check),
+                                onPressed: _saveExpense,
+                              ),
                       ],
                     ),
                   ),
@@ -246,7 +341,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                               const SizedBox(height: 8),
                               Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
+                                  color: Colors.white,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: Colors.grey.shade200,
@@ -306,9 +401,9 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
-                          '저장',
-                          style: TextStyle(
+                        child: Text(
+                          widget.existingExpense != null ? '수정 완료' : '저장',
+                          style: const TextStyle(
                             fontFamily: 'Gmarket_sans',
                             fontWeight: FontWeight.w700,
                             fontSize: 16,

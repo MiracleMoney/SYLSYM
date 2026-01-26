@@ -5,8 +5,13 @@ import 'package:intl/intl.dart';
 
 class ExpenseListWidget extends StatelessWidget {
   final List<ExpenseModel> expenses;
+  final Function(ExpenseModel)? onExpenseTap;
 
-  const ExpenseListWidget({super.key, required this.expenses});
+  const ExpenseListWidget({
+    super.key,
+    required this.expenses,
+    this.onExpenseTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -60,71 +65,74 @@ class ExpenseListWidget extends StatelessWidget {
       expense.subcategory,
     );
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(10),
+    return GestureDetector(
+      onTap: () => onExpenseTap?.call(expense),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-            child: Icon(icon, color: const Color(0xFF5B7EFF), size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  expense.description,
-                  style: const TextStyle(
-                    fontFamily: 'Gmarket_sans',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: const Color(0xFF5B7EFF), size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    expense.description,
+                    style: const TextStyle(
+                      fontFamily: 'Gmarket_sans',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '$categoryLabel • $subcategoryLabel',
-                  style: TextStyle(
-                    fontFamily: 'Gmarket_sans',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
+                  const SizedBox(height: 4),
+                  Text(
+                    '$categoryLabel • $subcategoryLabel',
+                    style: TextStyle(
+                      fontFamily: 'Gmarket_sans',
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            '- ₩${NumberFormat('#,###').format(expense.amount.toInt())}',
-            style: const TextStyle(
-              fontFamily: 'Gmarket_sans',
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-              color: Color(0xFFE9435A),
+            const SizedBox(width: 12),
+            Text(
+              '- ₩${NumberFormat('#,###').format(expense.amount.toInt())}',
+              style: const TextStyle(
+                fontFamily: 'Gmarket_sans',
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Color(0xFFE9435A),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -86,10 +86,69 @@ class _SpendingScreenState extends State<SpendingScreen>
     }
   }
 
+  /// 지출 수정
+  Future<void> _updateExpense(ExpenseModel expense) async {
+    try {
+      await _firestoreService.updateExpense(
+        expense.id,
+        expense.toJson(),
+        expense.date,
+      );
+      await _loadExpenses(); // 데이터 다시 불러오기
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('지출이 수정되었습니다')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('지출 수정에 실패했습니다: $e')));
+      }
+    }
+  }
+
+  /// 지출 삭제
+  Future<void> _deleteExpense(String expenseId) async {
+    try {
+      // 삭제할 지출 찾기 (날짜 정보 필요)
+      final expense = _expenses.firstWhere((e) => e.id == expenseId);
+
+      await _firestoreService.deleteExpense(expenseId, expense.date);
+      await _loadExpenses(); // 데이터 다시 불러오기
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('지출이 삭제되었습니다')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('지출 삭제에 실패했습니다: $e')));
+      }
+    }
+  }
+
   void _showAddExpenseDialog() {
     showDialog(
       context: context,
       builder: (context) => AddExpenseDialog(onExpenseAdded: _addExpense),
+    );
+  }
+
+  void _showEditExpenseDialog(ExpenseModel expense) {
+    showDialog(
+      context: context,
+      builder: (context) => AddExpenseDialog(
+        onExpenseAdded: _addExpense,
+        existingExpense: expense,
+        onExpenseUpdated: _updateExpense,
+        onExpenseDeleted: _deleteExpense,
+      ),
     );
   }
 
@@ -226,7 +285,10 @@ class _SpendingScreenState extends State<SpendingScreen>
                           horizontal: 20,
                           vertical: 10,
                         ),
-                        child: ExpenseListWidget(expenses: monthExpenses),
+                        child: ExpenseListWidget(
+                          expenses: monthExpenses,
+                          onExpenseTap: _showEditExpenseDialog,
+                        ),
                       ),
 
                 // 예산 대비 지출 탭

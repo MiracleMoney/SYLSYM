@@ -137,7 +137,7 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
             borderRadius: BorderRadius.circular(12),
             child: Container(
               decoration: BoxDecoration(
-                color: isSelected ? Colors.grey.shade50 : Colors.grey.shade50,
+                color: isSelected ? Colors.white : Colors.white,
                 border: Border.all(
                   color: isSelected ? Color(0xFFE9435A) : Colors.grey.shade200,
                   width: isSelected ? 2 : 1,
