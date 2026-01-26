@@ -158,15 +158,178 @@ class FirestoreService {
     return null;
   }
 
-  // ==================== 지출 데이터 (나중에 구현) ====================
+  // ==================== 지출 데이터 ====================
 
+  /// 지출 추가
   Future<void> addExpense(Map<String, dynamic> expenseData) async {
-    // TODO: 구현
+    try {
+      final userId = currentUserId;
+
+      // ID가 없으면 자동 생성
+      if (!expenseData.containsKey('id') || expenseData['id'] == null) {
+        expenseData['id'] = _firestore.collection('temp').doc().id;
+      }
+
+      // createdAt이 없으면 현재 시간으로 설정
+      if (!expenseData.containsKey('createdAt')) {
+        expenseData['createdAt'] = DateTime.now().toIso8601String();
+      }
+
+      // date에서 연-월 추출
+      final dateStr = expenseData['date'] as String;
+      final date = DateTime.parse(dateStr);
+      final yearMonth = '${date.year}-${date.month.toString().padLeft(2, '0')}';
+
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('expenses')
+          .doc(yearMonth)
+          .collection('items')
+          .doc(expenseData['id'])
+          .set(expenseData);
+
+      if (kDebugMode) {
+        print('✅ 지출 추가 성공: $yearMonth/${expenseData['id']}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ 지출 추가 실패: $e');
+      }
+      throw ErrorHandler.handleFirebaseError(e);
+    }
   }
 
+  /// 특정 월의 지출 목록 불러오기
   Future<List<Map<String, dynamic>>> loadExpenses(DateTime targetDate) async {
-    // TODO: 구현
-    return [];
+    try {
+      final userId = currentUserId;
+
+      // 연-월 형식
+      final yearMonth =
+          '${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}';
+
+      final querySnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('expenses')
+          .doc(yearMonth)
+          .collection('items')
+          .orderBy('date', descending: true)
+          .get();
+
+      if (kDebugMode) {
+        print('✅ 지출 목록 불러오기 성공 ($yearMonth): ${querySnapshot.docs.length}개');
+      }
+
+      return querySnapshot.docs.map((doc) => doc.data()).toList();
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ 지출 목록 불러오기 실패: $e');
+      }
+      // 목록 불러오기 실패는 빈 리스트 반환
+      return [];
+    }
+  }
+
+  /// 지출 삭제
+  Future<void> deleteExpense(String expenseId, DateTime expenseDate) async {
+    try {
+      final userId = currentUserId;
+      final yearMonth =
+          '${expenseDate.year}-${expenseDate.month.toString().padLeft(2, '0')}';
+
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('expenses')
+          .doc(yearMonth)
+          .collection('items')
+          .doc(expenseId)
+          .delete();
+
+      if (kDebugMode) {
+        print('✅ 지출 삭제 성공: $yearMonth/$expenseId');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ 지출 삭제 실패: $e');
+      }
+      throw ErrorHandler.handleFirebaseError(e);
+    }
+  }
+
+  /// 지출 수정
+  Future<void> updateExpense(
+    String expenseId,
+    Map<String, dynamic> expenseData,
+    DateTime expenseDate,
+  ) async {
+    try {
+      final userId = currentUserId;
+      final yearMonth =
+          '${expenseDate.year}-${expenseDate.month.toString().padLeft(2, '0')}';
+
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('expenses')
+          .doc(yearMonth)
+          .collection('items')
+          .doc(expenseId)
+          .update(expenseData);
+
+      if (kDebugMode) {
+        print('✅ 지출 수정 성공: $yearMonth/$expenseId');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ 지출 수정 실패: $e');
+      }
+      throw ErrorHandler.handleFirebaseError(e);
+    }
+  }
+
+  /// 모든 지출 불러오기 (최근 N개월)
+  Future<List<Map<String, dynamic>>> loadAllExpenses({
+    int monthsLimit = 6,
+  }) async {
+    try {
+      final userId = currentUserId;
+      final now = DateTime.now();
+      final allExpenses = <Map<String, dynamic>>[];
+
+      // 최근 N개월의 데이터 가져오기
+      for (int i = 0; i < monthsLimit; i++) {
+        final targetDate = DateTime(now.year, now.month - i, 1);
+        final yearMonth =
+            '${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}';
+
+        final querySnapshot = await _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('expenses')
+            .doc(yearMonth)
+            .collection('items')
+            .get();
+
+        allExpenses.addAll(querySnapshot.docs.map((doc) => doc.data()));
+      }
+
+      // 날짜순 정렬
+      allExpenses.sort((a, b) => b['date'].compareTo(a['date']));
+
+      if (kDebugMode) {
+        print('✅ 전체 지출 불러오기 성공: ${allExpenses.length}개');
+      }
+
+      return allExpenses;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ 전체 지출 불러오기 실패: $e');
+      }
+      return [];
+    }
   }
 
   // ==================== 자산 데이터 (나중에 구현) ====================

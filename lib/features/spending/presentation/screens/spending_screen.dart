@@ -7,6 +7,7 @@ import 'package:miraclemoney/features/salary/presentation/widgets/month_selector
 import 'package:miraclemoney/features/spending/presentation/widgets/expense_list_widget.dart';
 import 'package:miraclemoney/features/spending/presentation/widgets/expense_empty_state.dart';
 import 'package:miraclemoney/features/spending/presentation/widgets/category_budget_widget.dart';
+import 'package:miraclemoney/data/services/firestore_service.dart';
 
 class SpendingScreen extends StatefulWidget {
   const SpendingScreen({super.key});
@@ -17,14 +18,17 @@ class SpendingScreen extends StatefulWidget {
 
 class _SpendingScreenState extends State<SpendingScreen>
     with SingleTickerProviderStateMixin {
+  final FirestoreService _firestoreService = FirestoreService();
   final List<ExpenseModel> _expenses = [];
   DateTime _selectedMonth = DateTime.now();
   late TabController _tabController;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadExpenses();
   }
 
   @override
@@ -33,10 +37,53 @@ class _SpendingScreenState extends State<SpendingScreen>
     super.dispose();
   }
 
-  void _addExpense(ExpenseModel expense) {
+  /// Firebase에서 지출 데이터 불러오기
+  Future<void> _loadExpenses() async {
     setState(() {
-      _expenses.add(expense);
+      _isLoading = true;
     });
+
+    try {
+      final expensesData = await _firestoreService.loadExpenses(_selectedMonth);
+      final expenses = expensesData
+          .map((data) => ExpenseModel.fromJson(data))
+          .toList();
+
+      setState(() {
+        _expenses.clear();
+        _expenses.addAll(expenses);
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('지출 데이터를 불러오는데 실패했습니다: $e')));
+      }
+    }
+  }
+
+  /// 지출 추가
+  Future<void> _addExpense(ExpenseModel expense) async {
+    try {
+      await _firestoreService.addExpense(expense.toJson());
+      await _loadExpenses(); // 데이터 다시 불러오기
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('지출이 추가되었습니다')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('지출 추가에 실패했습니다: $e')));
+      }
+    }
   }
 
   void _showAddExpenseDialog() {
@@ -72,6 +119,19 @@ class _SpendingScreenState extends State<SpendingScreen>
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black,
+        actions: [
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.only(right: 16),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -92,6 +152,7 @@ class _SpendingScreenState extends State<SpendingScreen>
                           _selectedMonth.month - 1,
                         );
                       });
+                      _loadExpenses();
                     },
                     onNextMonth: () {
                       setState(() {
@@ -100,6 +161,7 @@ class _SpendingScreenState extends State<SpendingScreen>
                           _selectedMonth.month + 1,
                         );
                       });
+                      _loadExpenses();
                     },
                   ),
                 ),

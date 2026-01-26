@@ -20,11 +20,11 @@ class CategoryBudgetWidget extends StatelessWidget {
   // 임시 예산 데이터 (나중에 예산 기능에서 가져올 예정)
   Map<String, double> _getCategoryBudgets() {
     return {
-      ExpenseCategory.fixedExpenses: 1500000,
-      ExpenseCategory.livingExpenses: 800000,
-      ExpenseCategory.investmentExpenses: 600000,
-      ExpenseCategory.savingExpenses: 500000,
-      ExpenseCategory.interestExpenses: 300000,
+      ExpenseCategory.fixedExpenses: 0,
+      ExpenseCategory.livingExpenses: 0,
+      ExpenseCategory.investmentExpenses: 0,
+      ExpenseCategory.savingExpenses: 0,
+      ExpenseCategory.interestExpenses: 0,
     };
   }
 
