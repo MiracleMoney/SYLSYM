@@ -36,22 +36,26 @@ class ExpenseListWidget extends StatelessWidget {
         final dateLabel =
             '${date.year}년 ${date.month}월 ${date.day}일 ($weekday)';
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              dateLabel,
-              style: TextStyle(
-                fontFamily: 'Gmarket_sans',
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-                color: Colors.grey.shade700,
+        return Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+
+            children: [
+              Text(
+                dateLabel,
+                style: TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: Colors.grey.shade700,
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            ...dateExpenses.map((expense) => _buildExpenseItem(expense)),
-            const SizedBox(height: 24),
-          ],
+              const SizedBox(height: 12),
+              ...dateExpenses.map((expense) => _buildExpenseItem(expense)),
+              const SizedBox(height: 24),
+            ],
+          ),
         );
       }).toList(),
     );

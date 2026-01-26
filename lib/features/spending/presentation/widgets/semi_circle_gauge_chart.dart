@@ -8,11 +8,13 @@ import 'package:intl/intl.dart';
 class SemiCircleGaugeChart extends StatelessWidget {
   final List<ExpenseModel> expenses;
   final DateTime selectedMonth;
+  final double? budget; // 예산 (나중에 Firebase에서 가져올 예정)
 
   const SemiCircleGaugeChart({
     super.key,
     required this.expenses,
     required this.selectedMonth,
+    this.budget,
   });
 
   double _getTotalAmount() {
@@ -36,6 +38,30 @@ class SemiCircleGaugeChart extends StatelessWidget {
       const Color(0xFFEC407A), // 저축
       const Color(0xFFAB47BC), // 이자
     ];
+  }
+
+  double _getBudgetPercentage() {
+    final total = _getTotalAmount();
+    if (budget == null) return 0; // 예산 데이터 없음
+    if (budget == 0) return 0;
+    return (total / budget!) * 100;
+  }
+
+  String _getPercentageText() {
+    if (budget == null) {
+      final monthName = '${selectedMonth.month}월';
+      return '$monthName의 수입 데이터 없음';
+    }
+    return '${_getBudgetPercentage().toStringAsFixed(1)}%';
+  }
+
+  Color _getPercentageColor() {
+    if (budget == null) {
+      return Colors.grey.shade600;
+    }
+    return _getBudgetPercentage() > 100
+        ? const Color(0xFFE9435A)
+        : Colors.grey.shade600;
   }
 
   @override
@@ -78,12 +104,20 @@ class SemiCircleGaugeChart extends StatelessWidget {
               ),
               child: Center(
                 child: Padding(
-                  padding: const EdgeInsets.only(
-                    top: Sizes.size80 + Sizes.size28,
-                  ),
+                  padding: const EdgeInsets.only(top: Sizes.size60),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      Text(
+                        _getPercentageText(),
+                        style: TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontWeight: FontWeight.w600,
+                          fontSize: budget == null ? 13 : 16,
+                          color: _getPercentageColor(),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       Text(
                         '₩${NumberFormat('#,###').format(total.toInt())}',
                         style: const TextStyle(

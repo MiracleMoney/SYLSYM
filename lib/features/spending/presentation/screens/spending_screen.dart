@@ -23,6 +23,7 @@ class _SpendingScreenState extends State<SpendingScreen>
   DateTime _selectedMonth = DateTime.now();
   late TabController _tabController;
   bool _isLoading = false;
+  double? _monthlyBudget; // 해당 월의 예산 (totalIncome)
 
   @override
   void initState() {
@@ -44,14 +45,22 @@ class _SpendingScreenState extends State<SpendingScreen>
     });
 
     try {
+      // 지출 데이터 로드
       final expensesData = await _firestoreService.loadExpenses(_selectedMonth);
       final expenses = expensesData
           .map((data) => ExpenseModel.fromJson(data))
           .toList();
 
+      // salary_data에서 totalIncome 가져오기
+      final salaryData = await _firestoreService.loadSalaryData(
+        targetDate: _selectedMonth,
+      );
+      final budget = salaryData?.result.totalIncome;
+
       setState(() {
         _expenses.clear();
         _expenses.addAll(expenses);
+        _monthlyBudget = budget;
         _isLoading = false;
       });
     } catch (e) {
@@ -166,6 +175,7 @@ class _SpendingScreenState extends State<SpendingScreen>
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(
           '지출',
           style: TextStyle(
@@ -232,6 +242,7 @@ class _SpendingScreenState extends State<SpendingScreen>
                   child: SemiCircleGaugeChart(
                     expenses: monthExpenses,
                     selectedMonth: _selectedMonth,
+                    budget: _monthlyBudget,
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -267,7 +278,6 @@ class _SpendingScreenState extends State<SpendingScreen>
                     ],
                   ),
                 ),
-                const SizedBox(height: 10),
               ],
             ),
           ),
