@@ -26,7 +26,7 @@ class ExpenseCategory {
     'Hobby': '취미',
 
     'OTT': 'OTT',
-    'Subscription': '그 외 구독 서비스',
+    'Subscription': 'OTT 외\n구독 서비스',
     'Other': '기타',
   };
 

@@ -115,7 +115,9 @@ class SemiCircleGaugeChart extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'Gmarket_sans',
                           fontWeight: FontWeight.w600,
-                          fontSize: budget == null ? 13 : 16,
+                          fontSize: budget == null
+                              ? Sizes.size12
+                              : Sizes.size16,
                           color: _getPercentageColor(),
                         ),
                       ),
@@ -125,7 +127,7 @@ class SemiCircleGaugeChart extends StatelessWidget {
                         style: const TextStyle(
                           fontFamily: 'Gmarket_sans',
                           fontWeight: FontWeight.w700,
-                          fontSize: 28,
+                          fontSize: Sizes.size24,
                           color: Colors.black,
                         ),
                       ),

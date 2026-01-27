@@ -166,7 +166,7 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
                       fontWeight: isSelected
                           ? FontWeight.w700
                           : FontWeight.w500,
-                      fontSize: Sizes.size12 + Sizes.size1,
+                      fontSize: Sizes.size12,
                       color: isSelected ? Color(0xFFE9435A) : Colors.black,
                     ),
                   ),

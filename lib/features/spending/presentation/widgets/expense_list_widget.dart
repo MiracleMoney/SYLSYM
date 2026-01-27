@@ -47,13 +47,12 @@ class ExpenseListWidget extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'Gmarket_sans',
                   fontWeight: FontWeight.w700,
-                  fontSize: 13,
+                  fontSize: 14,
                   color: Colors.grey.shade700,
                 ),
               ),
               const SizedBox(height: 12),
               ...dateExpenses.map((expense) => _buildExpenseItem(expense)),
-              const SizedBox(height: 24),
             ],
           ),
         );
