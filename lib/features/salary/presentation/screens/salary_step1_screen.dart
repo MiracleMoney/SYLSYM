@@ -638,7 +638,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
                               ?.copyWith(
                                 fontFamily: "Gmarket_sans",
                                 fontWeight: FontWeight.w400,
-                                fontSize: Sizes.size16 + Sizes.size2,
+                                fontSize: Sizes.size16,
                               ),
                         ),
                         Gaps.v10,

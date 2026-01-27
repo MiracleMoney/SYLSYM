@@ -406,7 +406,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                           style: const TextStyle(
                             fontFamily: 'Gmarket_sans',
                             fontWeight: FontWeight.w700,
-                            fontSize: 16,
+                            fontSize: Sizes.size16,
                             color: Colors.white,
                           ),
                         ),

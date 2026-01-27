@@ -754,7 +754,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                       SectionHeader(
                         icon: Icons.calculate_outlined,
                         title: '목표 금액',
-                        fontSize: Sizes.size16 + Sizes.size4,
+                        fontSize: Sizes.size16 + Sizes.size2,
                       ),
                     ],
                   ),
@@ -778,7 +778,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                                 ?.copyWith(
                                   fontFamily: 'Gmarket_sans',
                                   height: 1.15,
-                                  fontSize: Sizes.size16 + Sizes.size2,
+                                  fontSize: Sizes.size16,
                                 ),
                           ),
                         ),
@@ -788,7 +788,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                               ?.copyWith(
                                 fontFamily: 'Gmarket_sans',
                                 fontWeight: FontWeight.w700,
-                                fontSize: Sizes.size16 + Sizes.size2,
+                                fontSize: Sizes.size16,
                               ),
                         ),
                       ],
@@ -814,7 +814,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                                 ?.copyWith(
                                   fontFamily: 'Gmarket_sans',
                                   height: 1.15,
-                                  fontSize: Sizes.size16 + Sizes.size2,
+                                  fontSize: Sizes.size16,
                                 ),
                           ),
                         ),
@@ -824,7 +824,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                               ?.copyWith(
                                 fontFamily: 'Gmarket_sans',
                                 fontWeight: FontWeight.w700,
-                                fontSize: Sizes.size16 + Sizes.size2,
+                                fontSize: Sizes.size16,
                               ),
                         ),
                       ],
@@ -840,7 +840,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                 SectionHeader(
                   icon: Icons.pie_chart_outline,
                   title: '월급 분리',
-                  fontSize: Sizes.size16 + Sizes.size4,
+                  fontSize: Sizes.size16 + Sizes.size2,
                 ),
               ],
             ),
@@ -859,7 +859,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                     '총 수입액',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontFamily: 'Gmarket_sans',
-                      fontSize: Sizes.size16 + Sizes.size2,
+                      fontSize: Sizes.size16,
                     ),
                   ),
                   Gaps.v8,
@@ -868,7 +868,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                       fontFamily: 'Gmarket_sans',
                       fontWeight: FontWeight.w700,
-                      fontSize: Sizes.size32,
+                      fontSize: Sizes.size24,
                     ),
                   ),
                 ],
@@ -931,6 +931,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                               ?.copyWith(
                                 fontFamily: 'Gmarket_sans',
                                 fontWeight: FontWeight.w400,
+                                fontSize: Sizes.size16,
                               ),
                         ),
                         Icon(
@@ -1017,7 +1018,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                       style: TextStyle(
                         fontFamily: 'Gmarket_sans',
                         fontWeight: FontWeight.w700,
-                        fontSize: Sizes.size16 + Sizes.size2,
+                        fontSize: Sizes.size16,
                       ),
                     ),
                   ),
@@ -1041,7 +1042,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                       style: TextStyle(
                         fontFamily: 'Gmarket_sans',
                         fontWeight: FontWeight.w700,
-                        fontSize: Sizes.size16 + Sizes.size2,
+                        fontSize: Sizes.size16,
                       ),
                     ),
                   ),
@@ -1079,7 +1080,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                 fontFamily: 'Gmarket_sans',
                 fontWeight: FontWeight.w400,
                 height: 1.15,
-                fontSize: Sizes.size16 + Sizes.size2,
+                fontSize: Sizes.size16,
               ),
             ),
           ),
@@ -1088,7 +1089,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               fontFamily: 'Gmarket_sans',
               fontWeight: FontWeight.w700,
-              fontSize: Sizes.size16 + Sizes.size2,
+              fontSize: Sizes.size16,
             ),
           ),
         ],
@@ -1250,7 +1251,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                       fontFamily: 'Gmarket_sans',
                       fontWeight: FontWeight.w400,
                       height: 1.15,
-                      fontSize: Sizes.size16 + Sizes.size2,
+                      fontSize: Sizes.size16,
                     ),
                   ),
                 ),
@@ -1263,7 +1264,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontFamily: 'Gmarket_sans',
                         fontWeight: FontWeight.w700,
-                        fontSize: Sizes.size16 + Sizes.size2,
+                        fontSize: Sizes.size16,
                       ),
                     ),
                     const SizedBox(width: 8),

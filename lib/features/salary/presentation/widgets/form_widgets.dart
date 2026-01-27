@@ -74,7 +74,7 @@ class LabeledTextFormField extends StatelessWidget {
 
     final labelStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.w400,
-      fontSize: Sizes.size16 + Sizes.size2,
+      fontSize: Sizes.size16,
       fontFamily: 'Gmarket_sans',
     );
 
@@ -90,9 +90,15 @@ class LabeledTextFormField extends StatelessWidget {
           inputFormatters: inputFormatters ?? defaultFormatters,
           textInputAction: textInputAction,
           onFieldSubmitted: onFieldSubmitted,
+          style: const TextStyle(
+            fontFamily: 'Gmarket_sans',
+            fontSize: Sizes.size16,
+            fontWeight: FontWeight.w500,
+          ),
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.grey.shade50,
+
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(Sizes.size8),
               borderSide: BorderSide.none,
@@ -102,7 +108,19 @@ class LabeledTextFormField extends StatelessWidget {
               borderSide: BorderSide.none,
             ),
             hintText: hint,
+            hintStyle: TextStyle(
+              fontFamily: 'Gmarket_sans',
+              fontWeight: FontWeight.w400,
+              fontSize: Sizes.size14,
+              color: Colors.grey.shade600,
+            ),
             suffixText: suffixText,
+            suffixStyle: TextStyle(
+              fontFamily: 'Gmarket_sans',
+              fontWeight: FontWeight.w500,
+              fontSize: Sizes.size16,
+              color: Colors.grey.shade800,
+            ),
             border: OutlineInputBorder(
               gapPadding: 5,
               borderRadius: BorderRadius.circular(Sizes.size8),

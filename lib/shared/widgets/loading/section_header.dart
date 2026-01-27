@@ -18,14 +18,14 @@ class SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18),
+        Icon(icon, size: 16),
         const SizedBox(width: 8),
         Text(
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontFamily: 'Gmarket_sans',
             fontWeight: FontWeight.w700,
-            fontSize: fontSize ?? Sizes.size20,
+            fontSize: fontSize ?? Sizes.size16 + Sizes.size2,
           ),
         ),
       ],

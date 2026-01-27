@@ -502,7 +502,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                 SectionHeader(
                   icon: Icons.monetization_on_outlined,
                   title: '퇴직금 투자 금액',
-                  fontSize: Sizes.size16 + Sizes.size4,
+                  fontSize: Sizes.size16 + Sizes.size2,
                 ),
               ],
             ),
@@ -512,7 +512,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontFamily: 'Gmarket_sans',
                 color: Colors.grey.shade600,
-                fontSize: Sizes.size16,
+                fontSize: Sizes.size14,
               ),
             ),
             Gaps.v12,
