@@ -66,6 +66,9 @@ class CategoryBudgetWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final categoryTotals = _getCategoryTotals();
     final categoryBudgets = _getCategoryBudgets();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final iconSize = screenWidth * 0.12; // 화면 너비의 12%
+    final progressBarHeight = screenWidth * 0.02; // 화면 너비의 2%
 
     return ListView.builder(
       shrinkWrap: true,
@@ -102,8 +105,8 @@ class CategoryBudgetWidget extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: iconSize,
+                    height: iconSize,
                     decoration: BoxDecoration(
                       color: _getCategoryColor(category).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -179,7 +182,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       child: LinearProgressIndicator(
                         value: percentage / 100,
-                        minHeight: 8,
+                        minHeight: progressBarHeight,
                         backgroundColor: Colors.grey.shade200,
                         valueColor: AlwaysStoppedAnimation<Color>(
                           isOverBudget

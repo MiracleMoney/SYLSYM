@@ -310,11 +310,20 @@ class _SpendingScreenState extends State<SpendingScreen>
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddExpenseDialog,
-        backgroundColor: Colors.black,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
+      floatingActionButton: Builder(
+        builder: (context) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          final iconSize = screenWidth * 0.07; // 화면 너비의 7%
+
+          return FloatingActionButton(
+            onPressed: _showAddExpenseDialog,
+            backgroundColor: Colors.black,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(Icons.add, color: Colors.white, size: iconSize),
+          );
+        },
       ),
     );
   }

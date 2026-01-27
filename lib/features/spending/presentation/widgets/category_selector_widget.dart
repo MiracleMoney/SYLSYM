@@ -108,12 +108,15 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
 
   Widget _buildSubcategoryGrid() {
     final subcategories = ExpenseCategory.getSubcategories(_selectedCategory);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final iconSize = screenWidth * 0.07; // 화면 너비의 7%
+    final crossAxisCount = screenWidth > 400 ? 3 : 2; // 화면 크기에 따라 2~3개
 
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
         childAspectRatio: 1.0,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
@@ -149,7 +152,7 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
                 children: [
                   Icon(
                     icon,
-                    size: 28,
+                    size: iconSize,
                     color: isSelected
                         ? Color(0xFFE9435A)
                         : Colors.grey.shade600,

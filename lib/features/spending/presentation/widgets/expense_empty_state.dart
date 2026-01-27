@@ -5,6 +5,9 @@ class ExpenseEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final iconSize = screenWidth * 0.15; // 화면 너비의 15%
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 60),
@@ -12,7 +15,7 @@ class ExpenseEmptyState extends StatelessWidget {
           children: [
             Icon(
               Icons.receipt_long_outlined,
-              size: 60,
+              size: iconSize,
               color: Colors.grey.shade300,
             ),
             const SizedBox(height: 16),

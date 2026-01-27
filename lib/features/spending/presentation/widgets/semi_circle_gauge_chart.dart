@@ -68,6 +68,8 @@ class SemiCircleGaugeChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final total = _getTotalAmount();
     final categoryAmounts = _getCategoryAmounts();
+    final screenHeight = MediaQuery.of(context).size.height;
+    final chartHeight = screenHeight * 0.2; // 화면 높이의 20%
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -95,7 +97,7 @@ class SemiCircleGaugeChart extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           SizedBox(
-            height: 160,
+            height: chartHeight,
             child: CustomPaint(
               painter: _SemiCircleGaugePainter(
                 categoryAmounts: categoryAmounts,

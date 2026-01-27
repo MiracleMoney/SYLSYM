@@ -392,7 +392,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                     padding: const EdgeInsets.all(16),
                     child: SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: MediaQuery.of(context).size.height * 0.06,
                       child: ElevatedButton(
                         onPressed: _saveExpense,
                         style: ElevatedButton.styleFrom(

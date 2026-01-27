@@ -77,10 +77,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // 캘린더 너비 계산: 화면 너비 - 좌우 패딩(20*2) - 대화상자 패딩(16*2)
     final screenWidth = MediaQuery.of(context).size.width;
-    final calendarWidth = screenWidth - 40 - 32; // 패딩 제외
-    final cellWidth = calendarWidth / 7; // 7개 요일로 나누기
+    final horizontalPadding = screenWidth * 0.05; // 화면 너비의 5%
 
     return Container(
       decoration: BoxDecoration(
@@ -94,73 +92,80 @@ class _CalendarWidgetState extends State<CalendarWidget> {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 캘린더 헤더
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: EdgeInsets.all(horizontalPadding),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // 실제 사용 가능한 너비에서 셀 크기 계산
+          final cellWidth = constraints.maxWidth / 7;
+
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '날짜 선택',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontFamily: 'Gmarket_sans',
-                  fontWeight: FontWeight.w700,
-                ),
+              // 캘린더 헤더
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '날짜 선택',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontFamily: 'Gmarket_sans',
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        _buildCalendarToggleButton(
+                          label: '주간',
+                          isSelected: isWeekly,
+                          onTap: () {
+                            setState(() {
+                              isWeekly = true;
+                            });
+                          },
+                        ),
+                        _buildCalendarToggleButton(
+                          label: '월간',
+                          isSelected: !isWeekly,
+                          onTap: () {
+                            setState(() {
+                              isWeekly = false;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    _buildCalendarToggleButton(
-                      label: '주간',
-                      isSelected: isWeekly,
-                      onTap: () {
-                        setState(() {
-                          isWeekly = true;
-                        });
-                      },
-                    ),
-                    _buildCalendarToggleButton(
-                      label: '월간',
-                      isSelected: !isWeekly,
-                      onTap: () {
-                        setState(() {
-                          isWeekly = false;
-                        });
-                      },
-                    ),
-                  ],
+              const SizedBox(height: 20),
+
+              // 주간/월간 캘린더
+              if (isWeekly)
+                _buildWeeklyCalendar(cellWidth)
+              else
+                _buildMonthlyCalendar(cellWidth),
+
+              const SizedBox(height: 16),
+
+              // 선택된 날짜 표시
+              Center(
+                child: Text(
+                  DateFormat('EEE, M/d/y', 'ko_KR').format(widget.selectedDate),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontFamily: 'Gmarket_sans',
+                    color: Colors.grey.shade600,
+                  ),
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 20),
-
-          // 주간/월간 캘린더
-          if (isWeekly)
-            _buildWeeklyCalendar(cellWidth)
-          else
-            _buildMonthlyCalendar(cellWidth),
-
-          const SizedBox(height: 16),
-
-          // 선택된 날짜 표시
-          Center(
-            child: Text(
-              DateFormat('EEE, M/d/y', 'ko_KR').format(widget.selectedDate),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontFamily: 'Gmarket_sans',
-                color: Colors.grey.shade600,
-              ),
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -211,7 +216,6 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       children: [
         // 요일 헤더
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: _days
               .map(
                 (day) => SizedBox(
@@ -233,9 +237,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
         ),
         const SizedBox(height: 12),
 
-        // 날짜 버튼 - Row로 변경 (더 가벼움)
+        // 날짜 버튼
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: weekDates
               .map((date) => _buildDateButton(date, cellWidth))
               .toList(),
@@ -252,7 +255,6 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       children: [
         // 요일 헤더
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: _days
               .map(
                 (day) => SizedBox(
@@ -287,7 +289,6 @@ class _CalendarWidgetState extends State<CalendarWidget> {
             return Padding(
               padding: EdgeInsets.only(bottom: weekIndex < 5 ? 8 : 0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: weekDates
                     .map((date) => _buildDateButton(date, cellWidth))
                     .toList(),
