@@ -77,6 +77,11 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 
   @override
   Widget build(BuildContext context) {
+    // 캘린더 너비 계산: 화면 너비 - 좌우 패딩(20*2) - 대화상자 패딩(16*2)
+    final screenWidth = MediaQuery.of(context).size.width;
+    final calendarWidth = screenWidth - 40 - 32; // 패딩 제외
+    final cellWidth = calendarWidth / 7; // 7개 요일로 나누기
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -138,7 +143,10 @@ class _CalendarWidgetState extends State<CalendarWidget> {
           const SizedBox(height: 20),
 
           // 주간/월간 캘린더
-          if (isWeekly) _buildWeeklyCalendar() else _buildMonthlyCalendar(),
+          if (isWeekly)
+            _buildWeeklyCalendar(cellWidth)
+          else
+            _buildMonthlyCalendar(cellWidth),
 
           const SizedBox(height: 16),
 
@@ -195,7 +203,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     );
   }
 
-  Widget _buildWeeklyCalendar() {
+  Widget _buildWeeklyCalendar(double cellWidth) {
     final weekDates = _getWeekDates(_focusedDate);
 
     return Column(
@@ -206,13 +214,18 @@ class _CalendarWidgetState extends State<CalendarWidget> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: _days
               .map(
-                (day) => Text(
-                  day,
-                  style: TextStyle(
-                    fontFamily: 'Gmarket_sans',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
+                (day) => SizedBox(
+                  width: cellWidth,
+                  child: Center(
+                    child: Text(
+                      day,
+                      style: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
                   ),
                 ),
               )
@@ -223,13 +236,15 @@ class _CalendarWidgetState extends State<CalendarWidget> {
         // 날짜 버튼 - Row로 변경 (더 가벼움)
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: weekDates.map((date) => _buildDateButton(date)).toList(),
+          children: weekDates
+              .map((date) => _buildDateButton(date, cellWidth))
+              .toList(),
         ),
       ],
     );
   }
 
-  Widget _buildMonthlyCalendar() {
+  Widget _buildMonthlyCalendar(double cellWidth) {
     final monthDates = _getMonthDates(_focusedDate);
 
     return Column(
@@ -240,13 +255,18 @@ class _CalendarWidgetState extends State<CalendarWidget> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: _days
               .map(
-                (day) => Text(
-                  day,
-                  style: TextStyle(
-                    fontFamily: 'Gmarket_sans',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
+                (day) => SizedBox(
+                  width: cellWidth,
+                  child: Center(
+                    child: Text(
+                      day,
+                      style: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
                   ),
                 ),
               )
@@ -254,25 +274,40 @@ class _CalendarWidgetState extends State<CalendarWidget> {
         ),
         const SizedBox(height: 12),
 
-        // 날짜 그리드 - Wrap으로 변경 (GridView.builder보다 가벼움)
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: monthDates.map((date) => _buildDateButton(date)).toList(),
+        // 날짜 그리드 - 6주 표시
+        Column(
+          children: List.generate(6, (weekIndex) {
+            final weekStart = weekIndex * 7;
+            final weekEnd = weekStart + 7;
+            final weekDates = monthDates.sublist(
+              weekStart,
+              weekEnd > monthDates.length ? monthDates.length : weekEnd,
+            );
+
+            return Padding(
+              padding: EdgeInsets.only(bottom: weekIndex < 5 ? 8 : 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: weekDates
+                    .map((date) => _buildDateButton(date, cellWidth))
+                    .toList(),
+              ),
+            );
+          }),
         ),
       ],
     );
   }
 
-  Widget _buildDateButton(DateTime date) {
+  Widget _buildDateButton(DateTime date, double cellWidth) {
     final isSelected = _isSameDay(date, widget.selectedDate);
     final isCurrentMonth = _isCurrentMonth(date);
     final today = DateTime.now();
     final isToday = _isSameDay(date, today);
 
     return SizedBox(
-      width: 45,
-      height: 45,
+      width: cellWidth,
+      height: cellWidth, // 정사각형 유지
       child: Material(
         color: Colors.transparent,
         child: InkWell(
