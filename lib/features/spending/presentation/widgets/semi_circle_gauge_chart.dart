@@ -95,7 +95,7 @@ class SemiCircleGaugeChart extends StatelessWidget {
               color: Colors.grey.shade600,
             ),
           ),
-          const SizedBox(height: 20),
+
           SizedBox(
             height: chartHeight,
             child: CustomPaint(
@@ -106,7 +106,7 @@ class SemiCircleGaugeChart extends StatelessWidget {
               ),
               child: Center(
                 child: Padding(
-                  padding: const EdgeInsets.only(top: Sizes.size60),
+                  padding: EdgeInsets.only(top: chartHeight * 0.55),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [

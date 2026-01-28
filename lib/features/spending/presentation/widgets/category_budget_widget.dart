@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:miraclemoney/core/constants/sizes.dart';
 import 'package:miraclemoney/features/spending/data/models/expense_model.dart';
 import 'package:miraclemoney/features/spending/data/constants/expense_category.dart';
 import 'package:intl/intl.dart';
@@ -127,7 +128,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                           style: const TextStyle(
                             fontFamily: 'Gmarket_sans',
                             fontWeight: FontWeight.w700,
-                            fontSize: 16,
+                            fontSize: Sizes.size16,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -136,7 +137,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                           style: TextStyle(
                             fontFamily: 'Gmarket_sans',
                             fontWeight: FontWeight.w500,
-                            fontSize: 14,
+                            fontSize: Sizes.size14,
                             color: Colors.grey.shade600,
                           ),
                         ),
