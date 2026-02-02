@@ -645,6 +645,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontFamily: 'Gmarket_sans',
                     fontWeight: FontWeight.w700,
+                    fontSize: Sizes.size20,
                   ),
                 ),
               ],
@@ -671,7 +672,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                   '수정',
                   style: TextStyle(
                     fontFamily: 'Gmarket_sans',
-                    fontSize: 18,
+                    fontSize: Sizes.size16,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -684,7 +685,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
                 '취소',
                 style: TextStyle(
                   fontFamily: 'Gmarket_sans',
-                  fontSize: 16,
+                  fontSize: Sizes.size16,
                   color: Colors.grey,
                 ),
               ),
