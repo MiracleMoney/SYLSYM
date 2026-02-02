@@ -228,7 +228,7 @@ class ExpenseCategory {
     else if (savingExpensesSubcategories.containsKey(subcategory)) {
       switch (subcategory) {
         case 'EmergencyFund':
-          return Icons.emergency_recording_rounded;
+          return Icons.warning_amber;
         case 'ShortTermGoal':
           return Icons.flag;
         case 'HousingSubscription':

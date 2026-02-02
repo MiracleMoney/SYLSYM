@@ -30,14 +30,14 @@ class SemiCircleGaugeChart extends StatelessWidget {
     return categoryAmounts;
   }
 
-  List<Color> _getCategoryColors() {
-    return [
-      const Color(0xFF5B7EFF), // 고정비
-      const Color(0xFF4CAF50), // 생활비
-      const Color(0xFFFFA726), // 투자
-      const Color(0xFFEC407A), // 저축
-      const Color(0xFFAB47BC), // 이자
-    ];
+  Map<String, Color> _getCategoryColorMap() {
+    return {
+      ExpenseCategory.fixedExpenses: const Color(0xFF5B7EFF), // 고정비 - 파랑
+      ExpenseCategory.livingExpenses: const Color(0xFF4CAF50), // 생활비 - 초록
+      ExpenseCategory.investmentExpenses: const Color(0xFFFFA726), // 투자 - 노랑
+      ExpenseCategory.savingExpenses: const Color(0xFFEC407A), // 저축 - 빨강
+      ExpenseCategory.interestExpenses: const Color(0xFFAB47BC), // 이자 - 보라
+    };
   }
 
   double _getBudgetPercentage() {
@@ -78,9 +78,9 @@ class SemiCircleGaugeChart extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withOpacity(0.2),
             blurRadius: 10,
-            offset: const Offset(0, 2),
+            offset: const Offset(0, 0),
           ),
         ],
       ),
@@ -102,7 +102,7 @@ class SemiCircleGaugeChart extends StatelessWidget {
               painter: _SemiCircleGaugePainter(
                 categoryAmounts: categoryAmounts,
                 total: total,
-                colors: _getCategoryColors(),
+                colorMap: _getCategoryColorMap(),
               ),
               child: Center(
                 child: Padding(
@@ -146,12 +146,12 @@ class SemiCircleGaugeChart extends StatelessWidget {
 class _SemiCircleGaugePainter extends CustomPainter {
   final Map<String, double> categoryAmounts;
   final double total;
-  final List<Color> colors;
+  final Map<String, Color> colorMap;
 
   _SemiCircleGaugePainter({
     required this.categoryAmounts,
     required this.total,
-    required this.colors,
+    required this.colorMap,
   });
 
   @override
@@ -179,12 +179,17 @@ class _SemiCircleGaugePainter extends CustomPainter {
     }
 
     double startAngle = math.pi;
-    int colorIndex = 0;
 
-    for (final entry in categoryAmounts.entries) {
+    // 금액이 큰 순서대로 정렬
+    final sortedEntries = categoryAmounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    for (final entry in sortedEntries) {
       final sweepAngle = (entry.value / total) * math.pi;
+      final categoryColor =
+          colorMap[entry.key] ?? Colors.grey; // 카테고리에 해당하는 색상 사용
       final paint = Paint()
-        ..color = colors[colorIndex % colors.length]
+        ..color = categoryColor
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.butt;
@@ -198,7 +203,6 @@ class _SemiCircleGaugePainter extends CustomPainter {
       );
 
       startAngle += sweepAngle;
-      colorIndex++;
     }
   }
 

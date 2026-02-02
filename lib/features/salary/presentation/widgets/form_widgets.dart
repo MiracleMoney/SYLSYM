@@ -97,7 +97,7 @@ class LabeledTextFormField extends StatelessWidget {
           ),
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.grey.shade50,
+            fillColor: Colors.grey.shade200,
 
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(Sizes.size8),

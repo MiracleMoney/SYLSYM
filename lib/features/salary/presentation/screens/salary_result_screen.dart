@@ -850,7 +850,7 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(

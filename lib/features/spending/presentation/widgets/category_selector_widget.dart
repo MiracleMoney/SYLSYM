@@ -86,7 +86,7 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
                             fontWeight: isSelected
                                 ? FontWeight.w700
                                 : FontWeight.w500,
-                            fontSize: 12,
+                            fontSize: Sizes.size12,
                             color: isSelected
                                 ? Colors.white
                                 : Colors.grey.shade700,
@@ -109,8 +109,8 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
   Widget _buildSubcategoryGrid() {
     final subcategories = ExpenseCategory.getSubcategories(_selectedCategory);
     final screenWidth = MediaQuery.of(context).size.width;
-    final iconSize = screenWidth * 0.07; // 화면 너비의 7%
-    final crossAxisCount = screenWidth > 400 ? 3 : 2; // 화면 크기에 따라 2~3개
+    final iconSize = screenWidth * 0.065; // 화면 너비의 7%
+    final crossAxisCount = 3; // 그리드뷰 갯수 3개로 고정
 
     return GridView.builder(
       shrinkWrap: true,
@@ -118,8 +118,8 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         childAspectRatio: 1.0,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
+        mainAxisSpacing: 4,
+        crossAxisSpacing: 4,
       ),
       itemCount: subcategories.length,
       itemBuilder: (context, index) {

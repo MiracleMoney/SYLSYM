@@ -76,7 +76,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
       _scaffoldMessengerKey.currentState?.showSnackBar(
         const SnackBar(
           content: Text(
-            '모든 필드를 입력해주세요.',
+            '모든 항목을 입력해주세요.',
             style: TextStyle(color: Colors.white),
           ),
         ),
