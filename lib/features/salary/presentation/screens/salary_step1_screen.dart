@@ -467,7 +467,7 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
             padding: const EdgeInsets.only(
               left: Sizes.size20,
               right: Sizes.size20,
-              top: Sizes.size1,
+              top: Sizes.size5,
               bottom: Sizes.size24,
             ),
             child: Column(

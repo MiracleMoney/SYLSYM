@@ -17,7 +17,7 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final AuthService _authService = AuthService(); // ✨ 추가
 
-  int _selectedIndex = 1; // 월급최적화부터 시작
+  int _selectedIndex = 0; // 월급최적화부터 시작
 
   final List<Widget> _screens = [
     const SalaryTabsScreen(), // 월급최적화만 노출
@@ -119,7 +119,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.account_balance_wallet_outlined),
             activeIcon: Icon(Icons.account_balance_wallet),
-            label: '월급최적화',
+            label: '자산',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.receipt_long_outlined),
