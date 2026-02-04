@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
 import 'package:intl/intl.dart';
+import 'package:miraclemoney/data/services/firestore_service.dart';
+import 'package:miraclemoney/data/models/salary/salary_result_data.dart';
 
 class BudgetScreen extends StatefulWidget {
   const BudgetScreen({super.key});
@@ -9,46 +11,25 @@ class BudgetScreen extends StatefulWidget {
   State<BudgetScreen> createState() => _BudgetScreenState();
 }
 
-class _BudgetScreenState extends State<BudgetScreen> {
+class _BudgetScreenState extends State<BudgetScreen>
+    with AutomaticKeepAliveClientMixin {
   DateTime _selectedMonth = DateTime.now();
+  final FirestoreService _firestoreService = FirestoreService();
+  SalaryResultData? _salaryResult;
+  bool _isSalaryLoading = false;
 
   // 카테고리별 확장 상태
   final Map<String, bool> _expandedCategories = {
-    'Fixed': true,
-    'Investment': false,
-    'Saving': false,
-    'Living': false,
-    'Interest': false,
+    '생활비': false,
+    '고정비': false,
+    '투자': false,
+    '저축': false,
+    '이자': false,
   };
 
   // 카테고리별 예산 데이터
   final Map<String, Map<String, TextEditingController>> _budgetControllers = {
-    'Fixed': {
-      '보험': TextEditingController(text: '0'),
-      '통신비': TextEditingController(text: '0'),
-      '대중교통': TextEditingController(text: '0'),
-      '자동차 할부': TextEditingController(text: '0'),
-      '자동차 보험': TextEditingController(text: '0'),
-      '주유': TextEditingController(text: '0'),
-      '월세': TextEditingController(text: '0'),
-      '공과금': TextEditingController(text: '0'),
-      '관리비': TextEditingController(text: '0'),
-      '기타': TextEditingController(text: '0'),
-    },
-    'Investment': {
-      '연금 저축': TextEditingController(text: '0'),
-      '퇴직 연금': TextEditingController(text: '0'),
-      'ISA': TextEditingController(text: '0'),
-      '일반계좌': TextEditingController(text: '0'),
-    },
-    'Saving': {
-      '비상금': TextEditingController(text: '0'),
-      '단기 목표': TextEditingController(text: '0'),
-      '주택 청약': TextEditingController(text: '0'),
-      '내집 마련': TextEditingController(text: '0'),
-      '기타': TextEditingController(text: '0'),
-    },
-    'Living': {
+    '생활비': {
       '식비': TextEditingController(text: '0'),
       '외식': TextEditingController(text: '0'),
       '배달 음식': TextEditingController(text: '0'),
@@ -68,7 +49,33 @@ class _BudgetScreenState extends State<BudgetScreen> {
       'OTT 외 구독 서비스': TextEditingController(text: '0'),
       '기타': TextEditingController(text: '0'),
     },
-    'Interest': {
+    '고정비': {
+      '보험': TextEditingController(text: '0'),
+      '통신비': TextEditingController(text: '0'),
+      '대중교통': TextEditingController(text: '0'),
+      '자동차 할부': TextEditingController(text: '0'),
+      '자동차 보험': TextEditingController(text: '0'),
+      '주유': TextEditingController(text: '0'),
+      '월세': TextEditingController(text: '0'),
+      '공과금': TextEditingController(text: '0'),
+      '관리비': TextEditingController(text: '0'),
+      '기타': TextEditingController(text: '0'),
+    },
+    '투자': {
+      '연금 저축': TextEditingController(text: '0'),
+      '퇴직 연금': TextEditingController(text: '0'),
+      'ISA': TextEditingController(text: '0'),
+      '일반계좌': TextEditingController(text: '0'),
+    },
+    '저축': {
+      '비상금': TextEditingController(text: '0'),
+      '단기 목표': TextEditingController(text: '0'),
+      '주택 청약': TextEditingController(text: '0'),
+      '내집 마련': TextEditingController(text: '0'),
+      '기타': TextEditingController(text: '0'),
+    },
+
+    '이자': {
       '신용 대출': TextEditingController(text: '0'),
       '전세 대출': TextEditingController(text: '0'),
       '주택 담보 대출': TextEditingController(text: '0'),
@@ -80,6 +87,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
     text: '5000000',
   );
 
+  // 월별 예산 스냅샷 (메모리 저장)
+  final Map<String, Map<String, Map<String, double>>> _budgetSnapshots = {};
+
   @override
   void dispose() {
     for (var category in _budgetControllers.values) {
@@ -89,6 +99,13 @@ class _BudgetScreenState extends State<BudgetScreen> {
     }
     _monthlyIncomeController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _saveCurrentSnapshot();
+    _loadSalaryResult();
   }
 
   double _getCategoryTotal(String category) {
@@ -109,16 +126,95 @@ class _BudgetScreenState extends State<BudgetScreen> {
   }
 
   void _changeMonth(int months) {
+    _saveCurrentSnapshot();
     setState(() {
       _selectedMonth = DateTime(
         _selectedMonth.year,
         _selectedMonth.month + months,
       );
     });
+    _loadSnapshotForMonth(_selectedMonth);
+    _loadSalaryResult();
+  }
+
+  String _yearMonthKey(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}';
+  }
+
+  Map<String, Map<String, double>> _snapshotFromControllers() {
+    final Map<String, Map<String, double>> snapshot = {};
+    _budgetControllers.forEach((category, items) {
+      snapshot[category] = {};
+      items.forEach((label, controller) {
+        final value = double.tryParse(controller.text) ?? 0;
+        snapshot[category]![label] = value;
+      });
+    });
+    return snapshot;
+  }
+
+  void _saveCurrentSnapshot() {
+    final key = _yearMonthKey(_selectedMonth);
+    _budgetSnapshots[key] = _snapshotFromControllers();
+  }
+
+  void _loadSnapshotForMonth(DateTime month) {
+    final key = _yearMonthKey(month);
+    final snapshot = _budgetSnapshots[key];
+
+    _budgetControllers.forEach((category, items) {
+      items.forEach((label, controller) {
+        final value = snapshot?[category]?[label] ?? 0;
+        controller.text = value.round().toString();
+      });
+    });
+
+    setState(() {});
+  }
+
+  Map<String, Map<String, double>>? _getPreviousMonthSnapshot() {
+    final previousMonth = DateTime(
+      _selectedMonth.year,
+      _selectedMonth.month - 1,
+    );
+    return _budgetSnapshots[_yearMonthKey(previousMonth)];
+  }
+
+  double? _getPreviousValue(String category, String label) {
+    final snapshot = _getPreviousMonthSnapshot();
+    return snapshot?[category]?[label];
+  }
+
+  Future<void> _loadSalaryResult() async {
+    setState(() {
+      _isSalaryLoading = true;
+    });
+    try {
+      final data = await _firestoreService.loadSalaryData(
+        targetDate: _selectedMonth,
+      );
+      setState(() {
+        _salaryResult = data?.result;
+        _isSalaryLoading = false;
+      });
+    } catch (_) {
+      setState(() {
+        _salaryResult = null;
+        _isSalaryLoading = false;
+      });
+    }
+  }
+
+  String _formatCurrency(double value) {
+    return '₩${NumberFormat('#,###').format(value.round())}';
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -151,6 +247,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                _buildSalaryAllocationSection(),
+                const SizedBox(height: 16),
                 ..._budgetControllers.keys.map((category) {
                   return _buildCategorySection(category);
                 }),
@@ -196,8 +294,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 children: [
                   Icon(
                     isExpanded
-                        ? Icons.keyboard_arrow_down
-                        : Icons.chevron_right,
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
                     color: Colors.grey.shade600,
                   ),
                   const SizedBox(width: 8),
@@ -207,7 +305,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       style: TextStyle(
                         fontFamily: 'Gmarket_sans',
                         fontWeight: FontWeight.w500,
-                        fontSize: Sizes.size14,
+                        fontSize: Sizes.size16,
                         color: Colors.black,
                       ),
                     ),
@@ -217,7 +315,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     style: TextStyle(
                       fontFamily: 'Gmarket_sans',
                       fontWeight: FontWeight.w500,
-                      fontSize: Sizes.size14,
+                      fontSize: Sizes.size16,
                       color: Colors.black,
                     ),
                   ),
@@ -225,21 +323,41 @@ class _BudgetScreenState extends State<BudgetScreen> {
               ),
             ),
           ),
-          if (isExpanded)
-            Container(
-              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-              child: Column(
-                children: _budgetControllers[category]!.entries.map((entry) {
-                  return _buildBudgetItem(entry.key, entry.value);
-                }).toList(),
-              ),
-            ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+            child: isExpanded
+                ? Container(
+                    padding: const EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      bottom: 16,
+                    ),
+                    child: Column(
+                      children: _budgetControllers[category]!.entries.map((
+                        entry,
+                      ) {
+                        return _buildBudgetItem(
+                          category,
+                          entry.key,
+                          entry.value,
+                        );
+                      }).toList(),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildBudgetItem(String label, TextEditingController controller) {
+  Widget _buildBudgetItem(
+    String category,
+    String label,
+    TextEditingController controller,
+  ) {
+    final previousValue = _getPreviousValue(category, label);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -251,11 +369,49 @@ class _BudgetScreenState extends State<BudgetScreen> {
               style: TextStyle(
                 fontFamily: 'Gmarket_sans',
                 fontWeight: FontWeight.w400,
-                fontSize: Sizes.size12,
+                fontSize: Sizes.size14,
                 color: Colors.grey.shade700,
               ),
             ),
           ),
+          if (previousValue != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _formatCurrency(previousValue),
+                    style: TextStyle(
+                      fontFamily: 'Gmarket_sans',
+                      fontWeight: FontWeight.w400,
+                      fontSize: Sizes.size12,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Tooltip(
+                    message: '이 금액은 지난 달 지출액입니다.\n예산을 작성하실 때 참고하세요.',
+                    triggerMode: TooltipTriggerMode.tap,
+                    showDuration: const Duration(seconds: 3),
+                    textStyle: TextStyle(
+                      fontFamily: 'Gmarket_sans',
+                      fontSize: Sizes.size12,
+                      color: Colors.white,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child: TextField(
               controller: controller,
@@ -264,7 +420,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
               style: TextStyle(
                 fontFamily: 'Gmarket_sans',
                 fontWeight: FontWeight.w400,
-                fontSize: Sizes.size12,
+                fontSize: Sizes.size14,
                 color: Colors.black,
               ),
               decoration: InputDecoration(
@@ -272,7 +428,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 prefixStyle: TextStyle(
                   fontFamily: 'Gmarket_sans',
                   fontWeight: FontWeight.w400,
-                  fontSize: Sizes.size12,
+                  fontSize: Sizes.size14,
                   color: Colors.grey.shade600,
                 ),
                 isDense: true,
@@ -397,6 +553,106 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSalaryAllocationSection() {
+    final result = _salaryResult;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '월급최적화 결과',
+            style: TextStyle(
+              fontFamily: 'Gmarket_sans',
+              fontWeight: FontWeight.w600,
+              fontSize: Sizes.size16,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (_isSalaryLoading)
+            Row(
+              children: [
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '불러오는 중...',
+                  style: TextStyle(
+                    fontFamily: 'Gmarket_sans',
+                    fontSize: Sizes.size12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            )
+          else if (result == null)
+            Text(
+              '이번 달 월급최적화 결과가 없습니다.',
+              style: TextStyle(
+                fontFamily: 'Gmarket_sans',
+                fontSize: Sizes.size12,
+                color: Colors.grey.shade600,
+              ),
+            )
+          else ...[
+            _buildReferenceRow('비상금', result.emergencyFund),
+            _buildReferenceRow(
+              '투자금',
+              result.pensionInvestment + result.retirementInvestment,
+            ),
+            _buildReferenceRow('단기목표금', result.shortTermGoalSaving),
+            _buildReferenceRow('생활비', result.livingExpense),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReferenceRow(String label, double amount) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Gmarket_sans',
+              fontWeight: FontWeight.w400,
+              fontSize: Sizes.size14,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          Text(
+            _formatCurrency(amount),
+            style: TextStyle(
+              fontFamily: 'Gmarket_sans',
+              fontWeight: FontWeight.w500,
+              fontSize: Sizes.size14,
+              color: Colors.black,
+            ),
           ),
         ],
       ),

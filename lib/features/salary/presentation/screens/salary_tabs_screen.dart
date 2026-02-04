@@ -36,7 +36,7 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
 
     // ✅ 월급최적화 탭으로 돌아올 때 현재 상태 확인 후 적절한 페이지로 복원
     // _tabController.addListener(() {
