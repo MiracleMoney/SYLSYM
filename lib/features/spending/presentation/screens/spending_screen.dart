@@ -313,7 +313,9 @@ class _SpendingScreenState extends State<SpendingScreen>
       floatingActionButton: Builder(
         builder: (context) {
           final screenWidth = MediaQuery.of(context).size.width;
-          final iconSize = screenWidth * 0.07; // 화면 너비의 7%
+          final iconSize = screenWidth > 600
+              ? screenWidth * 0.055
+              : screenWidth * 0.07;
 
           return FloatingActionButton(
             onPressed: _showAddExpenseDialog,
