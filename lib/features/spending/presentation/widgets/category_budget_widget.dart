@@ -68,8 +68,12 @@ class CategoryBudgetWidget extends StatelessWidget {
     final categoryTotals = _getCategoryTotals();
     final categoryBudgets = _getCategoryBudgets();
     final screenWidth = MediaQuery.of(context).size.width;
-    final iconSize = screenWidth * 0.12; // 화면 너비의 12%
-    final progressBarHeight = screenWidth * 0.02; // 화면 너비의 2%
+    final iconSize = screenWidth > 600
+        ? screenWidth * 0.06
+        : screenWidth * 0.12;
+    final progressBarHeight = screenWidth > 600
+        ? screenWidth * 0.01
+        : screenWidth * 0.02;
 
     return ListView.builder(
       shrinkWrap: true,

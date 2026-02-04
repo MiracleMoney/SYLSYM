@@ -62,7 +62,15 @@ class MyApp extends StatelessWidget {
       // Device Preview 설정
       useInheritedMediaQuery: true,
       locale: DevicePreview.locale(context),
-      builder: DevicePreview.appBuilder,
+      builder: (context, child) {
+        final app = DevicePreview.appBuilder(context, child);
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: app,
+          ),
+        );
+      },
 
       title: 'Miracle Money',
       debugShowCheckedModeBanner: false,

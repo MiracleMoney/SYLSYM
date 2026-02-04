@@ -71,7 +71,9 @@ class ExpenseListWidget extends StatelessWidget {
     return Builder(
       builder: (context) {
         final screenWidth = MediaQuery.of(context).size.width;
-        final iconSize = screenWidth * 0.12; // 화면 너비의 12%
+        final iconSize = screenWidth > 600
+            ? screenWidth * 0.03
+            : screenWidth * 0.12;
 
         return GestureDetector(
           onTap: () => onExpenseTap?.call(expense),
