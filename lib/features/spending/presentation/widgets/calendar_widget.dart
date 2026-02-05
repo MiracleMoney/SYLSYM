@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:miraclemoney/core/constants/sizes.dart';
 
 class CalendarWidget extends StatefulWidget {
   final Function(DateTime) onDateSelected;
@@ -75,6 +76,12 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     return date.month == _focusedDate.month && date.year == _focusedDate.year;
   }
 
+  void _changeMonth(int delta) {
+    setState(() {
+      _focusedDate = DateTime(_focusedDate.year, _focusedDate.month + delta, 1);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -106,12 +113,25 @@ class _CalendarWidgetState extends State<CalendarWidget> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    '날짜 선택',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontFamily: 'Gmarket_sans',
-                      fontWeight: FontWeight.w700,
-                    ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left),
+                        onPressed: () => _changeMonth(-1),
+                      ),
+                      Text(
+                        '${_focusedDate.year}년 ${_focusedDate.month}월',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontFamily: 'Gmarket_sans',
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right),
+                        onPressed: () => _changeMonth(1),
+                      ),
+                    ],
                   ),
                   Container(
                     decoration: BoxDecoration(
@@ -153,16 +173,16 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 
               const SizedBox(height: 16),
 
-              // 선택된 날짜 표시
-              Center(
-                child: Text(
-                  DateFormat('EEE, M/d/y', 'ko_KR').format(widget.selectedDate),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontFamily: 'Gmarket_sans',
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ),
+              // // 선택된 날짜 표시
+              // Center(
+              //   child: Text(
+              //     DateFormat('EEE, M/d/y', 'ko_KR').format(widget.selectedDate),
+              //     style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              //       fontFamily: 'Gmarket_sans',
+              //       color: Colors.grey.shade600,
+              //     ),
+              //   ),
+              // ),
             ],
           );
         },
@@ -199,7 +219,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
             style: TextStyle(
               fontFamily: 'Gmarket_sans',
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              fontSize: 13,
+              fontSize: Sizes.size12,
               color: isSelected ? Colors.black : Colors.grey.shade600,
             ),
           ),
@@ -226,7 +246,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                       style: TextStyle(
                         fontFamily: 'Gmarket_sans',
                         fontWeight: FontWeight.w500,
-                        fontSize: 12,
+                        fontSize: Sizes.size12,
                         color: Colors.grey.shade600,
                       ),
                     ),
@@ -265,7 +285,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                       style: TextStyle(
                         fontFamily: 'Gmarket_sans',
                         fontWeight: FontWeight.w500,
-                        fontSize: 12,
+                        fontSize: Sizes.size12,
                         color: Colors.grey.shade600,
                       ),
                     ),
@@ -334,7 +354,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                     : isToday
                     ? FontWeight.w700
                     : FontWeight.w500,
-                fontSize: 13,
+                fontSize: Sizes.size12,
                 color: isSelected
                     ? Colors.white
                     : isCurrentMonth
