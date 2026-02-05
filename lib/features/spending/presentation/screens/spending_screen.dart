@@ -145,7 +145,10 @@ class _SpendingScreenState extends State<SpendingScreen>
   void _showAddExpenseDialog() {
     showDialog(
       context: context,
-      builder: (context) => AddExpenseDialog(onExpenseAdded: _addExpense),
+      builder: (context) => AddExpenseDialog(
+        onExpenseAdded: _addExpense,
+        initialDate: _selectedMonth,
+      ),
     );
   }
 

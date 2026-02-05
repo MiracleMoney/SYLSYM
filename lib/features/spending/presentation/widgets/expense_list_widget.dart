@@ -13,6 +13,23 @@ class ExpenseListWidget extends StatelessWidget {
     this.onExpenseTap,
   });
 
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case 'FixedExpenses':
+        return const Color(0xFF5B7EFF);
+      case 'LivingExpenses':
+        return const Color(0xFF4CAF50);
+      case 'InvestmentExpenses':
+        return const Color(0xFFFFA726);
+      case 'SavingExpenses':
+        return const Color(0xFFEC407A);
+      case 'InterestExpenses':
+        return const Color(0xFFAB47BC);
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // 날짜순으로 정렬
@@ -67,6 +84,7 @@ class ExpenseListWidget extends StatelessWidget {
       expense.category,
       expense.subcategory,
     );
+    final categoryColor = _getCategoryColor(expense.category);
 
     return Builder(
       builder: (context) {
@@ -98,10 +116,10 @@ class ExpenseListWidget extends StatelessWidget {
                   width: iconSize,
                   height: iconSize,
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: categoryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, color: const Color(0xFF5B7EFF), size: 24),
+                  child: Icon(icon, color: categoryColor, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
