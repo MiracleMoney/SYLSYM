@@ -209,6 +209,40 @@ class _BudgetScreenState extends State<BudgetScreen>
     return '₩${NumberFormat('#,###').format(value.round())}';
   }
 
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case '고정비':
+        return Icons.home;
+      case '생활비':
+        return Icons.shopping_cart;
+      case '투자':
+        return Icons.trending_up;
+      case '저축':
+        return Icons.savings;
+      case '이자':
+        return Icons.percent;
+      default:
+        return Icons.receipt;
+    }
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case '고정비':
+        return const Color(0xFF5B7EFF);
+      case '생활비':
+        return const Color(0xFF4CAF50);
+      case '투자':
+        return const Color(0xFFFFA726);
+      case '저축':
+        return const Color(0xFFEC407A);
+      case '이자':
+        return const Color(0xFFAB47BC);
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   bool get wantKeepAlive => true;
 
@@ -299,6 +333,20 @@ class _BudgetScreenState extends State<BudgetScreen>
                     color: Colors.grey.shade600,
                   ),
                   const SizedBox(width: 8),
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: _getCategoryColor(category).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      _getCategoryIcon(category),
+                      color: _getCategoryColor(category),
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       category,
@@ -358,104 +406,219 @@ class _BudgetScreenState extends State<BudgetScreen>
     TextEditingController controller,
   ) {
     final previousValue = _getPreviousValue(category, label);
+    final isFoodItem = category == '생활비' && label == '식비';
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Gmarket_sans',
-                fontWeight: FontWeight.w400,
-                fontSize: Sizes.size14,
-                color: Colors.grey.shade700,
-              ),
-            ),
-          ),
-          if (previousValue != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _formatCurrency(previousValue),
+      child: isFoodItem
+          ? Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.restaurant,
+                    color: Colors.orange,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontWeight: FontWeight.w400,
+                          fontSize: Sizes.size14,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '지난달 ${_formatCurrency(previousValue ?? 0)}',
+                            style: TextStyle(
+                              fontFamily: 'Gmarket_sans',
+                              fontWeight: FontWeight.w400,
+                              fontSize: Sizes.size12,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Tooltip(
+                            message: '이 금액은 지난 달 지출액입니다.\n예산을 작성하실 때 참고하세요.',
+                            triggerMode: TooltipTriggerMode.tap,
+                            showDuration: const Duration(seconds: 3),
+                            textStyle: TextStyle(
+                              fontFamily: 'Gmarket_sans',
+                              fontSize: Sizes.size12,
+                              color: Colors.white,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.info_outline,
+                              size: 16,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 110,
+                  child: TextField(
+                    controller: controller,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.right,
                     style: TextStyle(
                       fontFamily: 'Gmarket_sans',
                       fontWeight: FontWeight.w400,
-                      fontSize: Sizes.size12,
-                      color: Colors.grey.shade500,
+                      fontSize: Sizes.size14,
+                      color: Colors.black,
                     ),
+                    decoration: InputDecoration(
+                      prefixText: '\$ ',
+                      prefixStyle: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w400,
+                        fontSize: Sizes.size14,
+                        color: Colors.grey.shade600,
+                      ),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Color(0xFFE9435A)),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setState(() {});
+                    },
                   ),
-                  const SizedBox(width: 4),
-                  Tooltip(
-                    message: '이 금액은 지난 달 지출액입니다.\n예산을 작성하실 때 참고하세요.',
-                    triggerMode: TooltipTriggerMode.tap,
-                    showDuration: const Duration(seconds: 3),
-                    textStyle: TextStyle(
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    label,
+                    style: TextStyle(
                       fontFamily: 'Gmarket_sans',
-                      fontSize: Sizes.size12,
-                      color: Colors.white,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.info_outline,
-                      size: 16,
-                      color: Colors.grey.shade500,
+                      fontWeight: FontWeight.w400,
+                      fontSize: Sizes.size14,
+                      color: Colors.grey.shade700,
                     ),
                   ),
-                ],
-              ),
+                ),
+                if (previousValue != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _formatCurrency(previousValue),
+                          style: TextStyle(
+                            fontFamily: 'Gmarket_sans',
+                            fontWeight: FontWeight.w400,
+                            fontSize: Sizes.size12,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Tooltip(
+                          message: '이 금액은 지난 달 지출액입니다.\n예산을 작성하실 때 참고하세요.',
+                          triggerMode: TooltipTriggerMode.tap,
+                          showDuration: const Duration(seconds: 3),
+                          textStyle: TextStyle(
+                            fontFamily: 'Gmarket_sans',
+                            fontSize: Sizes.size12,
+                            color: Colors.white,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.info_outline,
+                            size: 16,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontFamily: 'Gmarket_sans',
+                      fontWeight: FontWeight.w400,
+                      fontSize: Sizes.size14,
+                      color: Colors.black,
+                    ),
+                    decoration: InputDecoration(
+                      prefixText: '\$ ',
+                      prefixStyle: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w400,
+                        fontSize: Sizes.size14,
+                        color: Colors.grey.shade600,
+                      ),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Color(0xFFE9435A)),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setState(() {});
+                    },
+                  ),
+                ),
+              ],
             ),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontFamily: 'Gmarket_sans',
-                fontWeight: FontWeight.w400,
-                fontSize: Sizes.size14,
-                color: Colors.black,
-              ),
-              decoration: InputDecoration(
-                prefixText: '\$ ',
-                prefixStyle: TextStyle(
-                  fontFamily: 'Gmarket_sans',
-                  fontWeight: FontWeight.w400,
-                  fontSize: Sizes.size14,
-                  color: Colors.grey.shade600,
-                ),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 8,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Color(0xFFE9435A)),
-                ),
-              ),
-              onChanged: (value) {
-                setState(() {});
-              },
-            ),
-          ),
-        ],
-      ),
     );
   }
 
