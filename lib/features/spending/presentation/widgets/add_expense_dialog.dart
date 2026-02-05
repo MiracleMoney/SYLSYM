@@ -10,6 +10,7 @@ class AddExpenseDialog extends StatefulWidget {
   final Function(ExpenseModel)? onExpenseUpdated;
   final Function(String)? onExpenseDeleted;
   final ExpenseModel? existingExpense;
+  final DateTime? initialDate;
 
   const AddExpenseDialog({
     super.key,
@@ -17,6 +18,7 @@ class AddExpenseDialog extends StatefulWidget {
     this.onExpenseUpdated,
     this.onExpenseDeleted,
     this.existingExpense,
+    this.initialDate,
   });
 
   @override
@@ -50,7 +52,14 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
       _selectedCategory = widget.existingExpense!.category;
       _selectedSubcategory = widget.existingExpense!.subcategory;
     } else {
-      _selectedDate = DateTime.now();
+      final now = DateTime.now();
+      if (widget.initialDate != null &&
+          widget.initialDate!.year == now.year &&
+          widget.initialDate!.month == now.month) {
+        _selectedDate = DateTime(now.year, now.month, now.day);
+      } else {
+        _selectedDate = widget.initialDate ?? DateTime.now();
+      }
       _amountController = TextEditingController();
       _descriptionController = TextEditingController();
     }
