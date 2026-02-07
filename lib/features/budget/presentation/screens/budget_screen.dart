@@ -19,14 +19,9 @@ class _BudgetScreenState extends State<BudgetScreen>
   SalaryResultData? _salaryResult;
   bool _isSalaryLoading = false;
 
-  // 카테고리별 확장 상태
-  final Map<String, bool> _expandedCategories = {
-    '생활비': false,
-    '고정비': false,
-    '투자': false,
-    '저축': false,
-    '이자': false,
-  };
+  final List<String> _categoryOrder = const ['생활비', '고정비', '투자', '저축', '이자'];
+
+  String _selectedCategory = '생활비';
 
   // 카테고리별 예산 데이터
   final Map<String, Map<String, TextEditingController>> _budgetControllers = {
@@ -325,9 +320,9 @@ class _BudgetScreenState extends State<BudgetScreen>
               children: [
                 _buildSalaryAllocationSection(),
                 const SizedBox(height: 16),
-                ..._budgetControllers.keys.map((category) {
-                  return _buildCategorySection(category);
-                }),
+                _buildCategorySelectorRow(),
+                const SizedBox(height: 12),
+                _buildSelectedCategoryItems(),
                 const SizedBox(height: 24),
                 _buildSummarySection(),
               ],
@@ -339,106 +334,71 @@ class _BudgetScreenState extends State<BudgetScreen>
     );
   }
 
-  Widget _buildCategorySection(String category) {
-    final isExpanded = _expandedCategories[category] ?? false;
-    final categoryTotal = _getCategoryTotal(category);
-
+  Widget _buildCategorySelectorRow() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      width: double.infinity,
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.grey.shade200,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: () {
-              setState(() {
-                _expandedCategories[category] = !isExpanded;
-              });
-            },
+      child: Row(
+        children: _categoryOrder.map((category) {
+          final isSelected = category == _selectedCategory;
+          return Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Icon(
-                    isExpanded
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                    color: Colors.grey.shade600,
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 36,
-                    height: 36,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      _selectedCategory = category;
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 140),
+                    curve: Curves.easeInOut,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
-                      color: _getCategoryColor(category).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      color: isSelected
+                          ? const Color(0xFFE9435A)
+                          : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(
-                      _getCategoryIcon(category),
-                      color: _getCategoryColor(category),
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
+                    alignment: Alignment.center,
                     child: Text(
                       category,
                       style: TextStyle(
                         fontFamily: 'Gmarket_sans',
-                        fontWeight: FontWeight.w500,
-                        fontSize: Sizes.size16,
-                        color: Colors.black,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        fontSize: Sizes.size12,
+                        color: isSelected ? Colors.white : Colors.grey.shade700,
                       ),
                     ),
                   ),
-                  Text(
-                    '\$${NumberFormat('#,###').format(categoryTotal.toInt())}',
-                    style: TextStyle(
-                      fontFamily: 'Gmarket_sans',
-                      fontWeight: FontWeight.w500,
-                      fontSize: Sizes.size16,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-            child: isExpanded
-                ? Container(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      right: 16,
-                      bottom: 16,
-                    ),
-                    child: Column(
-                      children: _budgetControllers[category]!.entries.map((
-                        entry,
-                      ) {
-                        return _buildBudgetItem(
-                          category,
-                          entry.key,
-                          entry.value,
-                        );
-                      }).toList(),
-                    ),
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ],
+          );
+        }).toList(),
       ),
+    );
+  }
+
+  Widget _buildSelectedCategoryItems() {
+    final items = _budgetControllers[_selectedCategory];
+    if (items == null || items.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      children: items.entries.map((entry) {
+        return _buildBudgetItem(_selectedCategory, entry.key, entry.value);
+      }).toList(),
     );
   }
 
