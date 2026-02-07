@@ -113,6 +113,24 @@ class _BudgetScreenState extends State<BudgetScreen>
     return total;
   }
 
+  double _getPreviousCategoryTotal(String category) {
+    final previousSnapshot = _getPreviousMonthSnapshot();
+    if (previousSnapshot == null) {
+      return 0;
+    }
+
+    final items = previousSnapshot[category];
+    if (items == null) {
+      return 0;
+    }
+
+    double total = 0;
+    for (final value in items.values) {
+      total += value;
+    }
+    return total;
+  }
+
   double _getTotalBudget() {
     double total = 0;
     for (var category in _budgetControllers.keys) {
@@ -322,6 +340,8 @@ class _BudgetScreenState extends State<BudgetScreen>
                 const SizedBox(height: 16),
                 _buildCategorySelectorRow(),
                 const SizedBox(height: 12),
+                _buildCategoryComparisonGauge(),
+                const SizedBox(height: 12),
                 _buildSelectedCategoryItems(),
                 const SizedBox(height: 24),
                 _buildSummarySection(),
@@ -399,6 +419,136 @@ class _BudgetScreenState extends State<BudgetScreen>
       children: items.entries.map((entry) {
         return _buildBudgetItem(_selectedCategory, entry.key, entry.value);
       }).toList(),
+    );
+  }
+
+  Widget _buildCategoryComparisonGauge() {
+    final currentTotal = _getCategoryTotal(_selectedCategory);
+    final previousTotal = _getPreviousCategoryTotal(_selectedCategory);
+    final maxValue = [
+      currentTotal,
+      previousTotal,
+      1.0,
+    ].reduce((a, b) => a > b ? a : b);
+    final categoryColor = _getCategoryColor(_selectedCategory);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.08),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '$_selectedCategory 비교',
+                style: TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  fontWeight: FontWeight.w600,
+                  fontSize: Sizes.size14,
+                  color: Colors.black,
+                ),
+              ),
+              Text(
+                '이번달 예산 ${_formatCurrency(currentTotal)}',
+                style: TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  fontWeight: FontWeight.w500,
+                  fontSize: Sizes.size12,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildGaugeRow(
+            label: '이번달 예산',
+            value: currentTotal,
+            maxValue: maxValue,
+            color: categoryColor,
+          ),
+          const SizedBox(height: 10),
+          _buildGaugeRow(
+            label: '지난달 지출',
+            value: previousTotal,
+            maxValue: maxValue,
+            color: Colors.grey.shade500,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGaugeRow({
+    required String label,
+    required double value,
+    required double maxValue,
+    required Color color,
+  }) {
+    final progress = (value / maxValue).clamp(0.0, 1.0);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Gmarket_sans',
+                fontWeight: FontWeight.w500,
+                fontSize: Sizes.size12,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            Text(
+              _formatCurrency(value),
+              style: TextStyle(
+                fontFamily: 'Gmarket_sans',
+                fontWeight: FontWeight.w500,
+                fontSize: Sizes.size12,
+                color: Colors.grey.shade700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return Container(
+              height: 8,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  height: 8,
+                  width: constraints.maxWidth * progress,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
