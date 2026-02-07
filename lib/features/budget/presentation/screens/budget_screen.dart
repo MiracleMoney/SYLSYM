@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
 import 'package:intl/intl.dart';
@@ -135,6 +137,21 @@ class _BudgetScreenState extends State<BudgetScreen>
     double total = 0;
     for (var category in _budgetControllers.keys) {
       total += _getCategoryTotal(category);
+    }
+    return total;
+  }
+
+  double _getPreviousTotalBudget() {
+    final previousSnapshot = _getPreviousMonthSnapshot();
+    if (previousSnapshot == null) {
+      return 0;
+    }
+
+    double total = 0;
+    for (final categoryItems in previousSnapshot.values) {
+      for (final value in categoryItems.values) {
+        total += value;
+      }
     }
     return total;
   }
@@ -336,15 +353,13 @@ class _BudgetScreenState extends State<BudgetScreen>
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _buildSalaryAllocationSection(),
+                _buildBudgetDistributionSection(),
                 const SizedBox(height: 16),
                 _buildCategorySelectorRow(),
                 const SizedBox(height: 12),
                 _buildCategoryComparisonGauge(),
                 const SizedBox(height: 12),
                 _buildSelectedCategoryItems(),
-                const SizedBox(height: 24),
-                _buildSummarySection(),
               ],
             ),
           ),
@@ -448,39 +463,19 @@ class _BudgetScreenState extends State<BudgetScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '$_selectedCategory 비교',
-                style: TextStyle(
-                  fontFamily: 'Gmarket_sans',
-                  fontWeight: FontWeight.w600,
-                  fontSize: Sizes.size14,
-                  color: Colors.black,
-                ),
-              ),
-              Text(
-                '이번달 예산 ${_formatCurrency(currentTotal)}',
-                style: TextStyle(
-                  fontFamily: 'Gmarket_sans',
-                  fontWeight: FontWeight.w500,
-                  fontSize: Sizes.size12,
-                  color: Colors.grey.shade700,
-                ),
-              ),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+             
             ],
           ),
-          const SizedBox(height: 12),
           _buildGaugeRow(
-            label: '이번달 예산',
+            label: '이번달 $_selectedCategory 예산',
             value: currentTotal,
             maxValue: maxValue,
             color: categoryColor,
           ),
           const SizedBox(height: 10),
           _buildGaugeRow(
-            label: '지난달 지출',
+            label: '지난달 $_selectedCategory 지출',
             value: previousTotal,
             maxValue: maxValue,
             color: Colors.grey.shade500,
@@ -663,9 +658,19 @@ class _BudgetScreenState extends State<BudgetScreen>
     );
   }
 
-  Widget _buildSummarySection() {
+  Widget _buildBudgetDistributionSection() {
     final totalBudget = _getTotalBudget();
+    final previousTotalBudget = _getPreviousTotalBudget();
     final monthlyIncome = double.tryParse(_monthlyIncomeController.text) ?? 0;
+    final sortedCategories =
+        _categoryOrder
+            .map((category) => MapEntry(category, _getCategoryTotal(category)))
+            .toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+    final values = sortedCategories.map((entry) => entry.value).toList();
+    final colors = sortedCategories
+        .map((entry) => _getCategoryColor(entry.key))
+        .toList();
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -684,7 +689,7 @@ class _BudgetScreenState extends State<BudgetScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Summary',
+            '월 예산 분포',
             style: TextStyle(
               fontFamily: 'Gmarket_sans',
               fontWeight: FontWeight.w600,
@@ -692,68 +697,39 @@ class _BudgetScreenState extends State<BudgetScreen>
               color: Colors.black,
             ),
           ),
-          const SizedBox(height: 16),
-          ..._budgetControllers.keys.map((category) {
-            final total = _getCategoryTotal(category);
-            return _buildSummaryRow(category, total);
-          }),
-          Divider(height: 24, color: Colors.grey.shade300),
-          _buildSummaryRow('Total Budget', totalBudget, isBold: true),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  'Monthly Income',
-                  style: TextStyle(
-                    fontFamily: 'Gmarket_sans',
-                    fontWeight: FontWeight.w400,
-                    fontSize: Sizes.size14,
-                    color: Colors.grey.shade700,
+              SizedBox(
+                width: 120,
+                height: 120,
+                child: CustomPaint(
+                  painter: _BudgetPieChartPainter(
+                    values: values,
+                    colors: colors,
                   ),
                 ),
               ),
-              SizedBox(
-                width: 120,
-                child: TextField(
-                  controller: _monthlyIncomeController,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    fontFamily: 'Gmarket_sans',
-                    fontWeight: FontWeight.w500,
-                    fontSize: Sizes.size14,
-                    color: Colors.black,
-                  ),
-                  decoration: InputDecoration(
-                    prefixText: '\$ ',
-                    prefixStyle: TextStyle(
-                      fontFamily: 'Gmarket_sans',
-                      fontWeight: FontWeight.w500,
-                      fontSize: Sizes.size14,
-                      color: Colors.grey.shade600,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDistributionValueRow(
+                      label: '월 총 수입',
+                      value: monthlyIncome,
                     ),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 8,
+                    const SizedBox(height: 8),
+                    _buildDistributionValueRow(
+                      label: '지난달 지출',
+                      value: previousTotalBudget,
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    const SizedBox(height: 8),
+                    _buildDistributionValueRow(
+                      label: '총 예산',
+                      value: totalBudget,
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Color(0xFFE9435A)),
-                    ),
-                  ),
-                  onChanged: (value) {
-                    setState(() {});
-                  },
+                  ],
                 ),
               ),
             ],
@@ -763,103 +739,32 @@ class _BudgetScreenState extends State<BudgetScreen>
     );
   }
 
-  Widget _buildSalaryAllocationSection() {
-    final result = _salaryResult;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+  Widget _buildDistributionValueRow({
+    required String label,
+    required double value,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Gmarket_sans',
+            fontWeight: FontWeight.w400,
+            fontSize: Sizes.size14,
+            color: Colors.grey.shade700,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '월급최적화 결과',
-            style: TextStyle(
-              fontFamily: 'Gmarket_sans',
-              fontWeight: FontWeight.w600,
-              fontSize: Sizes.size16,
-              color: Colors.black,
-            ),
+        ),
+        Text(
+          _formatCurrency(value),
+          style: TextStyle(
+            fontFamily: 'Gmarket_sans',
+            fontWeight: FontWeight.w600,
+            fontSize: Sizes.size12,
+            color: Colors.black,
           ),
-          const SizedBox(height: 12),
-          if (_isSalaryLoading)
-            Row(
-              children: [
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '불러오는 중...',
-                  style: TextStyle(
-                    fontFamily: 'Gmarket_sans',
-                    fontSize: Sizes.size12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            )
-          else if (result == null)
-            Text(
-              '이번 달 월급최적화 결과가 없습니다.',
-              style: TextStyle(
-                fontFamily: 'Gmarket_sans',
-                fontSize: Sizes.size12,
-                color: Colors.grey.shade600,
-              ),
-            )
-          else ...[
-            _buildReferenceRow('비상금', result.emergencyFund),
-            _buildReferenceRow(
-              '투자금',
-              result.pensionInvestment + result.retirementInvestment,
-            ),
-            _buildReferenceRow('단기목표금', result.shortTermGoalSaving),
-            _buildReferenceRow('생활비', result.livingExpense),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReferenceRow(String label, double amount) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'Gmarket_sans',
-              fontWeight: FontWeight.w400,
-              fontSize: Sizes.size14,
-              color: Colors.grey.shade700,
-            ),
-          ),
-          Text(
-            _formatCurrency(amount),
-            style: TextStyle(
-              fontFamily: 'Gmarket_sans',
-              fontWeight: FontWeight.w500,
-              fontSize: Sizes.size14,
-              color: Colors.black,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -936,5 +841,45 @@ class _BudgetScreenState extends State<BudgetScreen>
         ),
       ),
     );
+  }
+}
+
+class _BudgetPieChartPainter extends CustomPainter {
+  final List<double> values;
+  final List<Color> colors;
+
+  _BudgetPieChartPainter({required this.values, required this.colors});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final total = values.fold<double>(0, (sum, value) => sum + value);
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final backgroundPaint = Paint()
+      ..color = Colors.grey.shade200
+      ..style = PaintingStyle.fill;
+
+    if (total <= 0) {
+      canvas.drawOval(rect, backgroundPaint);
+      return;
+    }
+
+    double startAngle = -math.pi / 2;
+    for (int index = 0; index < values.length; index++) {
+      final value = values[index];
+      if (value <= 0) {
+        continue;
+      }
+      final sweepAngle = (value / total) * math.pi * 2;
+      final paint = Paint()
+        ..color = colors[index % colors.length]
+        ..style = PaintingStyle.fill;
+      canvas.drawArc(rect, startAngle, sweepAngle, true, paint);
+      startAngle += sweepAngle;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _BudgetPieChartPainter oldDelegate) {
+    return oldDelegate.values != values || oldDelegate.colors != colors;
   }
 }
