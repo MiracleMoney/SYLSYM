@@ -3,6 +3,7 @@ import 'package:miraclemoney/core/constants/sizes.dart';
 import 'package:intl/intl.dart';
 import 'package:miraclemoney/data/services/firestore_service.dart';
 import 'package:miraclemoney/data/models/salary/salary_result_data.dart';
+import 'package:miraclemoney/features/spending/data/constants/expense_category.dart';
 
 class BudgetScreen extends StatefulWidget {
   const BudgetScreen({super.key});
@@ -243,6 +244,47 @@ class _BudgetScreenState extends State<BudgetScreen>
     }
   }
 
+  String? _getExpenseCategoryKey(String categoryLabel) {
+    switch (categoryLabel) {
+      case '생활비':
+        return ExpenseCategory.livingExpenses;
+      case '고정비':
+        return ExpenseCategory.fixedExpenses;
+      case '투자':
+        return ExpenseCategory.investmentExpenses;
+      case '저축':
+        return ExpenseCategory.savingExpenses;
+      case '이자':
+        return ExpenseCategory.interestExpenses;
+      default:
+        return null;
+    }
+  }
+
+  String _normalizeCategoryLabel(String label) {
+    return label.replaceAll(RegExp(r'\s+'), '');
+  }
+
+  IconData _getExpenseItemIcon(String categoryLabel, String itemLabel) {
+    final categoryKey = _getExpenseCategoryKey(categoryLabel);
+    if (categoryKey == null) {
+      return Icons.receipt;
+    }
+
+    final subcategories = ExpenseCategory.getSubcategories(categoryKey);
+    final normalizedItemLabel = _normalizeCategoryLabel(itemLabel);
+    String? subcategoryKey;
+
+    for (final entry in subcategories.entries) {
+      if (_normalizeCategoryLabel(entry.value) == normalizedItemLabel) {
+        subcategoryKey = entry.key;
+        break;
+      }
+    }
+
+    return ExpenseCategory.getCategoryIcon(subcategoryKey ?? itemLabel);
+  }
+
   @override
   bool get wantKeepAlive => true;
 
@@ -406,128 +448,34 @@ class _BudgetScreenState extends State<BudgetScreen>
     TextEditingController controller,
   ) {
     final previousValue = _getPreviousValue(category, label);
-    final isFoodItem = category == '생활비' && label == '식비';
+    final categoryColor = _getCategoryColor(category);
+    final iconData = _getExpenseItemIcon(category, label);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: isFoodItem
-          ? Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.restaurant,
-                    color: Colors.orange,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: TextStyle(
-                          fontFamily: 'Gmarket_sans',
-                          fontWeight: FontWeight.w400,
-                          fontSize: Sizes.size14,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '지난달 ${_formatCurrency(previousValue ?? 0)}',
-                            style: TextStyle(
-                              fontFamily: 'Gmarket_sans',
-                              fontWeight: FontWeight.w400,
-                              fontSize: Sizes.size12,
-                              color: Colors.grey.shade500,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Tooltip(
-                            message: '이 금액은 지난 달 지출액입니다.\n예산을 작성하실 때 참고하세요.',
-                            triggerMode: TooltipTriggerMode.tap,
-                            showDuration: const Duration(seconds: 3),
-                            textStyle: TextStyle(
-                              fontFamily: 'Gmarket_sans',
-                              fontSize: Sizes.size12,
-                              color: Colors.white,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.8),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.info_outline,
-                              size: 16,
-                              color: Colors.grey.shade500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                SizedBox(
-                  width: 110,
-                  child: TextField(
-                    controller: controller,
-                    keyboardType: TextInputType.number,
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontFamily: 'Gmarket_sans',
-                      fontWeight: FontWeight.w400,
-                      fontSize: Sizes.size14,
-                      color: Colors.black,
-                    ),
-                    decoration: InputDecoration(
-                      prefixText: '\$ ',
-                      prefixStyle: TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontWeight: FontWeight.w400,
-                        fontSize: Sizes.size14,
-                        color: Colors.grey.shade600,
-                      ),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 8,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Color(0xFFE9435A)),
-                      ),
-                    ),
-                    onChanged: (value) {
-                      setState(() {});
-                    },
-                  ),
-                ),
-              ],
-            )
-          : Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Text(
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: categoryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(iconData, color: categoryColor, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
                     label,
                     style: TextStyle(
                       fontFamily: 'Gmarket_sans',
@@ -536,89 +484,72 @@ class _BudgetScreenState extends State<BudgetScreen>
                       color: Colors.grey.shade700,
                     ),
                   ),
-                ),
-                if (previousValue != null)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _formatCurrency(previousValue),
-                          style: TextStyle(
-                            fontFamily: 'Gmarket_sans',
-                            fontWeight: FontWeight.w400,
-                            fontSize: Sizes.size12,
-                            color: Colors.grey.shade500,
-                          ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '지난달 ${_formatCurrency(previousValue ?? 0)}',
+                        style: TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontWeight: FontWeight.w400,
+                          fontSize: Sizes.size12,
+                          color: Colors.grey.shade500,
                         ),
-                        const SizedBox(width: 4),
-                        Tooltip(
-                          message: '이 금액은 지난 달 지출액입니다.\n예산을 작성하실 때 참고하세요.',
-                          triggerMode: TooltipTriggerMode.tap,
-                          showDuration: const Duration(seconds: 3),
-                          textStyle: TextStyle(
-                            fontFamily: 'Gmarket_sans',
-                            fontSize: Sizes.size12,
-                            color: Colors.white,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.8),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.info_outline,
-                            size: 16,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
                   ),
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    keyboardType: TextInputType.number,
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontFamily: 'Gmarket_sans',
-                      fontWeight: FontWeight.w400,
-                      fontSize: Sizes.size14,
-                      color: Colors.black,
-                    ),
-                    decoration: InputDecoration(
-                      prefixText: '\$ ',
-                      prefixStyle: TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontWeight: FontWeight.w400,
-                        fontSize: Sizes.size14,
-                        color: Colors.grey.shade600,
-                      ),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 8,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Color(0xFFE9435A)),
-                      ),
-                    ),
-                    onChanged: (value) {
-                      setState(() {});
-                    },
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 110,
+              child: TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  fontWeight: FontWeight.w400,
+                  fontSize: Sizes.size14,
+                  color: Colors.black,
+                ),
+                decoration: InputDecoration(
+                  prefixText: '\$ ',
+                  prefixStyle: TextStyle(
+                    fontFamily: 'Gmarket_sans',
+                    fontWeight: FontWeight.w400,
+                    fontSize: Sizes.size14,
+                    color: Colors.grey.shade600,
+                  ),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Color(0xFFE9435A)),
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {});
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
