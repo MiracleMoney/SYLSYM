@@ -85,7 +85,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final horizontalPadding = screenWidth * 0.05; // 화면 너비의 5%
+    final horizontalPadding = screenWidth * 0.03; // 화면 너비의 5%
 
     return Container(
       decoration: BoxDecoration(
@@ -125,6 +125,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                             ?.copyWith(
                               fontFamily: 'Gmarket_sans',
                               fontWeight: FontWeight.w600,
+                              fontSize: Sizes.size14,
                             ),
                       ),
                       IconButton(
@@ -219,7 +220,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
             style: TextStyle(
               fontFamily: 'Gmarket_sans',
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              fontSize: Sizes.size12,
+              fontSize: Sizes.size10,
               color: isSelected ? Colors.black : Colors.grey.shade600,
             ),
           ),
