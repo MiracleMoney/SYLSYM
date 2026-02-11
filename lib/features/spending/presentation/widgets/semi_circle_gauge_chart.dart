@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
-import 'dart:math' as math;
 import 'package:miraclemoney/features/spending/data/models/expense_model.dart';
 import 'package:miraclemoney/features/spending/data/constants/expense_category.dart';
 import 'package:intl/intl.dart';
@@ -40,28 +39,8 @@ class SemiCircleGaugeChart extends StatelessWidget {
     };
   }
 
-  double _getBudgetPercentage() {
-    final total = _getTotalAmount();
-    if (budget == null) return 0; // 예산 데이터 없음
-    if (budget == 0) return 0;
-    return (total / budget!) * 100;
-  }
-
-  String _getPercentageText() {
-    if (budget == null) {
-      final monthName = '${selectedMonth.month}월';
-      return '$monthName의 수입 데이터 없음';
-    }
-    return '${_getBudgetPercentage().toStringAsFixed(1)}%';
-  }
-
-  Color _getPercentageColor() {
-    if (budget == null) {
-      return Colors.grey.shade600;
-    }
-    return _getBudgetPercentage() > 100
-        ? const Color(0xFFE9435A)
-        : Colors.grey.shade600;
+  String _formatCurrency(num amount) {
+    return '₩${NumberFormat('#,###').format(amount.toInt())}';
   }
 
   @override
@@ -69,143 +48,211 @@ class SemiCircleGaugeChart extends StatelessWidget {
     final total = _getTotalAmount();
     final categoryAmounts = _getCategoryAmounts();
     final screenHeight = MediaQuery.of(context).size.height;
-    final chartHeight = screenHeight * 0.2; // 화면 높이의 20%
+    // final chartHeight = screenHeight * 0.18; // 화면 높이의 18%
+    final sortedEntries = categoryAmounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final incomeAmount = budget ?? 0;
+    final remainingAmount = incomeAmount - total;
 
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 0),
+    return Column(
+      children: [
+        Text(
+          _formatCurrency(total),
+          style: const TextStyle(
+            fontFamily: 'Gmarket_sans',
+            fontWeight: FontWeight.w700,
+            fontSize: Sizes.size28,
+            color: Colors.black,
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Text(
-            '내 지출 현황',
-            style: TextStyle(
-              fontFamily: 'Gmarket_sans',
-              fontWeight: FontWeight.w500,
-              fontSize: Sizes.size16,
-              color: Colors.grey.shade600,
-            ),
+        ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.only(
+            top: 16,
+            left: 16,
+            right: 16,
+            bottom: 20,
           ),
-
-          SizedBox(
-            height: chartHeight,
-            child: CustomPaint(
-              painter: _SemiCircleGaugePainter(
-                categoryAmounts: categoryAmounts,
-                total: total,
-                colorMap: _getCategoryColorMap(),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 0),
               ),
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.only(top: chartHeight * 0.55),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _getPercentageText(),
-                        style: TextStyle(
-                          fontFamily: 'Gmarket_sans',
-                          fontWeight: FontWeight.w600,
-                          fontSize: budget == null
-                              ? Sizes.size12
-                              : Sizes.size16,
-                          color: _getPercentageColor(),
-                        ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        '₩${NumberFormat('#,###').format(total.toInt())}',
-                        style: const TextStyle(
-                          fontFamily: 'Gmarket_sans',
-                          fontWeight: FontWeight.w700,
-                          fontSize: Sizes.size24,
-                          color: Colors.black,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '남은 금액',
+                            style: TextStyle(
+                              fontFamily: 'Gmarket_sans',
+                              fontWeight: FontWeight.w500,
+                              fontSize: Sizes.size12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _formatCurrency(remainingAmount),
+                            style: const TextStyle(
+                              fontFamily: 'Gmarket_sans',
+                              fontWeight: FontWeight.w700,
+                              fontSize: Sizes.size14,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '내 수입',
+                            style: TextStyle(
+                              fontFamily: 'Gmarket_sans',
+                              fontWeight: FontWeight.w500,
+                              fontSize: Sizes.size12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _formatCurrency(incomeAmount),
+                            style: const TextStyle(
+                              fontFamily: 'Gmarket_sans',
+                              fontWeight: FontWeight.w700,
+                              fontSize: Sizes.size14,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 10,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    if (total == 0 || incomeAmount <= 0) {
+                      return Container(
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      );
+                    }
+
+                    var segments = sortedEntries
+                        .where((entry) => entry.value > 0)
+                        .map(
+                          (entry) => _BarSegment(
+                            color:
+                                _getCategoryColorMap()[entry.key] ??
+                                Colors.grey,
+                            flex: ((entry.value / incomeAmount) * 1000).round(),
+                          ),
+                        )
+                        .where((segment) => segment.flex > 0)
+                        .toList();
+
+                    var totalFlex = segments.fold<int>(
+                      0,
+                      (sum, item) => sum + item.flex,
+                    );
+
+                    if (totalFlex == 0) {
+                      return Container(
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      );
+                    }
+
+                    if (totalFlex > 1000) {
+                      final scale = 1000 / totalFlex;
+                      segments = segments
+                          .map(
+                            (segment) => _BarSegment(
+                              color: segment.color,
+                              flex: (segment.flex * scale).round(),
+                            ),
+                          )
+                          .where((segment) => segment.flex > 0)
+                          .toList();
+                      totalFlex = segments.fold<int>(
+                        0,
+                        (sum, item) => sum + item.flex,
+                      );
+                    }
+
+                    final remainingFlex = (1000 - totalFlex).clamp(0, 1000);
+
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        height: 16,
+                        color: Colors.grey.shade200,
+                        child: Row(
+                          children: [
+                            ...segments.map(
+                              (segment) => Expanded(
+                                flex: segment.flex > 0 ? segment.flex : 1,
+                                child: Container(color: segment.color),
+                              ),
+                            ),
+                            if (remainingFlex > 0)
+                              Expanded(
+                                flex: remainingFlex,
+                                child: const SizedBox.shrink(),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-class _SemiCircleGaugePainter extends CustomPainter {
-  final Map<String, double> categoryAmounts;
-  final double total;
-  final Map<String, Color> colorMap;
+class _BarSegment {
+  final Color color;
+  final int flex;
 
-  _SemiCircleGaugePainter({
-    required this.categoryAmounts,
-    required this.total,
-    required this.colorMap,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height);
-    final radius = size.width / 2.5;
-    final strokeWidth = 35.0;
-
-    if (total == 0) {
-      // 데이터가 없을 때 회색 반원
-      final paint = Paint()
-        ..color = Colors.grey.shade200
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.butt;
-
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        math.pi,
-        math.pi,
-        false,
-        paint,
-      );
-      return;
-    }
-
-    double startAngle = math.pi;
-
-    // 금액이 큰 순서대로 정렬
-    final sortedEntries = categoryAmounts.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-
-    for (final entry in sortedEntries) {
-      final sweepAngle = (entry.value / total) * math.pi;
-      final categoryColor =
-          colorMap[entry.key] ?? Colors.grey; // 카테고리에 해당하는 색상 사용
-      final paint = Paint()
-        ..color = categoryColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.butt;
-
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        startAngle,
-        sweepAngle,
-        false,
-        paint,
-      );
-
-      startAngle += sweepAngle;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  _BarSegment({required this.color, required this.flex});
 }
