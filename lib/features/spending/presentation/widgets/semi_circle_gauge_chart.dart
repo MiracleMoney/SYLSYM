@@ -57,6 +57,15 @@ class SemiCircleGaugeChart extends StatelessWidget {
     return Column(
       children: [
         Text(
+          '지출 현황',
+          style: TextStyle(
+            fontFamily: 'Gmarket_sans',
+            fontWeight: FontWeight.w500,
+            fontSize: Sizes.size12,
+            color: Colors.grey.shade600,
+          ),
+        ),
+        Text(
           _formatCurrency(total),
           style: const TextStyle(
             fontFamily: 'Gmarket_sans',
@@ -65,7 +74,7 @@ class SemiCircleGaugeChart extends StatelessWidget {
             color: Colors.black,
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
         Container(
           padding: const EdgeInsets.only(
             top: 16,
@@ -131,7 +140,7 @@ class SemiCircleGaugeChart extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            '내 수입',
+                            '수입',
                             style: TextStyle(
                               fontFamily: 'Gmarket_sans',
                               fontWeight: FontWeight.w500,

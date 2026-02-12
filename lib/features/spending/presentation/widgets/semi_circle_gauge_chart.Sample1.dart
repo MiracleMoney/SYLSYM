@@ -5,12 +5,12 @@ import 'package:miraclemoney/features/spending/data/models/expense_model.dart';
 import 'package:miraclemoney/features/spending/data/constants/expense_category.dart';
 import 'package:intl/intl.dart';
 
-class SemiCircleGaugeChart extends StatelessWidget {
+class SemiCircleGaugeChartSample1 extends StatelessWidget {
   final List<ExpenseModel> expenses;
   final DateTime selectedMonth;
   final double? budget; // 예산 (나중에 Firebase에서 가져올 예정)
 
-  const SemiCircleGaugeChart({
+  const SemiCircleGaugeChartSample1({
     super.key,
     required this.expenses,
     required this.selectedMonth,
