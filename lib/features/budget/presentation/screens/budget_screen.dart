@@ -451,34 +451,159 @@ class _BudgetScreenState extends State<BudgetScreen>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: Colors.grey.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 0),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-             
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '이번달 $_selectedCategory 예산',
+                      style: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w500,
+                        fontSize: Sizes.size12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatCurrency(currentTotal),
+                      style: const TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w700,
+                        fontSize: Sizes.size14,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '지난달 $_selectedCategory 지출',
+                      style: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w500,
+                        fontSize: Sizes.size12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatCurrency(previousTotal),
+                      style: const TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w700,
+                        fontSize: Sizes.size14,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-          _buildGaugeRow(
-            label: '이번달 $_selectedCategory 예산',
-            value: currentTotal,
-            maxValue: maxValue,
-            color: categoryColor,
-          ),
-          const SizedBox(height: 10),
-          _buildGaugeRow(
-            label: '지난달 $_selectedCategory 지출',
-            value: previousTotal,
-            maxValue: maxValue,
-            color: Colors.grey.shade500,
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 10,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                if (maxValue <= 0) {
+                  return Container(
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  );
+                }
+
+                var segments = [
+                  _BudgetGaugeSegment(
+                    color: categoryColor,
+                    flex: ((currentTotal / maxValue) * 1000).round(),
+                  ),
+                  _BudgetGaugeSegment(
+                    color: Colors.grey.shade500,
+                    flex: ((previousTotal / maxValue) * 1000).round(),
+                  ),
+                ].where((segment) => segment.flex > 0).toList();
+
+                var totalFlex = segments.fold<int>(
+                  0,
+                  (sum, item) => sum + item.flex,
+                );
+
+                if (totalFlex == 0) {
+                  return Container(
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  );
+                }
+
+                if (totalFlex > 1000) {
+                  final scale = 1000 / totalFlex;
+                  segments = segments
+                      .map(
+                        (segment) => _BudgetGaugeSegment(
+                          color: segment.color,
+                          flex: (segment.flex * scale).round(),
+                        ),
+                      )
+                      .where((segment) => segment.flex > 0)
+                      .toList();
+                  totalFlex = segments.fold<int>(
+                    0,
+                    (sum, item) => sum + item.flex,
+                  );
+                }
+
+                final remainingFlex = (1000 - totalFlex).clamp(0, 1000);
+
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    height: 16,
+                    color: Colors.grey.shade200,
+                    child: Row(
+                      children: [
+                        ...segments.map(
+                          (segment) => Expanded(
+                            flex: segment.flex > 0 ? segment.flex : 1,
+                            child: Container(color: segment.color),
+                          ),
+                        ),
+                        if (remainingFlex > 0)
+                          Expanded(
+                            flex: remainingFlex,
+                            child: const SizedBox.shrink(),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -882,4 +1007,11 @@ class _BudgetPieChartPainter extends CustomPainter {
   bool shouldRepaint(covariant _BudgetPieChartPainter oldDelegate) {
     return oldDelegate.values != values || oldDelegate.colors != colors;
   }
+}
+
+class _BudgetGaugeSegment {
+  final Color color;
+  final int flex;
+
+  _BudgetGaugeSegment({required this.color, required this.flex});
 }
