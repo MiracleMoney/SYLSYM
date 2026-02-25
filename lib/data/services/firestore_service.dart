@@ -147,15 +147,69 @@ class FirestoreService {
     return await loadSalaryData(targetDate: month);
   }
 
-  // ==================== 예산 데이터 (나중에 구현) ====================
+  // ==================== 예산 데이터 ====================
 
-  Future<void> saveBudget(Map<String, dynamic> budgetData) async {
-    // TODO: 구현
+  /// 월별 예산 데이터 저장
+  /// structure: users/{userId}/budget/{yearMonth}
+  Future<void> saveBudget(
+    Map<String, dynamic> budgetData, {
+    required DateTime targetDate,
+  }) async {
+    try {
+      final userId = currentUserId;
+      final yearMonth =
+          '${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}';
+
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('budget')
+          .doc(yearMonth)
+          .set(budgetData, SetOptions(merge: true));
+
+      if (kDebugMode) {
+        print('✅ 예산 데이터 저장 성공: $yearMonth');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ 예산 데이터 저장 실패: $e');
+      }
+      throw ErrorHandler.handleFirebaseError(e);
+    }
   }
 
+  /// 월별 예산 데이터 불러오기
   Future<Map<String, dynamic>?> loadBudget(DateTime targetDate) async {
-    // TODO: 구현
-    return null;
+    try {
+      final userId = currentUserId;
+      final yearMonth =
+          '${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}';
+
+      final doc = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('budget')
+          .doc(yearMonth)
+          .get();
+
+      if (!doc.exists || doc.data() == null) {
+        if (kDebugMode) {
+          print('ℹ️ 예산 데이터 없음: $yearMonth');
+        }
+        return null;
+      }
+
+      if (kDebugMode) {
+        print('✅ 예산 데이터 불러오기 성공: $yearMonth');
+      }
+
+      return doc.data();
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ 예산 데이터 불러오기 실패: $e');
+      }
+      throw ErrorHandler.handleFirebaseError(e);
+    }
   }
 
   // ==================== 지출 데이터 ====================

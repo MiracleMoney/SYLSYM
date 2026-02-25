@@ -88,6 +88,8 @@ class _BudgetScreenState extends State<BudgetScreen>
   // 월별 예산 스냅샷 (메모리 저장)
   final Map<String, Map<String, Map<String, double>>> _budgetSnapshots = {};
 
+  double _totalExpense = 0;
+
   @override
   void dispose() {
     for (var category in _budgetControllers.values) {
@@ -102,8 +104,9 @@ class _BudgetScreenState extends State<BudgetScreen>
   @override
   void initState() {
     super.initState();
-    _saveCurrentSnapshot();
+    _loadBudgetFromFirestore(_selectedMonth);
     _loadSalaryResult();
+    _loadExpenses();
   }
 
   double _getCategoryTotal(String category) {
@@ -164,8 +167,33 @@ class _BudgetScreenState extends State<BudgetScreen>
         _selectedMonth.month + months,
       );
     });
-    _loadSnapshotForMonth(_selectedMonth);
+    _loadBudgetFromFirestore(_selectedMonth);
     _loadSalaryResult();
+    _loadExpenses();
+  }
+
+  Future<void> _loadExpenses() async {
+    try {
+      // 선택 월의 예산 화면 → 이전 달의 실제 지출 연동
+      final previousMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month - 1,
+      );
+      final expensesData = await _firestoreService.loadExpenses(previousMonth);
+      final total = expensesData.fold<double>(
+        0,
+        (sum, data) => sum + ((data['amount'] as num?)?.toDouble() ?? 0),
+      );
+      if (mounted)
+        setState(() {
+          _totalExpense = total;
+        });
+    } catch (_) {
+      if (mounted)
+        setState(() {
+          _totalExpense = 0;
+        });
+    }
   }
 
   String _yearMonthKey(DateTime date) {
@@ -216,13 +244,96 @@ class _BudgetScreenState extends State<BudgetScreen>
     return snapshot?[category]?[label];
   }
 
+  /// 한글 서브카테고리 레이블 → 영문 키 변환
+  String _getSubcategoryKey(String categoryKey, String koreanLabel) {
+    final subcategories = ExpenseCategory.getSubcategories(categoryKey);
+    final normalized = _normalizeCategoryLabel(koreanLabel);
+    for (final entry in subcategories.entries) {
+      if (_normalizeCategoryLabel(entry.value) == normalized) {
+        return entry.key;
+      }
+    }
+    return koreanLabel; // 매핑 실패 시 원본 반환
+  }
+
+  /// Firestore에서 해당 월 예산 데이터 불러오기
+  Future<void> _loadBudgetFromFirestore(DateTime month) async {
+    try {
+      final data = await _firestoreService.loadBudget(month);
+      if (data == null) {
+        // Firestore에 데이터 없으면 메모리 스냅샷으로 폴백
+        _loadSnapshotForMonth(month);
+        return;
+      }
+      // 영문 키 → 한글 컨트롤러에 반영
+      _budgetControllers.forEach((categoryKorean, items) {
+        final categoryKey =
+            _getExpenseCategoryKey(categoryKorean) ?? categoryKorean;
+        final categoryData = data[categoryKey];
+        items.forEach((labelKorean, controller) {
+          if (categoryData is Map) {
+            final itemKey = _getSubcategoryKey(categoryKey, labelKorean);
+            final value = categoryData[itemKey];
+            controller.text = (value ?? 0).toString();
+          } else {
+            controller.text = '0';
+          }
+        });
+      });
+      setState(() {});
+    } catch (_) {
+      // 에러 시 메모리 스냅샷으로 폴백
+      _loadSnapshotForMonth(month);
+    }
+  }
+
+  /// Firestore에 현재 월 예산 데이터 저장
+  Future<void> _saveBudgetToFirestore() async {
+    try {
+      final Map<String, dynamic> budgetData = {};
+      // 한글 키 → 영문 키로 변환하여 저장
+      _budgetControllers.forEach((categoryKorean, items) {
+        final categoryKey =
+            _getExpenseCategoryKey(categoryKorean) ?? categoryKorean;
+        final Map<String, dynamic> categoryData = {};
+        items.forEach((labelKorean, controller) {
+          final itemKey = _getSubcategoryKey(categoryKey, labelKorean);
+          categoryData[itemKey] = double.tryParse(controller.text) ?? 0;
+        });
+        budgetData[categoryKey] = categoryData;
+      });
+
+      await _firestoreService.saveBudget(
+        budgetData,
+        targetDate: _selectedMonth,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('예산이 저장되었습니다.')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
+      }
+    }
+  }
+
   Future<void> _loadSalaryResult() async {
     setState(() {
       _isSalaryLoading = true;
     });
     try {
+      // 선택 월의 예산 기준 수입 = 이전 달 salary_data
+      final previousMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month - 1,
+      );
       final data = await _firestoreService.loadSalaryData(
-        targetDate: _selectedMonth,
+        targetDate: previousMonth,
       );
       setState(() {
         _salaryResult = data?.result;
@@ -786,7 +897,8 @@ class _BudgetScreenState extends State<BudgetScreen>
   Widget _buildBudgetDistributionSection() {
     final totalBudget = _getTotalBudget();
     final previousTotalBudget = _getPreviousTotalBudget();
-    final monthlyIncome = double.tryParse(_monthlyIncomeController.text) ?? 0;
+    // 이전 달 salary_data의 totalIncome 사용 (없으면 0)
+    final monthlyIncome = _salaryResult?.totalIncome ?? 0;
     final sortedCategories =
         _categoryOrder
             .map((category) => MapEntry(category, _getCategoryTotal(category)))
@@ -866,7 +978,7 @@ class _BudgetScreenState extends State<BudgetScreen>
                     const SizedBox(height: 8),
                     _buildDistributionValueRow(
                       label: '지난달 지출',
-                      value: previousTotalBudget,
+                      value: _totalExpense,
                     ),
                     const SizedBox(height: 8),
                     _buildDistributionValueRow(
@@ -959,12 +1071,7 @@ class _BudgetScreenState extends State<BudgetScreen>
           width: double.infinity,
           height: 48,
           child: ElevatedButton(
-            onPressed: () {
-              // TODO: 예산 저장 로직
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('Budget saved!')));
-            },
+            onPressed: _saveBudgetToFirestore,
             style: ElevatedButton.styleFrom(
               backgroundColor: Color(0xFFE9435A),
               shape: RoundedRectangleBorder(
