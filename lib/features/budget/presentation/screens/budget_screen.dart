@@ -822,12 +822,12 @@ class _BudgetScreenState extends State<BudgetScreen>
               color: Colors.black,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           Row(
             children: [
               SizedBox(
-                width: 120,
-                height: 120,
+                width: 90,
+                height: 90,
                 child: CustomPaint(
                   painter: _BudgetPieChartPainter(
                     values: values,
@@ -835,7 +835,7 @@ class _BudgetScreenState extends State<BudgetScreen>
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 24),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -981,12 +981,16 @@ class _BudgetPieChartPainter extends CustomPainter {
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
     final backgroundPaint = Paint()
       ..color = Colors.grey.shade200
-      ..style = PaintingStyle.fill;
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 10;
 
     if (total <= 0) {
       canvas.drawOval(rect, backgroundPaint);
       return;
     }
+
+    // 배경 도넛 그리기
+    canvas.drawOval(rect, backgroundPaint);
 
     double startAngle = -math.pi / 2;
     for (int index = 0; index < values.length; index++) {
@@ -997,8 +1001,10 @@ class _BudgetPieChartPainter extends CustomPainter {
       final sweepAngle = (value / total) * math.pi * 2;
       final paint = Paint()
         ..color = colors[index % colors.length]
-        ..style = PaintingStyle.fill;
-      canvas.drawArc(rect, startAngle, sweepAngle, true, paint);
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 10
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
       startAngle += sweepAngle;
     }
   }
