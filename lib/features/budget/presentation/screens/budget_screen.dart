@@ -639,9 +639,9 @@ class _BudgetScreenState extends State<BudgetScreen>
           LayoutBuilder(
             builder: (context, constraints) {
               final isOverBudget =
-                  currentTotal > 0 && previousTotal > currentTotal;
-              final progress = currentTotal > 0
-                  ? (previousTotal / currentTotal).clamp(0.0, 1.0)
+                  previousTotal > 0 && currentTotal > previousTotal;
+              final progress = previousTotal > 0
+                  ? (currentTotal / previousTotal).clamp(0.0, 1.0)
                   : 0.0;
               final barColor = isOverBudget ? Colors.red : categoryColor;
 
