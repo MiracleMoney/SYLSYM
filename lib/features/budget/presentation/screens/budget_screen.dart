@@ -828,11 +828,30 @@ class _BudgetScreenState extends State<BudgetScreen>
               SizedBox(
                 width: 90,
                 height: 90,
-                child: CustomPaint(
-                  painter: _BudgetPieChartPainter(
-                    values: values,
-                    colors: colors,
-                  ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CustomPaint(
+                      size: const Size(90, 90),
+                      painter: _BudgetPieChartPainter(
+                        values: values,
+                        colors: colors,
+                      ),
+                    ),
+                    Text(
+                      monthlyIncome > 0
+                          ? '${((totalBudget / monthlyIncome) * 100).toStringAsFixed(0)}%'
+                          : '0%',
+                      style: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w700,
+                        fontSize: Sizes.size16,
+                        color: totalBudget > monthlyIncome
+                            ? Colors.red
+                            : Colors.black,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: 24),
