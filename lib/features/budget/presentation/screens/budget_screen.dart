@@ -89,6 +89,7 @@ class _BudgetScreenState extends State<BudgetScreen>
   final Map<String, Map<String, Map<String, double>>> _budgetSnapshots = {};
 
   double _totalExpense = 0;
+  Map<String, double> _previousCategoryExpenses = {};
 
   @override
   void dispose() {
@@ -180,18 +181,24 @@ class _BudgetScreenState extends State<BudgetScreen>
         _selectedMonth.month - 1,
       );
       final expensesData = await _firestoreService.loadExpenses(previousMonth);
-      final total = expensesData.fold<double>(
-        0,
-        (sum, data) => sum + ((data['amount'] as num?)?.toDouble() ?? 0),
-      );
+      double total = 0;
+      final Map<String, double> categoryTotals = {};
+      for (final data in expensesData) {
+        final amount = (data['amount'] as num?)?.toDouble() ?? 0;
+        final category = data['category'] as String? ?? '';
+        total += amount;
+        categoryTotals[category] = (categoryTotals[category] ?? 0) + amount;
+      }
       if (mounted)
         setState(() {
           _totalExpense = total;
+          _previousCategoryExpenses = categoryTotals;
         });
     } catch (_) {
       if (mounted)
         setState(() {
           _totalExpense = 0;
+          _previousCategoryExpenses = {};
         });
     }
   }
@@ -550,12 +557,9 @@ class _BudgetScreenState extends State<BudgetScreen>
 
   Widget _buildCategoryComparisonGauge() {
     final currentTotal = _getCategoryTotal(_selectedCategory);
-    final previousTotal = _getPreviousCategoryTotal(_selectedCategory);
-    final maxValue = [
-      currentTotal,
-      previousTotal,
-      1.0,
-    ].reduce((a, b) => a > b ? a : b);
+    final categoryKey =
+        _getExpenseCategoryKey(_selectedCategory) ?? _selectedCategory;
+    final previousTotal = _previousCategoryExpenses[categoryKey] ?? 0;
     final categoryColor = _getCategoryColor(_selectedCategory);
 
     return Container(
@@ -632,89 +636,55 @@ class _BudgetScreenState extends State<BudgetScreen>
             ],
           ),
           const SizedBox(height: 12),
-          SizedBox(
-            height: 10,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                if (maxValue <= 0) {
-                  return Container(
-                    height: 16,
-                    decoration: BoxDecoration(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isOverBudget =
+                  currentTotal > 0 && previousTotal > currentTotal;
+              final progress = currentTotal > 0
+                  ? (previousTotal / currentTotal).clamp(0.0, 1.0)
+                  : 0.0;
+              final barColor = isOverBudget ? Colors.red : categoryColor;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      height: 10,
+                      width: double.infinity,
                       color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  );
-                }
-
-                var segments = [
-                  _BudgetGaugeSegment(
-                    color: categoryColor,
-                    flex: ((currentTotal / maxValue) * 1000).round(),
-                  ),
-                  _BudgetGaugeSegment(
-                    color: Colors.grey.shade500,
-                    flex: ((previousTotal / maxValue) * 1000).round(),
-                  ),
-                ].where((segment) => segment.flex > 0).toList();
-
-                var totalFlex = segments.fold<int>(
-                  0,
-                  (sum, item) => sum + item.flex,
-                );
-
-                if (totalFlex == 0) {
-                  return Container(
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  );
-                }
-
-                if (totalFlex > 1000) {
-                  final scale = 1000 / totalFlex;
-                  segments = segments
-                      .map(
-                        (segment) => _BudgetGaugeSegment(
-                          color: segment.color,
-                          flex: (segment.flex * scale).round(),
-                        ),
-                      )
-                      .where((segment) => segment.flex > 0)
-                      .toList();
-                  totalFlex = segments.fold<int>(
-                    0,
-                    (sum, item) => sum + item.flex,
-                  );
-                }
-
-                final remainingFlex = (1000 - totalFlex).clamp(0, 1000);
-
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    height: 16,
-                    color: Colors.grey.shade200,
-                    child: Row(
-                      children: [
-                        ...segments.map(
-                          (segment) => Expanded(
-                            flex: segment.flex > 0 ? segment.flex : 1,
-                            child: Container(color: segment.color),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: FractionallySizedBox(
+                          widthFactor: progress,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: barColor,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
-                        if (remainingFlex > 0)
-                          Expanded(
-                            flex: remainingFlex,
-                            child: const SizedBox.shrink(),
-                          ),
-                      ],
+                      ),
                     ),
                   ),
-                );
-              },
-            ),
+                  if (currentTotal > 0) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      isOverBudget
+                          ? '예산 초과'
+                          : '${(progress * 100).toStringAsFixed(0)}% 사용',
+                      style: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w500,
+                        fontSize: Sizes.size11,
+                        color: isOverBudget ? Colors.red : Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -974,6 +944,7 @@ class _BudgetScreenState extends State<BudgetScreen>
                     _buildDistributionValueRow(
                       label: '월 총 수입',
                       value: monthlyIncome,
+                      showInfo: true,
                     ),
                     const SizedBox(height: 8),
                     _buildDistributionValueRow(
@@ -998,18 +969,30 @@ class _BudgetScreenState extends State<BudgetScreen>
   Widget _buildDistributionValueRow({
     required String label,
     required double value,
+    bool showInfo = false,
   }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Gmarket_sans',
-            fontWeight: FontWeight.w400,
-            fontSize: Sizes.size14,
-            color: Colors.grey.shade700,
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Gmarket_sans',
+                fontWeight: FontWeight.w400,
+                fontSize: Sizes.size14,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            if (showInfo) ...[
+              const SizedBox(width: 4),
+              const _InfoTooltipIcon(
+                message: '지난달 월급최적화 기능에서 \n입력한 월 총 수입입니다.',
+              ),
+            ],
+          ],
         ),
         Text(
           _formatCurrency(value),
@@ -1146,4 +1129,93 @@ class _BudgetGaugeSegment {
   final int flex;
 
   _BudgetGaugeSegment({required this.color, required this.flex});
+}
+
+class _InfoTooltipIcon extends StatefulWidget {
+  final String message;
+
+  const _InfoTooltipIcon({required this.message});
+
+  @override
+  State<_InfoTooltipIcon> createState() => _InfoTooltipIconState();
+}
+
+class _InfoTooltipIconState extends State<_InfoTooltipIcon> {
+  OverlayEntry? _overlayEntry;
+
+  void _toggle(BuildContext context) {
+    if (_overlayEntry != null) {
+      _hide();
+    } else {
+      _show(context);
+    }
+  }
+
+  void _show(BuildContext context) {
+    final box = context.findRenderObject() as RenderBox;
+    final iconPos = box.localToGlobal(Offset.zero);
+    final iconSize = box.size;
+
+    _overlayEntry = OverlayEntry(
+      builder: (_) => Stack(
+        children: [
+          // 투명 배리어 - 외부 탭 시 닫힘
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: _hide,
+            ),
+          ),
+          // 말풍선
+          Positioned(
+            left: iconPos.dx - 120,
+            top: iconPos.dy - 44,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 200),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  widget.message,
+                  style: const TextStyle(
+                    fontFamily: 'Gmarket_sans',
+                    fontSize: 12,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _hide() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  @override
+  void dispose() {
+    _hide();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _toggle(context),
+      child: Icon(Icons.info_outline, size: 14, color: Colors.grey.shade400),
+    );
+  }
 }
