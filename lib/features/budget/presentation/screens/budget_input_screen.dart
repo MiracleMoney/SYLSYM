@@ -1,0 +1,731 @@
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:miraclemoney/core/constants/sizes.dart';
+import 'package:intl/intl.dart';
+import 'package:miraclemoney/data/services/firestore_service.dart';
+import 'package:miraclemoney/data/models/salary/salary_result_data.dart';
+import 'package:miraclemoney/features/spending/data/constants/expense_category.dart';
+
+class BudgetInputScreen extends StatefulWidget {
+  const BudgetInputScreen({super.key});
+
+  @override
+  State<BudgetInputScreen> createState() => _BudgetInputScreenState();
+}
+
+class _BudgetInputScreenState extends State<BudgetInputScreen>
+    with AutomaticKeepAliveClientMixin {
+  DateTime _selectedMonth = DateTime.now();
+  final FirestoreService _firestoreService = FirestoreService();
+  SalaryResultData? _salaryResult;
+  bool _isSalaryLoading = false;
+
+  final List<String> _categoryOrder = const ['생활비', '고정비', '투자', '저축', '이자'];
+
+  final String _selectedCategory = '생활비';
+
+  // 카테고리별 예산 데이터
+  final Map<String, Map<String, TextEditingController>> _budgetControllers = {
+    '생활비': {
+      '식비': TextEditingController(text: '0'),
+      '외식': TextEditingController(text: '0'),
+      '배달 음식': TextEditingController(text: '0'),
+      '커피': TextEditingController(text: '0'),
+      '음료': TextEditingController(text: '0'),
+      '술': TextEditingController(text: '0'),
+      '생필품': TextEditingController(text: '0'),
+      '담배': TextEditingController(text: '0'),
+      '미용': TextEditingController(text: '0'),
+      '옷': TextEditingController(text: '0'),
+      '신발': TextEditingController(text: '0'),
+      '액세서리': TextEditingController(text: '0'),
+      '문화 생활': TextEditingController(text: '0'),
+      '모임 회비': TextEditingController(text: '0'),
+      '취미': TextEditingController(text: '0'),
+      'OTT': TextEditingController(text: '0'),
+      'OTT 외 구독 서비스': TextEditingController(text: '0'),
+      '기타': TextEditingController(text: '0'),
+    },
+    '고정비': {
+      '보험': TextEditingController(text: '0'),
+      '통신비': TextEditingController(text: '0'),
+      '대중교통': TextEditingController(text: '0'),
+      '자동차 할부': TextEditingController(text: '0'),
+      '자동차 보험': TextEditingController(text: '0'),
+      '주유': TextEditingController(text: '0'),
+      '월세': TextEditingController(text: '0'),
+      '공과금': TextEditingController(text: '0'),
+      '관리비': TextEditingController(text: '0'),
+      '기타': TextEditingController(text: '0'),
+    },
+    '투자': {
+      '연금 저축': TextEditingController(text: '0'),
+      '퇴직 연금': TextEditingController(text: '0'),
+      'ISA': TextEditingController(text: '0'),
+      '일반계좌': TextEditingController(text: '0'),
+    },
+    '저축': {
+      '비상금': TextEditingController(text: '0'),
+      '단기 목표': TextEditingController(text: '0'),
+      '주택 청약': TextEditingController(text: '0'),
+      '내집 마련': TextEditingController(text: '0'),
+      '기타': TextEditingController(text: '0'),
+    },
+
+    '이자': {
+      '신용 대출': TextEditingController(text: '0'),
+      '전세 대출': TextEditingController(text: '0'),
+      '주택 담보 대출': TextEditingController(text: '0'),
+      '기타 이자': TextEditingController(text: '0'),
+    },
+  };
+
+  final TextEditingController _monthlyIncomeController = TextEditingController(
+    text: '5000000',
+  );
+
+  // 월별 예산 스냅샷 (메모리 저장)
+  final Map<String, Map<String, Map<String, double>>> _budgetSnapshots = {};
+
+  @override
+  void dispose() {
+    for (var category in _budgetControllers.values) {
+      for (var controller in category.values) {
+        controller.dispose();
+      }
+    }
+    _monthlyIncomeController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _saveCurrentSnapshot();
+    _loadSalaryResult();
+  }
+
+  double _getCategoryTotal(String category) {
+    double total = 0;
+    for (var controller in _budgetControllers[category]!.values) {
+      final value = double.tryParse(controller.text) ?? 0;
+      total += value;
+    }
+    return total;
+  }
+
+  double _getPreviousCategoryTotal(String category) {
+    final previousSnapshot = _getPreviousMonthSnapshot();
+    if (previousSnapshot == null) {
+      return 0;
+    }
+
+    final items = previousSnapshot[category];
+    if (items == null) {
+      return 0;
+    }
+
+    double total = 0;
+    for (final value in items.values) {
+      total += value;
+    }
+    return total;
+  }
+
+  double _getTotalBudget() {
+    double total = 0;
+    for (var category in _budgetControllers.keys) {
+      total += _getCategoryTotal(category);
+    }
+    return total;
+  }
+
+  double _getPreviousTotalBudget() {
+    final previousSnapshot = _getPreviousMonthSnapshot();
+    if (previousSnapshot == null) {
+      return 0;
+    }
+
+    double total = 0;
+    for (final categoryItems in previousSnapshot.values) {
+      for (final value in categoryItems.values) {
+        total += value;
+      }
+    }
+    return total;
+  }
+
+  void _changeMonth(int months) {
+    _saveCurrentSnapshot();
+    setState(() {
+      _selectedMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month + months,
+      );
+    });
+    _loadSnapshotForMonth(_selectedMonth);
+    _loadSalaryResult();
+  }
+
+  String _yearMonthKey(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}';
+  }
+
+  Map<String, Map<String, double>> _snapshotFromControllers() {
+    final Map<String, Map<String, double>> snapshot = {};
+    _budgetControllers.forEach((category, items) {
+      snapshot[category] = {};
+      items.forEach((label, controller) {
+        final value = double.tryParse(controller.text) ?? 0;
+        snapshot[category]![label] = value;
+      });
+    });
+    return snapshot;
+  }
+
+  void _saveCurrentSnapshot() {
+    final key = _yearMonthKey(_selectedMonth);
+    _budgetSnapshots[key] = _snapshotFromControllers();
+  }
+
+  void _loadSnapshotForMonth(DateTime month) {
+    final key = _yearMonthKey(month);
+    final snapshot = _budgetSnapshots[key];
+
+    _budgetControllers.forEach((category, items) {
+      items.forEach((label, controller) {
+        final value = snapshot?[category]?[label] ?? 0;
+        controller.text = value.round().toString();
+      });
+    });
+
+    setState(() {});
+  }
+
+  Map<String, Map<String, double>>? _getPreviousMonthSnapshot() {
+    final previousMonth = DateTime(
+      _selectedMonth.year,
+      _selectedMonth.month - 1,
+    );
+    return _budgetSnapshots[_yearMonthKey(previousMonth)];
+  }
+
+  double? _getPreviousValue(String category, String label) {
+    final snapshot = _getPreviousMonthSnapshot();
+    return snapshot?[category]?[label];
+  }
+
+  Future<void> _loadSalaryResult() async {
+    setState(() {
+      _isSalaryLoading = true;
+    });
+    try {
+      final data = await _firestoreService.loadSalaryData(
+        targetDate: _selectedMonth,
+      );
+      setState(() {
+        _salaryResult = data?.result;
+        _isSalaryLoading = false;
+      });
+    } catch (_) {
+      setState(() {
+        _salaryResult = null;
+        _isSalaryLoading = false;
+      });
+    }
+  }
+
+  String _formatCurrency(double value) {
+    return '₩${NumberFormat('#,###').format(value.round())}';
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case '고정비':
+        return Icons.home;
+      case '생활비':
+        return Icons.shopping_cart;
+      case '투자':
+        return Icons.trending_up;
+      case '저축':
+        return Icons.savings;
+      case '이자':
+        return Icons.percent;
+      default:
+        return Icons.receipt;
+    }
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case '고정비':
+        return const Color(0xFF5B7EFF);
+      case '생활비':
+        return const Color(0xFF4CAF50);
+      case '투자':
+        return const Color(0xFFFFA726);
+      case '저축':
+        return const Color(0xFFEC407A);
+      case '이자':
+        return const Color(0xFFAB47BC);
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String? _getExpenseCategoryKey(String categoryLabel) {
+    switch (categoryLabel) {
+      case '생활비':
+        return ExpenseCategory.livingExpenses;
+      case '고정비':
+        return ExpenseCategory.fixedExpenses;
+      case '투자':
+        return ExpenseCategory.investmentExpenses;
+      case '저축':
+        return ExpenseCategory.savingExpenses;
+      case '이자':
+        return ExpenseCategory.interestExpenses;
+      default:
+        return null;
+    }
+  }
+
+  String _normalizeCategoryLabel(String label) {
+    return label.replaceAll(RegExp(r'\s+'), '');
+  }
+
+  IconData _getExpenseItemIcon(String categoryLabel, String itemLabel) {
+    final categoryKey = _getExpenseCategoryKey(categoryLabel);
+    if (categoryKey == null) {
+      return Icons.receipt;
+    }
+
+    final subcategories = ExpenseCategory.getSubcategories(categoryKey);
+    final normalizedItemLabel = _normalizeCategoryLabel(itemLabel);
+    String? subcategoryKey;
+
+    for (final entry in subcategories.entries) {
+      if (_normalizeCategoryLabel(entry.value) == normalizedItemLabel) {
+        subcategoryKey = entry.key;
+        break;
+      }
+    }
+
+    return ExpenseCategory.getCategoryIcon(subcategoryKey ?? itemLabel);
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.95,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 헤더
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                Text(
+                  '예산 입력',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontFamily: 'Gmarket_sans',
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.check),
+                  onPressed: () {
+                    // 저장 로직은 아래 Save Budget 버튼이 처리
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          // 콘텐츠
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      // showDistributionSection = false이므로 제외
+                      // showCategorySelector = false이므로 제외
+                      _buildCategoryComparisonGauge(),
+                      const SizedBox(height: 12),
+                      _buildSelectedCategoryItems(),
+                    ],
+                  ),
+                ),
+                _buildBottomButton(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectedCategoryItems() {
+    final items = _budgetControllers[_selectedCategory];
+    if (items == null || items.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      children: items.entries.map((entry) {
+        return _buildBudgetItem(_selectedCategory, entry.key, entry.value);
+      }).toList(),
+    );
+  }
+
+  Widget _buildCategoryComparisonGauge() {
+    final currentTotal = _getCategoryTotal(_selectedCategory);
+    final previousTotal = _getPreviousCategoryTotal(_selectedCategory);
+    final maxValue = [
+      currentTotal,
+      previousTotal,
+      1.0,
+    ].reduce((a, b) => a > b ? a : b);
+    final categoryColor = _getCategoryColor(_selectedCategory);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '이번달 $_selectedCategory 예산',
+                      style: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w500,
+                        fontSize: Sizes.size12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatCurrency(currentTotal),
+                      style: const TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w700,
+                        fontSize: Sizes.size14,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '지난달 $_selectedCategory 지출',
+                      style: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w500,
+                        fontSize: Sizes.size12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatCurrency(previousTotal),
+                      style: const TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w700,
+                        fontSize: Sizes.size14,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 10,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                if (maxValue <= 0) {
+                  return Container(
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  );
+                }
+
+                var segments = [
+                  _BudgetGaugeSegment(
+                    color: categoryColor,
+                    flex: ((currentTotal / maxValue) * 1000).round(),
+                  ),
+                  _BudgetGaugeSegment(
+                    color: Colors.grey.shade500,
+                    flex: ((previousTotal / maxValue) * 1000).round(),
+                  ),
+                ].where((segment) => segment.flex > 0).toList();
+
+                var totalFlex = segments.fold<int>(
+                  0,
+                  (sum, item) => sum + item.flex,
+                );
+
+                if (totalFlex == 0) {
+                  return Container(
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  );
+                }
+
+                if (totalFlex > 1000) {
+                  final scale = 1000 / totalFlex;
+                  segments = segments
+                      .map(
+                        (segment) => _BudgetGaugeSegment(
+                          color: segment.color,
+                          flex: (segment.flex * scale).round(),
+                        ),
+                      )
+                      .where((segment) => segment.flex > 0)
+                      .toList();
+                  totalFlex = segments.fold<int>(
+                    0,
+                    (sum, item) => sum + item.flex,
+                  );
+                }
+
+                final remainingFlex = (1000 - totalFlex).clamp(0, 1000);
+
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    height: 16,
+                    color: Colors.grey.shade200,
+                    child: Row(
+                      children: [
+                        ...segments.map(
+                          (segment) => Expanded(
+                            flex: segment.flex > 0 ? segment.flex : 1,
+                            child: Container(color: segment.color),
+                          ),
+                        ),
+                        if (remainingFlex > 0)
+                          Expanded(
+                            flex: remainingFlex,
+                            child: const SizedBox.shrink(),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBudgetItem(
+    String category,
+    String label,
+    TextEditingController controller,
+  ) {
+    final previousValue = _getPreviousValue(category, label);
+    final categoryColor = _getCategoryColor(category);
+    final iconData = _getExpenseItemIcon(category, label);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: Colors.white,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Icon(iconData, color: categoryColor, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontFamily: 'Gmarket_sans',
+                      fontWeight: FontWeight.w400,
+                      fontSize: Sizes.size14,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '지난달 ${_formatCurrency(previousValue ?? 0)}',
+                        style: TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontWeight: FontWeight.w400,
+                          fontSize: Sizes.size12,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 110,
+              child: TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  fontWeight: FontWeight.w400,
+                  fontSize: Sizes.size14,
+                  color: Colors.black,
+                ),
+                decoration: InputDecoration(
+                  prefixText: '\$ ',
+                  prefixStyle: TextStyle(
+                    fontFamily: 'Gmarket_sans',
+                    fontWeight: FontWeight.w400,
+                    fontSize: Sizes.size14,
+                    color: Colors.grey.shade600,
+                  ),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Color(0xFFE9435A)),
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {});
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomButton() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton(
+            onPressed: () {
+              // TODO: 예산 저장 로직
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Budget saved!')));
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFFE9435A),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+            child: Text(
+              'Save Budget',
+              style: TextStyle(
+                fontFamily: 'Gmarket_sans',
+                fontWeight: FontWeight.w600,
+                fontSize: Sizes.size16,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BudgetGaugeSegment {
+  final Color color;
+  final int flex;
+
+  _BudgetGaugeSegment({required this.color, required this.flex});
+}

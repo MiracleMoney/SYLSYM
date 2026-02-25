@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
+import 'package:miraclemoney/features/budget/presentation/screens/budget_input_screen.dart';
 import 'package:miraclemoney/features/spending/data/models/expense_model.dart';
 import 'package:miraclemoney/features/spending/data/constants/expense_category.dart';
 import 'package:intl/intl.dart';
@@ -160,25 +161,42 @@ class CategoryBudgetWidget extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Icon(
-                        Icons.chevron_right,
-                        color: Colors.grey.shade400,
-                        size: 20,
+                      IconButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (dialogContext) {
+                              final screenHeight = MediaQuery.of(
+                                dialogContext,
+                              ).size.height;
+                              return Dialog(
+                                backgroundColor: Colors.transparent,
+                                insetPadding: const EdgeInsets.all(16),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(24),
+                                  child: SizedBox(
+                                    height: screenHeight * 0.95,
+                                    child: const BudgetInputScreen(),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        icon: Icon(
+                          Icons.chevron_right,
+                          color: Colors.grey.shade400,
+                          size: 20,
+                        ),
+                        splashRadius: 18,
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
                       ),
                     ],
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                '예산 기능은 곧 제공될 예정입니다',
-                style: TextStyle(
-                  fontFamily: 'Gmarket_sans',
-                  fontWeight: FontWeight.w500,
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
-              ),
+
               const SizedBox(height: 8),
               Row(
                 children: [
