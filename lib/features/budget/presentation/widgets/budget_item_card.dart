@@ -84,7 +84,7 @@ class BudgetItemCard extends StatelessWidget {
                     controller.clear();
                   }
                 },
-                inputFormatters: [numberFormatter],
+                // inputFormatters: [numberFormatter], // 임시 제거
                 style: const TextStyle(
                   fontFamily: 'Gmarket_sans',
                   fontWeight: FontWeight.w400,
@@ -117,7 +117,29 @@ class BudgetItemCard extends StatelessWidget {
                     borderSide: const BorderSide(color: Color(0xFFE9435A)),
                   ),
                 ),
-                onChanged: (_) => onChanged(),
+                onChanged: (value) {
+                  // 숫자만 추출
+                  String digits = value.replaceAll(RegExp(r'[^\d]'), '');
+                  if (digits.isNotEmpty) {
+                    // 콤마 포맷팅 적용
+                    int number = int.parse(digits);
+                    String formatted = number.toString().replaceAllMapped(
+                      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                      (match) => '${match[1]},',
+                    );
+
+                    // 무한 루프 방지: 이미 포맷된 값과 같으면 업데이트하지 않음
+                    if (controller.text != formatted) {
+                      controller.value = TextEditingValue(
+                        text: formatted,
+                        selection: TextSelection.collapsed(
+                          offset: formatted.length,
+                        ),
+                      );
+                    }
+                  }
+                  onChanged();
+                },
               ),
             ),
           ],
