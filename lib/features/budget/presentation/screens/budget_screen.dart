@@ -90,6 +90,7 @@ class _BudgetScreenState extends State<BudgetScreen>
 
   double _totalExpense = 0;
   Map<String, double> _previousCategoryExpenses = {};
+  Map<String, Map<String, double>> _previousItemExpenses = {};
 
   @override
   void dispose() {
@@ -183,22 +184,38 @@ class _BudgetScreenState extends State<BudgetScreen>
       final expensesData = await _firestoreService.loadExpenses(previousMonth);
       double total = 0;
       final Map<String, double> categoryTotals = {};
+      final Map<String, Map<String, double>> itemTotals = {};
+
       for (final data in expensesData) {
         final amount = (data['amount'] as num?)?.toDouble() ?? 0;
         final category = data['category'] as String? ?? '';
+        final subcategory = data['subcategory'] as String? ?? '';
+
         total += amount;
         categoryTotals[category] = (categoryTotals[category] ?? 0) + amount;
+
+        // 항목별 지출 집계
+        if (category.isNotEmpty && subcategory.isNotEmpty) {
+          if (itemTotals[category] == null) {
+            itemTotals[category] = {};
+          }
+          itemTotals[category]![subcategory] =
+              (itemTotals[category]![subcategory] ?? 0) + amount;
+        }
       }
+
       if (mounted)
         setState(() {
           _totalExpense = total;
           _previousCategoryExpenses = categoryTotals;
+          _previousItemExpenses = itemTotals;
         });
     } catch (_) {
       if (mounted)
         setState(() {
           _totalExpense = 0;
           _previousCategoryExpenses = {};
+          _previousItemExpenses = {};
         });
     }
   }
@@ -249,6 +266,12 @@ class _BudgetScreenState extends State<BudgetScreen>
   double? _getPreviousValue(String category, String label) {
     final snapshot = _getPreviousMonthSnapshot();
     return snapshot?[category]?[label];
+  }
+
+  double _getPreviousExpenseValue(String category, String label) {
+    final categoryKey = _getExpenseCategoryKey(category) ?? category;
+    final itemKey = _getSubcategoryKey(categoryKey, label);
+    return _previousItemExpenses[categoryKey]?[itemKey] ?? 0;
   }
 
   /// 한글 서브카테고리 레이블 → 영문 키 변환
@@ -800,7 +823,7 @@ class _BudgetScreenState extends State<BudgetScreen>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '지난달 ${_formatCurrency(previousValue ?? 0)}',
+                        '지난달 지출 ${_formatCurrency(_getPreviousExpenseValue(category, label))}',
                         style: TextStyle(
                           fontFamily: 'Gmarket_sans',
                           fontWeight: FontWeight.w400,
