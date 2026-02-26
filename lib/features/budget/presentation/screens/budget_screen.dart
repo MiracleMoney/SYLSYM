@@ -326,7 +326,7 @@ class _BudgetScreenState extends State<BudgetScreen>
           if (categoryData is Map) {
             final itemKey = _getSubcategoryKey(categoryKey, labelKorean);
             final value = categoryData[itemKey];
-            controller.text = (value ?? 0).toString();
+            controller.text = ((value ?? 0) as num).round().toString();
           } else {
             controller.text = '0';
           }
@@ -873,7 +873,7 @@ class _BudgetScreenState extends State<BudgetScreen>
                   color: Colors.black,
                 ),
                 decoration: InputDecoration(
-                  prefixText: '\$ ',
+                  prefixText: '₩ ',
                   prefixStyle: TextStyle(
                     fontFamily: 'Gmarket_sans',
                     fontWeight: FontWeight.w400,
