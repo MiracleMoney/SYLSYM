@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
 import 'package:intl/intl.dart';
 import 'package:miraclemoney/data/services/firestore_service.dart';
@@ -114,7 +115,8 @@ class _BudgetScreenState extends State<BudgetScreen>
   double _getCategoryTotal(String category) {
     double total = 0;
     for (var controller in _budgetControllers[category]!.values) {
-      final value = double.tryParse(controller.text) ?? 0;
+      final rawText = controller.text.replaceAll(',', '');
+      final value = double.tryParse(rawText) ?? 0;
       total += value;
     }
     return total;
@@ -124,7 +126,8 @@ class _BudgetScreenState extends State<BudgetScreen>
   double _getCategoryTotalForChart(String category) {
     double total = 0;
     for (var controller in _budgetControllers[category]!.values) {
-      final value = double.tryParse(controller.text) ?? 0;
+      final rawText = controller.text.replaceAll(',', '');
+      final value = double.tryParse(rawText) ?? 0;
       // 개별 항목이 500원 이상일때만 합계에 포함
       if (value >= 500) {
         total += value;
@@ -251,7 +254,8 @@ class _BudgetScreenState extends State<BudgetScreen>
     _budgetControllers.forEach((category, items) {
       snapshot[category] = {};
       items.forEach((label, controller) {
-        final value = double.tryParse(controller.text) ?? 0;
+        final rawText = controller.text.replaceAll(',', '');
+        final value = double.tryParse(rawText) ?? 0;
         snapshot[category]![label] = value;
       });
     });
@@ -270,7 +274,12 @@ class _BudgetScreenState extends State<BudgetScreen>
     _budgetControllers.forEach((category, items) {
       items.forEach((label, controller) {
         final value = snapshot?[category]?[label] ?? 0;
-        controller.text = value.round().toString();
+        final roundedValue = value.round();
+        if (roundedValue == 0) {
+          controller.text = '0';
+        } else {
+          controller.text = NumberFormat('#,###').format(roundedValue);
+        }
       });
     });
 
@@ -326,7 +335,12 @@ class _BudgetScreenState extends State<BudgetScreen>
           if (categoryData is Map) {
             final itemKey = _getSubcategoryKey(categoryKey, labelKorean);
             final value = categoryData[itemKey];
-            controller.text = ((value ?? 0) as num).round().toString();
+            final roundedValue = ((value ?? 0) as num).round();
+            if (roundedValue == 0) {
+              controller.text = '0';
+            } else {
+              controller.text = NumberFormat('#,###').format(roundedValue);
+            }
           } else {
             controller.text = '0';
           }
@@ -350,7 +364,8 @@ class _BudgetScreenState extends State<BudgetScreen>
         final Map<String, dynamic> categoryData = {};
         items.forEach((labelKorean, controller) {
           final itemKey = _getSubcategoryKey(categoryKey, labelKorean);
-          categoryData[itemKey] = double.tryParse(controller.text) ?? 0;
+          final rawText = controller.text.replaceAll(',', '');
+          categoryData[itemKey] = double.tryParse(rawText) ?? 0;
         });
         budgetData[categoryKey] = categoryData;
       });
@@ -401,6 +416,33 @@ class _BudgetScreenState extends State<BudgetScreen>
 
   String _formatCurrency(double value) {
     return '₩${NumberFormat('#,###').format(value.round())}';
+  }
+
+  TextInputFormatter _numberFormatter() {
+    return TextInputFormatter.withFunction((oldValue, newValue) {
+      if (newValue.text.isEmpty) {
+        return newValue;
+      }
+
+      // 숫자만 추출
+      String digits = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
+
+      if (digits.isEmpty) {
+        return TextEditingValue(
+          text: '',
+          selection: TextSelection.collapsed(offset: 0),
+        );
+      }
+
+      // 숫자에 콤마 추가
+      final formatter = NumberFormat('#,###');
+      final formatted = formatter.format(int.parse(digits));
+
+      return TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
+    });
   }
 
   IconData _getCategoryIcon(String category) {
@@ -849,7 +891,7 @@ class _BudgetScreenState extends State<BudgetScreen>
                         style: TextStyle(
                           fontFamily: 'Gmarket_sans',
                           fontWeight: FontWeight.w400,
-                          fontSize: Sizes.size12,
+                          fontSize: Sizes.size10,
                           color: Colors.grey.shade500,
                         ),
                       ),
@@ -861,11 +903,18 @@ class _BudgetScreenState extends State<BudgetScreen>
             ),
             const SizedBox(width: 12),
             SizedBox(
-              width: 110,
+              width: 120,
               child: TextField(
                 controller: controller,
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.right,
+                onTap: () {
+                  // 현재 값이 '0'이면 텍스트 지우기
+                  if (controller.text == '0') {
+                    controller.clear();
+                  }
+                },
+                inputFormatters: [_numberFormatter()],
                 style: TextStyle(
                   fontFamily: 'Gmarket_sans',
                   fontWeight: FontWeight.w400,
