@@ -120,6 +120,19 @@ class _BudgetScreenState extends State<BudgetScreen>
     return total;
   }
 
+  // 도넛차트 전용: 500원 미만은 제외
+  double _getCategoryTotalForChart(String category) {
+    double total = 0;
+    for (var controller in _budgetControllers[category]!.values) {
+      final value = double.tryParse(controller.text) ?? 0;
+      // 개별 항목이 500원 이상일때만 합계에 포함
+      if (value >= 500) {
+        total += value;
+      }
+    }
+    return total;
+  }
+
   double _getPreviousCategoryTotal(String category) {
     final previousSnapshot = _getPreviousMonthSnapshot();
     if (previousSnapshot == null) {
@@ -142,6 +155,15 @@ class _BudgetScreenState extends State<BudgetScreen>
     double total = 0;
     for (var category in _budgetControllers.keys) {
       total += _getCategoryTotal(category);
+    }
+    return total;
+  }
+
+  // 도넛차트 전용: 500원 미만은 제외
+  double _getTotalBudgetForChart() {
+    double total = 0;
+    for (var category in _budgetControllers.keys) {
+      total += _getCategoryTotalForChart(category);
     }
     return total;
   }
@@ -894,7 +916,10 @@ class _BudgetScreenState extends State<BudgetScreen>
     final monthlyIncome = _salaryResult?.totalIncome ?? 0;
     final sortedCategories =
         _categoryOrder
-            .map((category) => MapEntry(category, _getCategoryTotal(category)))
+            .map(
+              (category) =>
+                  MapEntry(category, _getCategoryTotalForChart(category)),
+            )
             .toList()
           ..sort((a, b) => b.value.compareTo(a.value));
     final values = sortedCategories.map((entry) => entry.value).toList();
@@ -931,8 +956,8 @@ class _BudgetScreenState extends State<BudgetScreen>
           Row(
             children: [
               SizedBox(
-                width: 90,
-                height: 90,
+                width: 100,
+                height: 100,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -945,13 +970,13 @@ class _BudgetScreenState extends State<BudgetScreen>
                     ),
                     Text(
                       monthlyIncome > 0
-                          ? '${((totalBudget / monthlyIncome) * 100).toStringAsFixed(0)}%'
+                          ? '${((_getTotalBudgetForChart() / monthlyIncome) * 100).toStringAsFixed(0)}%'
                           : '0%',
                       style: TextStyle(
                         fontFamily: 'Gmarket_sans',
                         fontWeight: FontWeight.w700,
                         fontSize: Sizes.size16,
-                        color: totalBudget > monthlyIncome
+                        color: _getTotalBudgetForChart() > monthlyIncome
                             ? Colors.red
                             : Colors.black,
                       ),
