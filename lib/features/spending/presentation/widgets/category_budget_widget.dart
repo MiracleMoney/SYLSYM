@@ -137,62 +137,80 @@ class CategoryBudgetWidget extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          '₩${NumberFormat('#,###').format(actual.toInt())}',
-                          style: TextStyle(
-                            fontFamily: 'Gmarket_sans',
-                            fontWeight: FontWeight.w500,
-                            fontSize: Sizes.size14,
-                            color: Colors.grey.shade600,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              '예산',
+                              style: TextStyle(
+                                fontFamily: 'Gmarket_sans',
+                                fontWeight: FontWeight.w500,
+                                fontSize: Sizes.size12 + Sizes.size1,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '₩${NumberFormat('#,###').format(budget.toInt())}',
+                              style: const TextStyle(
+                                fontFamily: 'Gmarket_sans',
+                                fontWeight: FontWeight.w500,
+                                fontSize: Sizes.size12,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              '지출',
+                              style: TextStyle(
+                                fontFamily: 'Gmarket_sans',
+                                fontWeight: FontWeight.w500,
+                                fontSize: Sizes.size12 + Sizes.size1,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '₩${NumberFormat('#,###').format(actual.toInt())}',
+                              style: const TextStyle(
+                                fontFamily: 'Gmarket_sans',
+                                fontWeight: FontWeight.w500,
+                                fontSize: Sizes.size12,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '₩${NumberFormat('#,###').format(budget.toInt())}',
-                        style: const TextStyle(
-                          fontFamily: 'Gmarket_sans',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      IconButton(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (dialogContext) {
-                              final screenHeight = MediaQuery.of(
-                                dialogContext,
-                              ).size.height;
-                              return Dialog(
-                                backgroundColor: Colors.transparent,
-                                insetPadding: const EdgeInsets.all(16),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(24),
-                                  child: SizedBox(
-                                    height: screenHeight * 0.95,
-                                    child: const BudgetInputScreen(),
-                                  ),
-                                ),
-                              );
-                            },
+                  IconButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (dialogContext) {
+                          final screenHeight = MediaQuery.of(
+                            dialogContext,
+                          ).size.height;
+                          return Dialog(
+                            backgroundColor: Colors.transparent,
+                            insetPadding: const EdgeInsets.all(16),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: SizedBox(
+                                height: screenHeight * 0.95,
+                                child: const BudgetInputScreen(),
+                              ),
+                            ),
                           );
                         },
-                        icon: Icon(
-                          Icons.chevron_right,
-                          color: Colors.grey.shade400,
-                          size: 20,
-                        ),
-                        splashRadius: 18,
-                        constraints: const BoxConstraints(),
-                        padding: EdgeInsets.zero,
-                      ),
-                    ],
+                      );
+                    },
+                    icon: Icon(
+                      Icons.chevron_right,
+                      color: Colors.grey.shade400,
+                      size: 20,
+                    ),
+                    splashRadius: 18,
+                    constraints: const BoxConstraints(),
+                    padding: EdgeInsets.zero,
                   ),
                 ],
               ),
