@@ -35,37 +35,45 @@ class BottomActionButton extends StatelessWidget {
         top: false,
         child: SizedBox(
           width: double.infinity,
+          height: MediaQuery.of(context).size.height * 0.06,
           child: allFieldsFilled
-              ? SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    focusNode: buttonFocus,
-                    style: ElevatedButton.styleFrom(
-                      textStyle: const TextStyle(
-                        fontSize: Sizes.size16 + Sizes.size2,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(56),
+              ? ElevatedButton(
+                  focusNode: buttonFocus,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    onPressed: onNavigate, // ✅ 중복 onTapDown 제거
-                    child: Text(navigateButtonText),
+                  ),
+                  onPressed: onNavigate, // ✅ 중복 onTapDown 제거
+                  child: Text(
+                    navigateButtonText,
+                    style: const TextStyle(
+                      fontFamily: 'Gmarket_sans',
+                      fontWeight: FontWeight.w700,
+                      fontSize: Sizes.size16,
+                    ),
                   ),
                 )
               : ElevatedButton(
                   focusNode: buttonFocus,
                   style: ElevatedButton.styleFrom(
-                    textStyle: const TextStyle(
-                      fontSize: Sizes.size16 + Sizes.size2,
-                      fontWeight: FontWeight.w700,
-                    ),
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(56),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   onPressed: onNext, // ✅ 중복 onTapDown 제거
-                  child: Text(nextButtonText),
+                  child: Text(
+                    nextButtonText,
+                    style: const TextStyle(
+                      fontFamily: 'Gmarket_sans',
+                      fontWeight: FontWeight.w700,
+                      fontSize: Sizes.size16,
+                    ),
+                  ),
                 ),
         ),
       ),

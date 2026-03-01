@@ -24,21 +24,20 @@ class SaveBudgetButton extends StatelessWidget {
       child: SafeArea(
         child: SizedBox(
           width: double.infinity,
-          height: 48,
+          height: MediaQuery.of(context).size.height * 0.06,
           child: ElevatedButton(
             onPressed: onPressed,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE9435A),
+              backgroundColor: Colors.black,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              elevation: 0,
             ),
             child: Text(
-              'Save Budget',
-              style: TextStyle(
+              '저장',
+              style: const TextStyle(
                 fontFamily: 'Gmarket_sans',
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 fontSize: Sizes.size16,
                 color: Colors.white,
               ),
