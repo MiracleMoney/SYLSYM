@@ -123,10 +123,20 @@ class _BudgetScreenState extends State<BudgetScreen>
 
   double _getCategoryTotal(String category) {
     double total = 0;
-    for (var controller in _budgetControllers[category]!.values) {
-      final rawText = controller.text.replaceAll(',', '');
-      final value = double.tryParse(rawText) ?? 0;
-      total += value;
+    final controllers = _budgetControllers[category];
+    if (controllers == null) return 0.0;
+
+    for (var controller in controllers.values) {
+      try {
+        final rawText = controller.text.replaceAll(',', '');
+        final value = double.tryParse(rawText) ?? 0;
+        if (value.isFinite) {
+          total += value;
+        }
+      } catch (e) {
+        // TextEditingController 접근 오류 시 0으로 처리
+        continue;
+      }
     }
     return total;
   }
@@ -134,12 +144,20 @@ class _BudgetScreenState extends State<BudgetScreen>
   // 도넛차트 전용: 500원 미만은 제외
   double _getCategoryTotalForChart(String category) {
     double total = 0;
-    for (var controller in _budgetControllers[category]!.values) {
-      final rawText = controller.text.replaceAll(',', '');
-      final value = double.tryParse(rawText) ?? 0;
-      // 개별 항목이 500원 이상일때만 합계에 포함
-      if (value >= 500) {
-        total += value;
+    final controllers = _budgetControllers[category];
+    if (controllers == null) return 0.0;
+
+    for (var controller in controllers.values) {
+      try {
+        final rawText = controller.text.replaceAll(',', '');
+        final value = double.tryParse(rawText) ?? 0;
+        // 개별 항목이 500원 이상일때만 합계에 포함
+        if (value >= 500 && value.isFinite) {
+          total += value;
+        }
+      } catch (e) {
+        // TextEditingController 접근 오류 시 0으로 처리
+        continue;
       }
     }
     return total;
@@ -166,7 +184,10 @@ class _BudgetScreenState extends State<BudgetScreen>
   double _getTotalBudget() {
     double total = 0;
     for (var category in _budgetControllers.keys) {
-      total += _getCategoryTotal(category);
+      final categoryTotal = _getCategoryTotal(category);
+      if (categoryTotal.isFinite) {
+        total += categoryTotal;
+      }
     }
     return total;
   }
@@ -175,7 +196,10 @@ class _BudgetScreenState extends State<BudgetScreen>
   double _getTotalBudgetForChart() {
     double total = 0;
     for (var category in _budgetControllers.keys) {
-      total += _getCategoryTotalForChart(category);
+      final categoryTotal = _getCategoryTotalForChart(category);
+      if (categoryTotal.isFinite) {
+        total += categoryTotal;
+      }
     }
     return total;
   }
@@ -233,8 +257,10 @@ class _BudgetScreenState extends State<BudgetScreen>
           if (itemTotals[category] == null) {
             itemTotals[category] = {};
           }
-          itemTotals[category]![subcategory] =
-              (itemTotals[category]![subcategory] ?? 0) + amount;
+          final categoryMap = itemTotals[category];
+          if (categoryMap != null) {
+            categoryMap[subcategory] = (categoryMap[subcategory] ?? 0) + amount;
+          }
         }
       }
 
@@ -263,9 +289,20 @@ class _BudgetScreenState extends State<BudgetScreen>
     _budgetControllers.forEach((category, items) {
       snapshot[category] = {};
       items.forEach((label, controller) {
-        final rawText = controller.text.replaceAll(',', '');
-        final value = double.tryParse(rawText) ?? 0;
-        snapshot[category]![label] = value;
+        try {
+          final rawText = controller.text.replaceAll(',', '');
+          final value = double.tryParse(rawText) ?? 0;
+          final categoryMap = snapshot[category];
+          if (categoryMap != null && value.isFinite) {
+            categoryMap[label] = value;
+          }
+        } catch (e) {
+          // TextEditingController 접근 오류 시 0으로 처리
+          final categoryMap = snapshot[category];
+          if (categoryMap != null) {
+            categoryMap[label] = 0.0;
+          }
+        }
       });
     });
     return snapshot;
@@ -282,12 +319,17 @@ class _BudgetScreenState extends State<BudgetScreen>
 
     _budgetControllers.forEach((category, items) {
       items.forEach((label, controller) {
-        final value = snapshot?[category]?[label] ?? 0;
-        final roundedValue = value.round();
-        if (roundedValue == 0) {
+        try {
+          final value = snapshot?[category]?[label] ?? 0;
+          final roundedValue = value.round();
+          if (roundedValue == 0) {
+            controller.text = '0';
+          } else {
+            controller.text = NumberFormat('#,###').format(roundedValue);
+          }
+        } catch (e) {
+          // TextEditingController 접근 오류 시 기본값 설정
           controller.text = '0';
-        } else {
-          controller.text = NumberFormat('#,###').format(roundedValue);
         }
       });
     });
@@ -424,6 +466,9 @@ class _BudgetScreenState extends State<BudgetScreen>
   }
 
   String _formatCurrency(double value) {
+    if (!value.isFinite) {
+      return '₩0';
+    }
     return '₩${NumberFormat('#,###').format(value.round())}';
   }
 
@@ -564,7 +609,7 @@ class _BudgetScreenState extends State<BudgetScreen>
                           totalBudget: _getTotalBudget(),
                           totalBudgetForChart: _getTotalBudgetForChart(),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 24),
                         CategorySelector(
                           categories: _categoryOrder,
                           selectedCategory: _selectedCategory,
@@ -574,7 +619,6 @@ class _BudgetScreenState extends State<BudgetScreen>
                             });
                           },
                         ),
-                        const SizedBox(height: 12),
                       ],
                     ),
                   ),
@@ -582,27 +626,39 @@ class _BudgetScreenState extends State<BudgetScreen>
                 SliverPersistentHeader(
                   pinned: true,
                   delegate: StickyHeaderDelegate(
+                    height: 100, // 넉넉한 높이 할당
                     childBuilder: (showShadow) {
                       final currentTotal = _getCategoryTotal(_selectedCategory);
                       final categoryKey =
                           _getExpenseCategoryKey(_selectedCategory) ??
                           _selectedCategory;
                       final previousTotal =
-                          _previousCategoryExpenses[categoryKey] ?? 0;
+                          _previousCategoryExpenses[categoryKey] ?? 0.0;
                       final categoryColor = _getCategoryColor(
                         _selectedCategory,
                       );
 
+                      // null 안전성 확보
+                      final safeCurrentTotal = currentTotal.isFinite
+                          ? currentTotal
+                          : 0.0;
+                      final safePreviousTotal = previousTotal.isFinite
+                          ? previousTotal
+                          : 0.0;
+
                       return Container(
+                        height: 100, // 고정 높이
                         color: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: CategoryComparisonGauge(
-                          selectedCategory: _selectedCategory,
-                          currentTotal: currentTotal,
-                          previousTotal: previousTotal,
-                          categoryColor: categoryColor,
-                          formatCurrency: _formatCurrency,
-                          showShadow: showShadow,
+                        child: Center(
+                          child: CategoryComparisonGauge(
+                            selectedCategory: _selectedCategory,
+                            currentTotal: safeCurrentTotal,
+                            previousTotal: safePreviousTotal,
+                            categoryColor: categoryColor,
+                            formatCurrency: _formatCurrency,
+                            showShadow: showShadow,
+                          ),
                         ),
                       );
                     },
@@ -613,7 +669,6 @@ class _BudgetScreenState extends State<BudgetScreen>
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        const SizedBox(height: 12),
                         BudgetItemsList(
                           items: _budgetControllers[_selectedCategory] ?? {},
                           selectedCategory: _selectedCategory,

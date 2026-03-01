@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 
 /// 고정 헤더 델리게이트
 class StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const StickyHeaderDelegate({required this.childBuilder});
+  const StickyHeaderDelegate({required this.childBuilder, this.height = 160});
 
   final Widget Function(bool showShadow) childBuilder;
+  final double height;
 
   @override
-  double get minExtent => 120; // 최소 높이
+  double get minExtent => height; // 최소 높이
 
   @override
-  double get maxExtent => 120; // 최대 높이
+  double get maxExtent => height; // 최대 높이
 
   @override
   Widget build(
@@ -25,6 +26,7 @@ class StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant StickyHeaderDelegate oldDelegate) {
-    return true; // 상태 변화를 감지할 수 있도록 true로 설정
+    return oldDelegate.childBuilder != childBuilder ||
+        oldDelegate.height != height;
   }
 }
