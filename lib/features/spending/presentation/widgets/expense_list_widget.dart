@@ -96,7 +96,7 @@ class ExpenseListWidget extends StatelessWidget {
         return GestureDetector(
           onTap: () => onExpenseTap?.call(expense),
           child: Container(
-            margin: const EdgeInsets.only(bottom: 12),
+            margin: const EdgeInsets.only(bottom: 6),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,

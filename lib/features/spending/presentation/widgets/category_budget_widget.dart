@@ -91,7 +91,7 @@ class CategoryBudgetWidget extends StatelessWidget {
         final isOverBudget = actual > budget;
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 16),
+          margin: const EdgeInsets.only(bottom: 6),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -123,6 +123,34 @@ class CategoryBudgetWidget extends StatelessWidget {
                       size: 24,
                     ),
                   ),
+                  const SizedBox(width: 2),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    // decoration: BoxDecoration(
+                    //   color: isOverBudget
+                    //       ? Colors.red.withOpacity(0.1)
+                    //       : percentage > 80
+                    //       ? Colors.orange.withOpacity(0.1)
+                    //       : Colors.green.withOpacity(0.1),
+                    //   borderRadius: BorderRadius.circular(8),
+                    // ),
+                    child: Text(
+                      '${percentage.toInt()}%',
+                      style: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w700,
+                        fontSize: Sizes.size14,
+                        color: isOverBudget
+                            ? Colors.red
+                            : percentage > 80
+                            ? Colors.orange
+                            : Colors.green,
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -133,7 +161,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                           style: const TextStyle(
                             fontFamily: 'Gmarket_sans',
                             fontWeight: FontWeight.w700,
-                            fontSize: Sizes.size16,
+                            fontSize: Sizes.size14,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -179,74 +207,6 @@ class CategoryBudgetWidget extends StatelessWidget {
                           ],
                         ),
                       ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (dialogContext) {
-                          final screenHeight = MediaQuery.of(
-                            dialogContext,
-                          ).size.height;
-                          return Dialog(
-                            backgroundColor: Colors.transparent,
-                            insetPadding: const EdgeInsets.all(16),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(24),
-                              child: SizedBox(
-                                height: screenHeight * 0.95,
-                                child: const BudgetInputScreen(),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    icon: Icon(
-                      Icons.chevron_right,
-                      color: Colors.grey.shade400,
-                      size: 20,
-                    ),
-                    splashRadius: 18,
-                    constraints: const BoxConstraints(),
-                    padding: EdgeInsets.zero,
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: LinearProgressIndicator(
-                        value: percentage / 100,
-                        minHeight: progressBarHeight,
-                        backgroundColor: Colors.grey.shade200,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          isOverBudget
-                              ? Colors.red
-                              : percentage > 80
-                              ? Colors.orange
-                              : Colors.green,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${percentage.toInt()}%',
-                    style: TextStyle(
-                      fontFamily: 'Gmarket_sans',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: isOverBudget
-                          ? Colors.red
-                          : percentage > 80
-                          ? Colors.orange
-                          : Colors.green,
                     ),
                   ),
                 ],
