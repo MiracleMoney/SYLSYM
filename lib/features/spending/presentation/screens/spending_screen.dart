@@ -24,6 +24,7 @@ class _SpendingScreenState extends State<SpendingScreen>
   late TabController _tabController;
   bool _isLoading = false;
   double? _monthlyBudget; // 해당 월의 예산 (totalIncome)
+  Map<String, double> _categoryBudgets = {}; // 카테고리별 예산 데이터
 
   @override
   void initState() {
@@ -57,6 +58,9 @@ class _SpendingScreenState extends State<SpendingScreen>
       );
       final budget = salaryData?.result.totalIncome;
 
+      // 예산 데이터 로드
+      await _loadBudgetData();
+
       setState(() {
         _expenses.clear();
         _expenses.addAll(expenses);
@@ -72,6 +76,48 @@ class _SpendingScreenState extends State<SpendingScreen>
           context,
         ).showSnackBar(SnackBar(content: Text('지출 데이터를 불러오는데 실패했습니다: $e')));
       }
+    }
+  }
+
+  /// 예산 데이터 로드
+  Future<void> _loadBudgetData() async {
+    try {
+      final budgetData = await _firestoreService.loadBudget(_selectedMonth);
+
+      if (budgetData != null) {
+        final Map<String, double> categoryTotals = {};
+
+        // 각 카테고리별로 세부 항목들의 예산을 합산
+        budgetData.forEach((categoryKey, categoryData) {
+          if (categoryData is Map<String, dynamic>) {
+            double total = 0;
+            categoryData.forEach((itemKey, value) {
+              total += (value as num).toDouble();
+            });
+            categoryTotals[categoryKey] = total;
+          }
+        });
+
+        _categoryBudgets = categoryTotals;
+      } else {
+        // 예산 데이터가 없으면 기본값으로 설정
+        _categoryBudgets = {
+          'FixedExpenses': 0,
+          'LivingExpenses': 0,
+          'InvestmentExpenses': 0,
+          'SavingExpenses': 0,
+          'InterestExpenses': 0,
+        };
+      }
+    } catch (e) {
+      // 에러 발생 시 기본값으로 설정
+      _categoryBudgets = {
+        'FixedExpenses': 0,
+        'LivingExpenses': 0,
+        'InvestmentExpenses': 0,
+        'SavingExpenses': 0,
+        'InterestExpenses': 0,
+      };
     }
   }
 
@@ -306,7 +352,10 @@ class _SpendingScreenState extends State<SpendingScreen>
 
                 // 예산 대비 지출 탭
                 SingleChildScrollView(
-                  child: CategoryBudgetWidget(expenses: monthExpenses),
+                  child: CategoryBudgetWidget(
+                    expenses: monthExpenses,
+                    categoryBudgets: _categoryBudgets,
+                  ),
                 ),
               ],
             ),

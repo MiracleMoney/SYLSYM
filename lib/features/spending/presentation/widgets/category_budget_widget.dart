@@ -7,8 +7,13 @@ import 'package:intl/intl.dart';
 
 class CategoryBudgetWidget extends StatelessWidget {
   final List<ExpenseModel> expenses;
+  final Map<String, double> categoryBudgets;
 
-  const CategoryBudgetWidget({super.key, required this.expenses});
+  const CategoryBudgetWidget({
+    super.key,
+    required this.expenses,
+    required this.categoryBudgets,
+  });
 
   Map<String, double> _getCategoryTotals() {
     final Map<String, double> totals = {};
@@ -19,14 +24,16 @@ class CategoryBudgetWidget extends StatelessWidget {
     return totals;
   }
 
-  // 임시 예산 데이터 (나중에 예산 기능에서 가져올 예정)
+  // 예산 데이터를 가져오는 메서드 (이제 props에서 직접 가져옴)
   Map<String, double> _getCategoryBudgets() {
     return {
-      ExpenseCategory.fixedExpenses: 0,
-      ExpenseCategory.livingExpenses: 0,
-      ExpenseCategory.investmentExpenses: 0,
-      ExpenseCategory.savingExpenses: 0,
-      ExpenseCategory.interestExpenses: 0,
+      ExpenseCategory.fixedExpenses: categoryBudgets['FixedExpenses'] ?? 0,
+      ExpenseCategory.livingExpenses: categoryBudgets['LivingExpenses'] ?? 0,
+      ExpenseCategory.investmentExpenses:
+          categoryBudgets['InvestmentExpenses'] ?? 0,
+      ExpenseCategory.savingExpenses: categoryBudgets['SavingExpenses'] ?? 0,
+      ExpenseCategory.interestExpenses:
+          categoryBudgets['InterestExpenses'] ?? 0,
     };
   }
 
@@ -125,6 +132,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                   ),
                   const SizedBox(width: 2),
                   Container(
+                    width: 60, // 고정 너비로 백분율 표시 영역 고정
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
                       vertical: 4,
@@ -151,20 +159,20 @@ class CategoryBudgetWidget extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 24),
+                  // Text(
+                  //   ExpenseCategory.getCategoryLabel(category),
+                  //   style: const TextStyle(
+                  //     fontFamily: 'Gmarket_sans',
+                  //     fontWeight: FontWeight.w700,
+                  //     fontSize: Sizes.size14,
+                  //   ),
+                  // ),
+                  // const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          ExpenseCategory.getCategoryLabel(category),
-                          style: const TextStyle(
-                            fontFamily: 'Gmarket_sans',
-                            fontWeight: FontWeight.w700,
-                            fontSize: Sizes.size14,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
                         Row(
                           children: [
                             Text(
@@ -185,7 +193,11 @@ class CategoryBudgetWidget extends StatelessWidget {
                                 fontSize: Sizes.size12,
                               ),
                             ),
-                            const Spacer(),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
                             Text(
                               '지출',
                               style: TextStyle(
