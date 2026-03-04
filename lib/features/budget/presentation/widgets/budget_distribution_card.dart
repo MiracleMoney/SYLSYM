@@ -77,7 +77,7 @@ class BudgetDistributionCard extends StatelessWidget {
                   alignment: Alignment.center,
                   children: [
                     CustomPaint(
-                      size: const Size(100, 100),
+                      size: const Size(90, 90),
                       painter: BudgetPieChartPainter(
                         values: values,
                         colors: colors,
