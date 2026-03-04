@@ -26,6 +26,7 @@ class BudgetPieChartPainter extends CustomPainter {
     canvas.drawOval(rect, backgroundPaint);
 
     const gapAngle = 0.06; // 세그먼트 사이 간격 (라디안)
+    const minAngle = 0.01; // 최소 세그먼트 각도
     final nonZeroCount = values.where((v) => v > 0).length;
 
     double startAngle = -math.pi / 2;
@@ -35,10 +36,23 @@ class BudgetPieChartPainter extends CustomPainter {
         continue;
       }
       final totalSweep = (value / total) * math.pi * 2;
-      // 세그먼트가 여러 개일 때만 gap 적용
-      final sweepAngle = nonZeroCount > 1
-          ? (totalSweep - gapAngle).clamp(0.01, totalSweep)
-          : totalSweep;
+
+      // 세그먼트가 여러 개일 때만 gap 적용하고, 유효한 각도 범위로 제한
+      double sweepAngle;
+      if (nonZeroCount > 1) {
+        sweepAngle = (totalSweep - gapAngle).clamp(
+          minAngle,
+          math.max(minAngle, totalSweep),
+        );
+      } else {
+        sweepAngle = math.max(minAngle, totalSweep);
+      }
+
+      // 각도가 유효하지 않으면 skip
+      if (sweepAngle <= 0 || sweepAngle.isNaN || sweepAngle.isInfinite) {
+        continue;
+      }
+
       final paint = Paint()
         ..color = colors[index % colors.length]
         ..style = PaintingStyle.stroke
