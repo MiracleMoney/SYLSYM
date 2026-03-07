@@ -47,12 +47,12 @@ class SemiCircleGaugeChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final total = _getTotalAmount();
     final categoryAmounts = _getCategoryAmounts();
-    final screenHeight = MediaQuery.of(context).size.height;
+    // final screenHeight = MediaQuery.of(context).size.height;
     // final chartHeight = screenHeight * 0.18; // 화면 높이의 18%
     final sortedEntries = categoryAmounts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    final incomeAmount = budget ?? 0;
-    final remainingAmount = incomeAmount - total;
+    final budgetAmount = budget ?? 0;
+    final remainingAmount = budgetAmount - total;
 
     return Column(
       children: [
@@ -140,7 +140,7 @@ class SemiCircleGaugeChart extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            '수입',
+                            '예산',
                             style: TextStyle(
                               fontFamily: 'Gmarket_sans',
                               fontWeight: FontWeight.w500,
@@ -150,7 +150,7 @@ class SemiCircleGaugeChart extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _formatCurrency(incomeAmount),
+                            _formatCurrency(budgetAmount),
                             style: const TextStyle(
                               fontFamily: 'Gmarket_sans',
                               fontWeight: FontWeight.w700,
@@ -169,7 +169,7 @@ class SemiCircleGaugeChart extends StatelessWidget {
                 height: 10,
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    if (total == 0 || incomeAmount <= 0) {
+                    if (total == 0 || budgetAmount <= 0) {
                       return Container(
                         height: 16,
                         decoration: BoxDecoration(
@@ -186,7 +186,7 @@ class SemiCircleGaugeChart extends StatelessWidget {
                             color:
                                 _getCategoryColorMap()[entry.key] ??
                                 Colors.grey,
-                            flex: ((entry.value / incomeAmount) * 1000).round(),
+                            flex: ((entry.value / budgetAmount) * 1000).round(),
                           ),
                         )
                         .where((segment) => segment.flex > 0)
