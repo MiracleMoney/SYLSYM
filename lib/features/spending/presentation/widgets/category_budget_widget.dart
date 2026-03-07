@@ -8,11 +8,13 @@ import 'package:intl/intl.dart';
 class CategoryBudgetWidget extends StatelessWidget {
   final List<ExpenseModel> expenses;
   final Map<String, double> categoryBudgets;
+  final Map<String, dynamic> rawBudgetData;
 
   const CategoryBudgetWidget({
     super.key,
     required this.expenses,
     required this.categoryBudgets,
+    required this.rawBudgetData, // 추가
   });
 
   Map<String, double> _getCategoryTotals() {
@@ -100,6 +102,7 @@ class CategoryBudgetWidget extends StatelessWidget {
             category,
             expenses,
             categoryBudgets,
+            rawBudgetData, // 추가 전달
           ),
           child: Container(
             margin: const EdgeInsets.only(bottom: 6),

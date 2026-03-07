@@ -8,12 +8,14 @@ class CategoryDetailDialog extends StatelessWidget {
   final String category;
   final List<ExpenseModel> expenses;
   final Map<String, double> categoryBudgets;
+  final Map<String, dynamic> rawBudgetData; // Firebase 세부 예산 추가
 
   const CategoryDetailDialog({
     super.key,
     required this.category,
     required this.expenses,
     required this.categoryBudgets,
+    required this.rawBudgetData, // 추가
   });
 
   // 세부 항목별 지출 계산
@@ -28,38 +30,25 @@ class CategoryDetailDialog extends StatelessWidget {
     return totals;
   }
 
-  // 메인 카테고리 예산을 서브카테고리에 지출 비율 기반으로 분배
+  // Firebase에 저장된 데이터에서 실제 서브카테고리별 예산을 가져오기
   Map<String, double> _getSubcategoryBudgets() {
     final categoryKey = _getCategoryKey(category);
     if (categoryKey == null) return {};
 
-    // 메인 카테고리의 총 예산 가져오기
-    final mainBudget = categoryBudgets[category] ?? 0;
-    if (mainBudget == 0) return {};
-
     final subcategories = ExpenseCategory.getSubcategories(categoryKey);
-    final subcategoryTotals = _getSubcategoryTotals();
-    final totalExpense = subcategoryTotals.values.fold(0.0, (a, b) => a + b);
-
     final Map<String, double> budgets = {};
 
-    if (totalExpense == 0) {
-      // 지출이 없으면 서브카테고리에 균등 분배
-      final equalBudget = mainBudget / subcategories.length;
+    // 이 달의 categoryKey에 해당하는 data가 rawBudgetData에 있다면
+    final categoryData = rawBudgetData[categoryKey];
+    if (categoryData is Map) {
       subcategories.forEach((key, label) {
-        budgets[key] = equalBudget;
+        final val = (categoryData[key] as num?)?.toDouble() ?? 0.0;
+        budgets[key] = val;
       });
     } else {
-      // 지출 비율에 따라 예산 분배 + 최소 예산 보장
-      final minBudgetPerCategory = mainBudget * 0.05; // 최소 5%
-      double remainingBudget =
-          mainBudget - (minBudgetPerCategory * subcategories.length);
-
+      // 없으면 0으로 표시
       subcategories.forEach((key, label) {
-        final expenseAmount = subcategoryTotals[key] ?? 0;
-        final proportionalBudget =
-            remainingBudget * (expenseAmount / totalExpense);
-        budgets[key] = minBudgetPerCategory + proportionalBudget;
+        budgets[key] = 0.0;
       });
     }
 
@@ -332,6 +321,7 @@ void showCategoryDetailDialog(
   String category,
   List<ExpenseModel> expenses,
   Map<String, double> categoryBudgets,
+  Map<String, dynamic> rawBudgetData,
 ) {
   showDialog(
     context: context,
@@ -339,6 +329,7 @@ void showCategoryDetailDialog(
       category: category,
       expenses: expenses,
       categoryBudgets: categoryBudgets,
+      rawBudgetData: rawBudgetData,
     ),
   );
 }

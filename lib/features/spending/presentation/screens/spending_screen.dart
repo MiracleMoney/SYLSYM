@@ -25,6 +25,7 @@ class _SpendingScreenState extends State<SpendingScreen>
   bool _isLoading = false;
   double? _monthlyBudget; // 해당 월의 예산 (totalIncome)
   Map<String, double> _categoryBudgets = {}; // 카테고리별 예산 데이터
+  Map<String, dynamic> _rawBudgetData = {}; // 전체 예산 데이터 (세부 항목 포함)
 
   @override
   void initState() {
@@ -85,6 +86,7 @@ class _SpendingScreenState extends State<SpendingScreen>
       final budgetData = await _firestoreService.loadBudget(_selectedMonth);
 
       if (budgetData != null) {
+        _rawBudgetData = budgetData; // 저장해둠
         final Map<String, double> categoryTotals = {};
 
         // 각 카테고리별로 세부 항목들의 예산을 합산
@@ -101,6 +103,7 @@ class _SpendingScreenState extends State<SpendingScreen>
         _categoryBudgets = categoryTotals;
       } else {
         // 예산 데이터가 없으면 기본값으로 설정
+        _rawBudgetData = {};
         _categoryBudgets = {
           'FixedExpenses': 0,
           'LivingExpenses': 0,
@@ -111,6 +114,7 @@ class _SpendingScreenState extends State<SpendingScreen>
       }
     } catch (e) {
       // 에러 발생 시 기본값으로 설정
+      _rawBudgetData = {};
       _categoryBudgets = {
         'FixedExpenses': 0,
         'LivingExpenses': 0,
@@ -355,6 +359,7 @@ class _SpendingScreenState extends State<SpendingScreen>
                   child: CategoryBudgetWidget(
                     expenses: monthExpenses,
                     categoryBudgets: _categoryBudgets,
+                    rawBudgetData: _rawBudgetData, // 추가 전달
                   ),
                 ),
               ],
