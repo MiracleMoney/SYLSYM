@@ -37,6 +37,7 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this, initialIndex: 0);
+    _tabController.addListener(_handleTabSelection);
 
     // ✅ 월급최적화 탭으로 돌아올 때 현재 상태 확인 후 적절한 페이지로 복원
     // _tabController.addListener(() {
@@ -62,8 +63,14 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
     _checkAndLoadMonthData();
   }
 
+  void _handleTabSelection() {
+    if (_tabController.indexIsChanging) return;
+    setState(() {}); // Tab 변경에 따른 뷰 리빌드를 위해 호출 (BudgetScreen의 isFocused 갱신용)
+  }
+
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabSelection);
     _currentMonth.removeListener(_checkAndLoadMonthData);
 
     _tabController.dispose();
@@ -461,7 +468,7 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
                   ],
                 ),
           // 예산 탭
-          BudgetScreen(),
+          BudgetScreen(isFocused: _tabController.index == 1),
         ],
       ),
     );

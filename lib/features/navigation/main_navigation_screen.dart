@@ -19,12 +19,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   int _selectedIndex = 1; // 월급최적화부터 시작
 
-  final List<Widget> _screens = [
-    const SalaryTabsScreen(), // 월급최적화만 노출
-    const SpendingScreen(), // 지출
-    const CommunityScreen(),
-    const MyRoomScreen(),
-  ];
   @override
   void initState() {
     super.initState();
@@ -96,8 +90,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 탭 전환 시점마다 isFocused 파라미터를 업데이트하기 위해 build 안에서 리스트를 구성
+    final List<Widget> screens = [
+      const SalaryTabsScreen(), // 월급최적화, 예산
+      SpendingScreen(isFocused: _selectedIndex == 1), // 지출
+      const CommunityScreen(), // 커뮤니티
+      const MyRoomScreen(), // 마이룸
+    ];
+
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _screens),
+      body: IndexedStack(index: _selectedIndex, children: screens),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
         currentIndex: _selectedIndex,

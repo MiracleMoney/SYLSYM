@@ -10,7 +10,8 @@ import 'package:miraclemoney/features/spending/presentation/widgets/category_bud
 import 'package:miraclemoney/data/services/firestore_service.dart';
 
 class SpendingScreen extends StatefulWidget {
-  const SpendingScreen({super.key});
+  final bool isFocused;
+  const SpendingScreen({super.key, this.isFocused = false});
 
   @override
   State<SpendingScreen> createState() => _SpendingScreenState();
@@ -31,6 +32,15 @@ class _SpendingScreenState extends State<SpendingScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadExpenses();
+  }
+
+  @override
+  void didUpdateWidget(covariant SpendingScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 현재 탭으로 돌아왔을 때 데이터를 다시 불러옵니다.
+    if (widget.isFocused && !oldWidget.isFocused) {
+      _loadExpenses();
+    }
   }
 
   @override

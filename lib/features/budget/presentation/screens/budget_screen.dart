@@ -18,7 +18,8 @@ import '../widgets/sticky_header_delegate.dart';
 import '../helpers/number_input_formatter.dart';
 
 class BudgetScreen extends StatefulWidget {
-  const BudgetScreen({super.key});
+  final bool isFocused;
+  const BudgetScreen({super.key, this.isFocused = false});
 
   @override
   State<BudgetScreen> createState() => _BudgetScreenState();
@@ -119,6 +120,17 @@ class _BudgetScreenState extends State<BudgetScreen>
     _loadBudgetFromFirestore(_selectedMonth);
     _loadSalaryResult();
     _loadExpenses();
+  }
+
+  @override
+  void didUpdateWidget(covariant BudgetScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 현재 탭으로 돌아왔을 때 데이터를 다시 불러옵니다.
+    if (widget.isFocused && !oldWidget.isFocused) {
+      _loadBudgetFromFirestore(_selectedMonth);
+      _loadSalaryResult();
+      _loadExpenses();
+    }
   }
 
   double _getCategoryTotal(String category) {
