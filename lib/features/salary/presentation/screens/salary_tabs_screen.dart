@@ -36,7 +36,7 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
+    _tabController = TabController(length: 2, vsync: this, initialIndex: 0);
 
     // ✅ 월급최적화 탭으로 돌아올 때 현재 상태 확인 후 적절한 페이지로 복원
     // _tabController.addListener(() {
@@ -337,7 +337,7 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
             ? IconButton(icon: const Icon(Icons.arrow_back), onPressed: _goBack)
             : null,
         title: const Text(
-          '자산 관리',
+          '자산',
           style: TextStyle(
             fontFamily: 'Gmarket_sans',
             fontWeight: FontWeight.w700,

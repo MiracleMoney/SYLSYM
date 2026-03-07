@@ -17,7 +17,7 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final AuthService _authService = AuthService(); // ✨ 추가
 
-  int _selectedIndex = 0; // 월급최적화부터 시작
+  int _selectedIndex = 1; // 월급최적화부터 시작
 
   final List<Widget> _screens = [
     const SalaryTabsScreen(), // 월급최적화만 노출

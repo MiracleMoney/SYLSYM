@@ -389,157 +389,160 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
   Widget build(BuildContext context) {
     final cardRadius = BorderRadius.circular(12.0);
 
-    return Scaffold(
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.only(
-          left: Sizes.size20,
-          right: Sizes.size20,
-          top: Sizes.size5,
-          bottom: Sizes.size24,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            MonthSelector(
-              currentMonth: _currentMonth.value,
-              onPreviousMonth: () {
-                final prev = DateTime(
-                  _currentMonth.value.year,
-                  _currentMonth.value.month - 1,
-                );
-                _currentMonth.value = prev;
-              },
-              onNextMonth: () {
-                final next = DateTime(
-                  _currentMonth.value.year,
-                  _currentMonth.value.month + 1,
-                );
-                _currentMonth.value = next;
-              },
-            ),
-
-            Gaps.v12,
-            const Row(
-              children: [
-                SectionHeader(icon: Icons.payments_outlined, title: '본업 수입'),
-              ],
-            ),
-            Gaps.v12,
-
-            NumberInputField(
-              label: '월급',
-              hint: '예: 1,800,000',
-              controller: _baseSalaryController,
-              focusNode: _baseSalaryFocus,
-              nextFocus: _overtimeFocus,
-              suffixText: '₩',
-            ),
-            Gaps.v16,
-            NumberInputField(
-              label: '추가 근무',
-              hint: '예: 300,000',
-              controller: _overtimeController,
-              focusNode: _overtimeFocus,
-              nextFocus: _bonusFocus,
-              suffixText: '₩',
-            ),
-            Gaps.v16,
-            NumberInputField(
-              label: '상여금',
-              hint: '예: 500,000',
-              controller: _bonusController,
-              focusNode: _bonusFocus,
-              nextFocus: _incentiveFocus,
-              suffixText: '₩',
-            ),
-            Gaps.v16,
-            NumberInputField(
-              label: '성과급',
-              hint: '예: 500,000',
-              controller: _incentiveController,
-              focusNode: _incentiveFocus,
-              nextFocus: _side1Focus,
-              suffixText: '₩',
-            ),
-
-            Gaps.v32,
-            Row(
-              children: [SectionHeader(icon: Icons.money, title: '추가 수입')],
-            ),
-            Gaps.v12,
-            NumberInputField(
-              label: '추가 수입 1',
-              hint: '예: 300,000',
-              controller: _side1Controller,
-              focusNode: _side1Focus,
-              nextFocus: _side2Focus,
-              suffixText: '₩',
-            ),
-            Gaps.v16,
-            NumberInputField(
-              label: '추가 수입 2',
-              hint: '예: 200,000',
-              controller: _side2Controller,
-              focusNode: _side2Focus,
-              nextFocus: _side3Focus,
-              suffixText: '₩',
-            ),
-            Gaps.v16,
-            NumberInputField(
-              label: '추가 수입 3',
-              hint: '예: 100,000',
-              controller: _side3Controller,
-              focusNode: _side3Focus,
-              nextFocus: _retirementFocus,
-              suffixText: '₩',
-            ),
-
-            Gaps.v32,
-            // retirement card
-            Row(
-              children: [
-                SectionHeader(
-                  icon: Icons.monetization_on_outlined,
-                  title: '퇴직금 투자 금액',
-                  fontSize: Sizes.size16 + Sizes.size2,
-                ),
-              ],
-            ),
-            Gaps.v4,
-            Text(
-              '(연 퇴직금을 12개월로 나눈 금액을 입력해주세요)',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontFamily: 'Gmarket_sans',
-                color: Colors.grey.shade600,
-                fontSize: Sizes.size14,
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        body: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.only(
+            left: Sizes.size20,
+            right: Sizes.size20,
+            top: Sizes.size5,
+            bottom: Sizes.size24,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              MonthSelector(
+                currentMonth: _currentMonth.value,
+                onPreviousMonth: () {
+                  final prev = DateTime(
+                    _currentMonth.value.year,
+                    _currentMonth.value.month - 1,
+                  );
+                  _currentMonth.value = prev;
+                },
+                onNextMonth: () {
+                  final next = DateTime(
+                    _currentMonth.value.year,
+                    _currentMonth.value.month + 1,
+                  );
+                  _currentMonth.value = next;
+                },
               ),
-            ),
-            Gaps.v12,
-            NumberInputField(
-              label: '퇴직금',
-              hint: '예: 220,000',
-              controller: _retirementController,
-              focusNode: _retirementFocus,
-              nextFocus: null,
-              suffixText: '₩',
-              action: TextInputAction.done,
-            ),
-          ],
-        ),
-      ),
 
-      // ✅ ValueListenableBuilder로 감싸서 버튼만 rebuild
-      bottomNavigationBar: ValueListenableBuilder<bool>(
-        valueListenable: _allFieldsFilledNotifier,
-        builder: (context, allFilled, child) {
-          return BottomActionButton(
-            allFieldsFilled: allFilled,
-            onNext: _onNext,
-            onNavigate: _onCalculate,
-            buttonFocus: _actionButtonFocus,
-          );
-        },
+              Gaps.v12,
+              const Row(
+                children: [
+                  SectionHeader(icon: Icons.payments_outlined, title: '본업 수입'),
+                ],
+              ),
+              Gaps.v12,
+
+              NumberInputField(
+                label: '월급',
+                hint: '예: 1,800,000',
+                controller: _baseSalaryController,
+                focusNode: _baseSalaryFocus,
+                nextFocus: _overtimeFocus,
+                suffixText: '₩',
+              ),
+              Gaps.v16,
+              NumberInputField(
+                label: '추가 근무',
+                hint: '예: 300,000',
+                controller: _overtimeController,
+                focusNode: _overtimeFocus,
+                nextFocus: _bonusFocus,
+                suffixText: '₩',
+              ),
+              Gaps.v16,
+              NumberInputField(
+                label: '상여금',
+                hint: '예: 500,000',
+                controller: _bonusController,
+                focusNode: _bonusFocus,
+                nextFocus: _incentiveFocus,
+                suffixText: '₩',
+              ),
+              Gaps.v16,
+              NumberInputField(
+                label: '성과급',
+                hint: '예: 500,000',
+                controller: _incentiveController,
+                focusNode: _incentiveFocus,
+                nextFocus: _side1Focus,
+                suffixText: '₩',
+              ),
+
+              Gaps.v32,
+              Row(
+                children: [SectionHeader(icon: Icons.money, title: '추가 수입')],
+              ),
+              Gaps.v12,
+              NumberInputField(
+                label: '추가 수입 1',
+                hint: '예: 300,000',
+                controller: _side1Controller,
+                focusNode: _side1Focus,
+                nextFocus: _side2Focus,
+                suffixText: '₩',
+              ),
+              Gaps.v16,
+              NumberInputField(
+                label: '추가 수입 2',
+                hint: '예: 200,000',
+                controller: _side2Controller,
+                focusNode: _side2Focus,
+                nextFocus: _side3Focus,
+                suffixText: '₩',
+              ),
+              Gaps.v16,
+              NumberInputField(
+                label: '추가 수입 3',
+                hint: '예: 100,000',
+                controller: _side3Controller,
+                focusNode: _side3Focus,
+                nextFocus: _retirementFocus,
+                suffixText: '₩',
+              ),
+
+              Gaps.v32,
+              // retirement card
+              Row(
+                children: [
+                  SectionHeader(
+                    icon: Icons.monetization_on_outlined,
+                    title: '퇴직금 투자 금액',
+                    fontSize: Sizes.size16 + Sizes.size2,
+                  ),
+                ],
+              ),
+              Gaps.v4,
+              Text(
+                '(연 퇴직금을 12개월로 나눈 금액을 입력해주세요)',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontFamily: 'Gmarket_sans',
+                  color: Colors.grey.shade600,
+                  fontSize: Sizes.size14,
+                ),
+              ),
+              Gaps.v12,
+              NumberInputField(
+                label: '퇴직금',
+                hint: '예: 220,000',
+                controller: _retirementController,
+                focusNode: _retirementFocus,
+                nextFocus: null,
+                suffixText: '₩',
+                action: TextInputAction.done,
+              ),
+            ],
+          ),
+        ),
+
+        // ✅ ValueListenableBuilder로 감싸서 버튼만 rebuild
+        bottomNavigationBar: ValueListenableBuilder<bool>(
+          valueListenable: _allFieldsFilledNotifier,
+          builder: (context, allFilled, child) {
+            return BottomActionButton(
+              allFieldsFilled: allFilled,
+              onNext: _onNext,
+              onNavigate: _onCalculate,
+              buttonFocus: _actionButtonFocus,
+            );
+          },
+        ),
       ),
     );
   }

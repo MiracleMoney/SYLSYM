@@ -116,7 +116,7 @@ class BudgetDistributionCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     _DistributionValueRow(
-                      label: '총 예산',
+                      label: '이번달 예산',
                       value: formatCurrency(totalBudget),
                     ),
                   ],

@@ -457,270 +457,284 @@ class _SalaryStep1ScreenState extends State<SalaryStep1Screen> {
       ],
     );
 
-    return Scaffold(
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        body: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
 
-        child: Form(
-          key: _formKey,
-          child: Padding(
-            padding: const EdgeInsets.only(
-              left: Sizes.size20,
-              right: Sizes.size20,
-              top: Sizes.size5,
-              bottom: Sizes.size24,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // ---------- 월 네비게이션 바 (상단) ----------
-                MonthSelector(
-                  currentMonth: _currentMonth.value,
-                  onPreviousMonth: () {
-                    final prev = DateTime(
-                      _currentMonth.value.year,
-                      _currentMonth.value.month - 1,
-                    );
-                    _changeMonth(prev);
-                  },
-                  onNextMonth: () {
-                    final next = DateTime(
-                      _currentMonth.value.year,
-                      _currentMonth.value.month + 1,
-                    );
-                    _changeMonth(next);
-                  },
-                ),
-                Gaps.v12,
-                Row(
-                  children: [
-                    SectionHeader(
-                      icon: Icons.flag_outlined,
-                      title: '경제적자유 목표 설정',
-                    ),
-                  ],
-                ),
-                Gaps.v12,
-                NumberInputField(
-                  label: '현재 나이',
-                  hint: '예: 30',
-                  controller: _currentAgeController,
-                  focusNode: _currentAgeFocus,
-                  nextFocus: _retireAgeFocus,
-                  suffixText: '세',
-                ),
-                Gaps.v16,
-                NumberInputField(
-                  label: '은퇴 희망 나이',
-                  hint: '예: 65',
-                  controller: _retireAgeController,
-                  focusNode: _retireAgeFocus,
-                  nextFocus: _livingExpenseFocus,
-                  suffixText: '세',
-                ),
-                Gaps.v16,
-                NumberInputField(
-                  label: '현재 희망 생활비',
-                  hint: '예: 2,000,000',
-                  controller: _livingExpenseController,
-                  focusNode: _livingExpenseFocus,
-                  nextFocus: _snpValueFocus,
-                  suffixText: '₩',
-                ),
-                Gaps.v16,
-                NumberInputField(
-                  label: '현재 S&P500 평가금액',
-                  hint: '예: 3,000,000',
-                  controller: _snpValueController,
-                  focusNode: _snpValueFocus,
-                  nextFocus: _expectedReturnFocus,
-                  suffixText: '₩',
-                ),
-                Gaps.v16,
-                NumberInputField(
-                  label: '기대수익률',
-                  hint: '예: 8.2',
-                  controller: _expectedReturnController,
-                  focusNode: _expectedReturnFocus,
-                  nextFocus: _inflationFocus,
-                  allowDecimal: true,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+          child: Form(
+            key: _formKey,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: Sizes.size20,
+                right: Sizes.size20,
+                top: Sizes.size5,
+                bottom: Sizes.size24,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ---------- 월 네비게이션 바 (상단) ----------
+                  MonthSelector(
+                    currentMonth: _currentMonth.value,
+                    onPreviousMonth: () {
+                      final prev = DateTime(
+                        _currentMonth.value.year,
+                        _currentMonth.value.month - 1,
+                      );
+                      _changeMonth(prev);
+                    },
+                    onNextMonth: () {
+                      final next = DateTime(
+                        _currentMonth.value.year,
+                        _currentMonth.value.month + 1,
+                      );
+                      _changeMonth(next);
+                    },
                   ),
-                  suffixText: '%',
-                ),
-                Gaps.v16,
-                NumberInputField(
-                  label: '예상 물가 상승률',
-                  hint: '예: 2.5',
-                  controller: _inflationController,
-                  focusNode: _inflationFocus,
-                  nextFocus: _hasShortTermGoal ? _shortTermDropdownFocus : null,
-                  allowDecimal: true,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  suffixText: '%',
-                ),
-                Gaps.v32,
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+                  Gaps.v12,
+                  Row(
+                    children: [
+                      SectionHeader(
+                        icon: Icons.flag_outlined,
+                        title: '경제적자유 목표 설정',
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: SwitchListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 0,
-                      ),
-                      title: Text(
-                        '단기 목표가 있나요?',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontFamily: "Gmarket_sans",
-                              fontWeight: FontWeight.w700,
-                              fontSize: Sizes.size16 + Sizes.size2,
-                            ),
-                      ),
-                      value: _hasShortTermGoal,
-                      activeThumbColor: const Color(0xFFE9435A),
-                      activeTrackColor: Colors.transparent,
-                      trackOutlineColor: WidgetStateProperty.resolveWith((
-                        states,
-                      ) {
-                        if (states.contains(WidgetState.selected)) {
-                          return Colors.grey.shade400;
-                        }
-                        return Colors.grey.shade400;
-                      }),
-                      inactiveThumbColor: Colors.black,
-                      inactiveTrackColor: Colors.transparent,
-                      onChanged: (val) {
-                        Future.microtask(() {
-                          if (!mounted) return;
-                          setState(() => _hasShortTermGoal = val);
-                        });
-                      },
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      tileColor: Colors.transparent,
-                    ),
+                  Gaps.v12,
+                  NumberInputField(
+                    label: '현재 나이',
+                    hint: '예: 30',
+                    controller: _currentAgeController,
+                    focusNode: _currentAgeFocus,
+                    nextFocus: _retireAgeFocus,
+                    suffixText: '세',
                   ),
-                ),
-                if (_hasShortTermGoal) ...[
                   Gaps.v16,
+                  NumberInputField(
+                    label: '은퇴 희망 나이',
+                    hint: '예: 65',
+                    controller: _retireAgeController,
+                    focusNode: _retireAgeFocus,
+                    nextFocus: _livingExpenseFocus,
+                    suffixText: '세',
+                  ),
+                  Gaps.v16,
+                  NumberInputField(
+                    label: '현재 희망 생활비',
+                    hint: '예: 2,000,000',
+                    controller: _livingExpenseController,
+                    focusNode: _livingExpenseFocus,
+                    nextFocus: _snpValueFocus,
+                    suffixText: '₩',
+                  ),
+                  Gaps.v16,
+                  NumberInputField(
+                    label: '현재 S&P500 평가금액',
+                    hint: '예: 3,000,000',
+                    controller: _snpValueController,
+                    focusNode: _snpValueFocus,
+                    nextFocus: _expectedReturnFocus,
+                    suffixText: '₩',
+                  ),
+                  Gaps.v16,
+                  NumberInputField(
+                    label: '기대수익률',
+                    hint: '예: 8.2',
+                    controller: _expectedReturnController,
+                    focusNode: _expectedReturnFocus,
+                    nextFocus: _inflationFocus,
+                    allowDecimal: true,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    suffixText: '%',
+                  ),
+                  Gaps.v16,
+                  NumberInputField(
+                    label: '예상 물가 상승률',
+                    hint: '예: 2.5',
+                    controller: _inflationController,
+                    focusNode: _inflationFocus,
+                    nextFocus: _hasShortTermGoal
+                        ? _shortTermDropdownFocus
+                        : null,
+                    allowDecimal: true,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    suffixText: '%',
+                  ),
+                  Gaps.v32,
                   Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '단기 목표',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontFamily: "Gmarket_sans",
-                                fontWeight: FontWeight.w400,
-                                fontSize: Sizes.size16,
-                              ),
-                        ),
-                        Gaps.v10,
-                        DropdownButtonFormField<String>(
-                          dropdownColor: Colors.white,
-                          focusNode: _shortTermDropdownFocus,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.grey.shade50,
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(Sizes.size8),
-                              borderSide: BorderSide.none,
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(Sizes.size8),
-                              borderSide: BorderSide.none,
-                            ),
-                            border: OutlineInputBorder(
-                              gapPadding: 5,
-                              borderRadius: BorderRadius.circular(Sizes.size8),
-                            ),
-                          ),
-                          hint: const Text('단기 목표 선택'),
-                          initialValue: _selectedShortTermGoal,
-                          items: _shortTermOptions
-                              .map(
-                                (e) =>
-                                    DropdownMenuItem(value: e, child: Text(e)),
-                              )
-                              .toList(),
-                          onChanged: (val) => Future.microtask(() {
-                            if (!mounted) return;
-                            setState(() => _selectedShortTermGoal = val);
-                          }),
-                          validator: (v) =>
-                              (v == null || v.isEmpty) ? '단기 목표를 선택하세요' : null,
-                        ),
-                        Gaps.v16,
-                        NumberInputField(
-                          label: '단기 목표 금액',
-                          hint: '예: 1,000,000',
-                          controller: _shortTermGoalAmountController,
-                          focusNode: _shortTermGoalAmountFocus,
-                          nextFocus: _shortTermGoalDurationFocus,
-                          suffixText: '₩',
-                        ),
-                        Gaps.v16,
-                        NumberInputField(
-                          label: '단기 목표 기간 (월)',
-                          hint: '예: 12',
-                          controller: _shortTermGoalDurationController,
-                          focusNode: _shortTermGoalDurationFocus,
-                          nextFocus: _shortTermSavedFocus,
-                          suffixText: '개월',
-                          keyboardType: TextInputType.number,
-                        ),
-                        Gaps.v16,
-                        NumberInputField(
-                          label: '현재 단기 목표 저축액',
-                          hint: '예: 500,000',
-                          controller: _shortTermSavedController,
-                          focusNode: _shortTermSavedFocus,
-                          nextFocus: null,
-                          suffixText: '₩',
-                          keyboardType: TextInputType.number,
-                          action: TextInputAction.done,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: SwitchListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 0,
+                        ),
+                        title: Text(
+                          '단기 목표가 있나요?',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontFamily: "Gmarket_sans",
+                                fontWeight: FontWeight.w700,
+                                fontSize: Sizes.size16 + Sizes.size2,
+                              ),
+                        ),
+                        value: _hasShortTermGoal,
+                        activeThumbColor: const Color(0xFFE9435A),
+                        activeTrackColor: Colors.transparent,
+                        trackOutlineColor: WidgetStateProperty.resolveWith((
+                          states,
+                        ) {
+                          if (states.contains(WidgetState.selected)) {
+                            return Colors.grey.shade400;
+                          }
+                          return Colors.grey.shade400;
+                        }),
+                        inactiveThumbColor: Colors.black,
+                        inactiveTrackColor: Colors.transparent,
+                        onChanged: (val) {
+                          Future.microtask(() {
+                            if (!mounted) return;
+                            setState(() => _hasShortTermGoal = val);
+                          });
+                        },
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        tileColor: Colors.transparent,
+                      ),
+                    ),
                   ),
+                  if (_hasShortTermGoal) ...[
+                    Gaps.v16,
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '단기 목표',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontFamily: "Gmarket_sans",
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: Sizes.size16,
+                                ),
+                          ),
+                          Gaps.v10,
+                          DropdownButtonFormField<String>(
+                            dropdownColor: Colors.white,
+                            focusNode: _shortTermDropdownFocus,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.grey.shade50,
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                  Sizes.size8,
+                                ),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                  Sizes.size8,
+                                ),
+                                borderSide: BorderSide.none,
+                              ),
+                              border: OutlineInputBorder(
+                                gapPadding: 5,
+                                borderRadius: BorderRadius.circular(
+                                  Sizes.size8,
+                                ),
+                              ),
+                            ),
+                            hint: const Text('단기 목표 선택'),
+                            initialValue: _selectedShortTermGoal,
+                            items: _shortTermOptions
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e,
+                                    child: Text(e),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) => Future.microtask(() {
+                              if (!mounted) return;
+                              setState(() => _selectedShortTermGoal = val);
+                            }),
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? '단기 목표를 선택하세요'
+                                : null,
+                          ),
+                          Gaps.v16,
+                          NumberInputField(
+                            label: '단기 목표 금액',
+                            hint: '예: 1,000,000',
+                            controller: _shortTermGoalAmountController,
+                            focusNode: _shortTermGoalAmountFocus,
+                            nextFocus: _shortTermGoalDurationFocus,
+                            suffixText: '₩',
+                          ),
+                          Gaps.v16,
+                          NumberInputField(
+                            label: '단기 목표 기간 (월)',
+                            hint: '예: 12',
+                            controller: _shortTermGoalDurationController,
+                            focusNode: _shortTermGoalDurationFocus,
+                            nextFocus: _shortTermSavedFocus,
+                            suffixText: '개월',
+                            keyboardType: TextInputType.number,
+                          ),
+                          Gaps.v16,
+                          NumberInputField(
+                            label: '현재 단기 목표 저축액',
+                            hint: '예: 500,000',
+                            controller: _shortTermSavedController,
+                            focusNode: _shortTermSavedFocus,
+                            nextFocus: null,
+                            suffixText: '₩',
+                            keyboardType: TextInputType.number,
+                            action: TextInputAction.done,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
-      ),
-      // Next 버튼을 키보드 위에 고정
-      bottomNavigationBar: BottomActionButton(
-        allFieldsFilled: _allFieldsFilled,
-        onNext: _onNext,
-        onNavigate: _navigateToStep2,
-        buttonFocus: _nextButtonFocus,
+        // Next 버튼을 키보드 위에 고정
+        bottomNavigationBar: BottomActionButton(
+          allFieldsFilled: _allFieldsFilled,
+          onNext: _onNext,
+          onNavigate: _navigateToStep2,
+          buttonFocus: _nextButtonFocus,
+        ),
       ),
     );
   }

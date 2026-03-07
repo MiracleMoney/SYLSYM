@@ -553,142 +553,150 @@ class _BudgetScreenState extends State<BudgetScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          Expanded(
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: SafeArea(
-                    bottom: false,
-                    child: Container(
-                      color: Colors.white,
-                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Column(
+          children: [
+            Expanded(
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: SafeArea(
+                      bottom: false,
+                      child: Container(
+                        color: Colors.white,
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                Icons.chevron_left,
+                                color: Colors.black,
+                              ),
+                              onPressed: () => _changeMonth(-1),
+                            ),
+                            Text(
+                              '${_selectedMonth.year}년 ${_selectedMonth.month}월',
+                              style: TextStyle(
+                                fontFamily: 'Gmarket_sans',
+                                fontWeight: FontWeight.w500,
+                                fontSize: Sizes.size16 + Sizes.size2,
+                                color: Colors.black,
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.chevron_right,
+                                color: Colors.black,
+                              ),
+                              onPressed: () => _changeMonth(1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
                         children: [
-                          IconButton(
-                            icon: Icon(Icons.chevron_left, color: Colors.black),
-                            onPressed: () => _changeMonth(-1),
+                          BudgetDistributionCard(
+                            categoryOrder: _categoryOrder,
+                            getCategoryTotalForChart: _getCategoryTotalForChart,
+                            getCategoryColor: _getCategoryColor,
+                            formatCurrency: _formatCurrency,
+                            monthlyIncome: _salaryResult?.totalIncome ?? 0,
+                            totalExpense: _totalExpense,
+                            totalBudget: _getTotalBudget(),
+                            totalBudgetForChart: _getTotalBudgetForChart(),
                           ),
-                          Text(
-                            '${_selectedMonth.year}년 ${_selectedMonth.month}월',
-                            style: TextStyle(
-                              fontFamily: 'Gmarket_sans',
-                              fontWeight: FontWeight.w500,
-                              fontSize: Sizes.size16 + Sizes.size2,
-                              color: Colors.black,
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.chevron_right,
-                              color: Colors.black,
-                            ),
-                            onPressed: () => _changeMonth(1),
+                          const SizedBox(height: 24),
+                          CategorySelector(
+                            categories: _categoryOrder,
+                            selectedCategory: _selectedCategory,
+                            onCategorySelected: (category) {
+                              setState(() {
+                                _selectedCategory = category;
+                              });
+                            },
                           ),
                         ],
                       ),
                     ),
                   ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        BudgetDistributionCard(
-                          categoryOrder: _categoryOrder,
-                          getCategoryTotalForChart: _getCategoryTotalForChart,
-                          getCategoryColor: _getCategoryColor,
-                          formatCurrency: _formatCurrency,
-                          monthlyIncome: _salaryResult?.totalIncome ?? 0,
-                          totalExpense: _totalExpense,
-                          totalBudget: _getTotalBudget(),
-                          totalBudgetForChart: _getTotalBudgetForChart(),
-                        ),
-                        const SizedBox(height: 24),
-                        CategorySelector(
-                          categories: _categoryOrder,
-                          selectedCategory: _selectedCategory,
-                          onCategorySelected: (category) {
-                            setState(() {
-                              _selectedCategory = category;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: StickyHeaderDelegate(
-                    height: 100, // 넉넉한 높이 할당
-                    childBuilder: (showShadow) {
-                      final currentTotal = _getCategoryTotal(_selectedCategory);
-                      final categoryKey =
-                          _getExpenseCategoryKey(_selectedCategory) ??
-                          _selectedCategory;
-                      final previousTotal =
-                          _previousCategoryExpenses[categoryKey] ?? 0.0;
-                      final categoryColor = _getCategoryColor(
-                        _selectedCategory,
-                      );
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: StickyHeaderDelegate(
+                      height: 100, // 넉넉한 높이 할당
+                      childBuilder: (showShadow) {
+                        final currentTotal = _getCategoryTotal(
+                          _selectedCategory,
+                        );
+                        final categoryKey =
+                            _getExpenseCategoryKey(_selectedCategory) ??
+                            _selectedCategory;
+                        final previousTotal =
+                            _previousCategoryExpenses[categoryKey] ?? 0.0;
+                        final categoryColor = _getCategoryColor(
+                          _selectedCategory,
+                        );
 
-                      // null 안전성 확보
-                      final safeCurrentTotal = currentTotal.isFinite
-                          ? currentTotal
-                          : 0.0;
-                      final safePreviousTotal = previousTotal.isFinite
-                          ? previousTotal
-                          : 0.0;
+                        // null 안전성 확보
+                        final safeCurrentTotal = currentTotal.isFinite
+                            ? currentTotal
+                            : 0.0;
+                        final safePreviousTotal = previousTotal.isFinite
+                            ? previousTotal
+                            : 0.0;
 
-                      return Container(
-                        height: 100, // 고정 높이
-                        color: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Center(
-                          child: CategoryComparisonGauge(
-                            selectedCategory: _selectedCategory,
-                            currentTotal: safeCurrentTotal,
-                            previousTotal: safePreviousTotal,
-                            categoryColor: categoryColor,
-                            formatCurrency: _formatCurrency,
-                            showShadow: showShadow,
+                        return Container(
+                          height: 100, // 고정 높이
+                          color: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Center(
+                            child: CategoryComparisonGauge(
+                              selectedCategory: _selectedCategory,
+                              currentTotal: safeCurrentTotal,
+                              previousTotal: safePreviousTotal,
+                              categoryColor: categoryColor,
+                              formatCurrency: _formatCurrency,
+                              showShadow: showShadow,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        BudgetItemsList(
-                          items: _budgetControllers[_selectedCategory] ?? {},
-                          selectedCategory: _selectedCategory,
-                          getCategoryColor: _getCategoryColor,
-                          getExpenseItemIcon: _getExpenseItemIcon,
-                          getPreviousExpenseValue: _getPreviousExpenseValue,
-                          formatCurrency: _formatCurrency,
-                          numberFormatter:
-                              NumberInputFormatter.getCommaFormatter(),
-                          onItemChanged: () => setState(() {}),
-                        ),
-                      ],
+                        );
+                      },
                     ),
                   ),
-                ),
-              ],
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          BudgetItemsList(
+                            items: _budgetControllers[_selectedCategory] ?? {},
+                            selectedCategory: _selectedCategory,
+                            getCategoryColor: _getCategoryColor,
+                            getExpenseItemIcon: _getExpenseItemIcon,
+                            getPreviousExpenseValue: _getPreviousExpenseValue,
+                            formatCurrency: _formatCurrency,
+                            numberFormatter:
+                                NumberInputFormatter.getCommaFormatter(),
+                            onItemChanged: () => setState(() {}),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          SaveBudgetButton(onPressed: _saveBudgetToFirestore),
-        ],
+            SaveBudgetButton(onPressed: _saveBudgetToFirestore),
+          ],
+        ),
       ),
     );
   }
