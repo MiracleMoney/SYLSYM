@@ -35,15 +35,6 @@ class _SpendingScreenState extends State<SpendingScreen>
   }
 
   @override
-  void didUpdateWidget(covariant SpendingScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // 현재 탭으로 돌아왔을 때 데이터를 다시 불러옵니다.
-    if (widget.isFocused && !oldWidget.isFocused) {
-      _loadExpenses();
-    }
-  }
-
-  @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
@@ -304,6 +295,15 @@ class _SpendingScreenState extends State<SpendingScreen>
                       0.0,
                       (sum, val) => sum + val,
                     ),
+                    onRefresh: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('데이터를 새로고침합니다.'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                      _loadExpenses();
+                    },
                   ),
                 ),
                 const SizedBox(height: 5),

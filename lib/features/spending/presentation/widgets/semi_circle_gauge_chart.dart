@@ -8,12 +8,14 @@ class SemiCircleGaugeChart extends StatelessWidget {
   final List<ExpenseModel> expenses;
   final DateTime selectedMonth;
   final double? budget; // 예산 (나중에 Firebase에서 가져올 예정)
+  final VoidCallback? onRefresh; // 새로고침 콜백 추가
 
   const SemiCircleGaugeChart({
     super.key,
     required this.expenses,
     required this.selectedMonth,
     this.budget,
+    this.onRefresh,
   });
 
   double _getTotalAmount() {
@@ -65,14 +67,31 @@ class SemiCircleGaugeChart extends StatelessWidget {
             color: Colors.grey.shade600,
           ),
         ),
-        Text(
-          _formatCurrency(total),
-          style: const TextStyle(
-            fontFamily: 'Gmarket_sans',
-            fontWeight: FontWeight.w700,
-            fontSize: Sizes.size28,
-            color: Colors.black,
-          ),
+        Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            Text(
+              _formatCurrency(total),
+              style: const TextStyle(
+                fontFamily: 'Gmarket_sans',
+                fontWeight: FontWeight.w700,
+                fontSize: Sizes.size28,
+                color: Colors.black,
+              ),
+            ),
+            if (onRefresh != null)
+              Positioned(
+                right: -40, // 아이콘 크기(24) + 간격(4) 만큼 밖으로 밀어냄
+                child: IconButton(
+                  icon: const Icon(Icons.refresh, color: Colors.black),
+                  onPressed: onRefresh,
+                  iconSize: 24,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 24),
         Container(
