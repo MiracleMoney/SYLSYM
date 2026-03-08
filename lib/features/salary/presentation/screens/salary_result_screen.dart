@@ -700,359 +700,363 @@ class _SalaryResultScreenState extends State<SalaryResultScreen> {
   Widget build(BuildContext context) {
     final cardRadius = BorderRadius.circular(12.0); // 이 줄 추가
 
-    return Scaffold(
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.only(
-          left: Sizes.size20,
-          right: Sizes.size20,
-          top: Sizes.size5,
-          bottom: Sizes.size16,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Month selector
-            MonthSelector(
-              currentMonth: _currentMonth.value,
-              onPreviousMonth: () {
-                final prev = DateTime(
-                  _currentMonth.value.year,
-                  _currentMonth.value.month - 1,
-                );
-                _currentMonth.value = prev;
-              },
-              onNextMonth: () {
-                final next = DateTime(
-                  _currentMonth.value.year,
-                  _currentMonth.value.month + 1,
-                );
-                _currentMonth.value = next;
-              },
-            ),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        body: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.only(
+            left: Sizes.size20,
+            right: Sizes.size20,
+            top: Sizes.size5,
+            bottom: Sizes.size16,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Month selector
+              MonthSelector(
+                currentMonth: _currentMonth.value,
+                onPreviousMonth: () {
+                  final prev = DateTime(
+                    _currentMonth.value.year,
+                    _currentMonth.value.month - 1,
+                  );
+                  _currentMonth.value = prev;
+                },
+                onNextMonth: () {
+                  final next = DateTime(
+                    _currentMonth.value.year,
+                    _currentMonth.value.month + 1,
+                  );
+                  _currentMonth.value = next;
+                },
+              ),
 
-            Gaps.v12,
+              Gaps.v12,
 
-            // // Automatic Allocation subtitle
-            // Center(
-            //   child: Text(
-            //     '월급 자동 배분 결과',
-            //     style: Theme.of(
-            //       context,
-            //     ).textTheme.bodyLarge?.copyWith(fontFamily: 'Gmarket_sans'),
-            //   ),
-            // ),
+              // // Automatic Allocation subtitle
+              // Center(
+              //   child: Text(
+              //     '월급 자동 배분 결과',
+              //     style: Theme.of(
+              //       context,
+              //     ).textTheme.bodyLarge?.copyWith(fontFamily: 'Gmarket_sans'),
+              //   ),
+              // ),
 
-            // calculated targets card
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(borderRadius: cardRadius),
-              child: Column(
-                children: [
-                  // header
-                  Row(
-                    children: [
-                      SectionHeader(
-                        icon: Icons.calculate_outlined,
-                        title: '목표 금액',
-                        fontSize: Sizes.size16 + Sizes.size2,
+              // calculated targets card
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(borderRadius: cardRadius),
+                child: Column(
+                  children: [
+                    // header
+                    Row(
+                      children: [
+                        SectionHeader(
+                          icon: Icons.calculate_outlined,
+                          title: '목표 금액',
+                          fontSize: Sizes.size16 + Sizes.size2,
+                        ),
+                      ],
+                    ),
+                    Gaps.v12, // first item
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
                       ),
-                    ],
-                  ),
-                  Gaps.v12, // first item
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            '은퇴 후 필요 생활비',
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              '은퇴 후 필요 생활비',
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
+                                    fontFamily: 'Gmarket_sans',
+                                    height: 1.15,
+                                    fontSize: Sizes.size16,
+                                  ),
+                            ),
+                          ),
+                          Text(
+                            _formatCurrency(_retirementMonthlyExpense),
                             style: Theme.of(context).textTheme.bodyLarge
                                 ?.copyWith(
                                   fontFamily: 'Gmarket_sans',
-                                  height: 1.15,
+                                  fontWeight: FontWeight.w700,
                                   fontSize: Sizes.size16,
                                 ),
                           ),
-                        ),
-                        Text(
-                          _formatCurrency(_retirementMonthlyExpense),
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                fontFamily: 'Gmarket_sans',
-                                fontWeight: FontWeight.w700,
-                                fontSize: Sizes.size16,
-                              ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Gaps.v10,
-                  // second item
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            '경제적자유 금액',
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(
-                                  fontFamily: 'Gmarket_sans',
-                                  height: 1.15,
-                                  fontSize: Sizes.size16,
-                                ),
-                          ),
-                        ),
-                        Text(
-                          _formatCurrency(_economicFreedomAmount),
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                fontFamily: 'Gmarket_sans',
-                                fontWeight: FontWeight.w700,
-                                fontSize: Sizes.size16,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Gaps.v32,
-            Row(
-              children: [
-                SectionHeader(
-                  icon: Icons.pie_chart_outline,
-                  title: '월급 분리',
-                  fontSize: Sizes.size16 + Sizes.size2,
-                ),
-              ],
-            ),
-            Gaps.v12,
-            // Total Monthly Allocation Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    '총 수입액',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontFamily: 'Gmarket_sans',
-                      fontSize: Sizes.size16,
-                    ),
-                  ),
-                  Gaps.v8,
-                  Text(
-                    _formatCurrency(_totalMonthlyAllocation),
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontFamily: 'Gmarket_sans',
-                      fontWeight: FontWeight.w700,
-                      fontSize: Sizes.size24,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Gaps.v32,
-
-            // Allocation Breakdown
-            // Text(
-            //   '월급 분리 내역',
-            //   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            //     fontFamily: 'Gmarket_sans',
-            //     fontWeight: FontWeight.w700,
-            //   ),
-            // ),
-            Gaps.v12,
-
-            // Emergency Fund
-            _buildAllocationItem(context, '비상금', _emergencyFund),
-
-            Gaps.v12,
-
-            // Pension Saving
-            _buildExpandableInvestmentItem(),
-
-            Gaps.v12,
-
-            // Short-term Goal Saving
-            _buildAllocationItem(context, '단기 목표', _shortTermGoalSaving),
-
-            Gaps.v12,
-
-            // Living Expense
-            _buildAllocationItem(context, '생활비', _livingExpenseAllocation),
-
-            Gaps.v20,
-
-            // Input Details (Expandable)
-            Column(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _isDetailsExpanded = !_isDetailsExpanded;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '입력한 세부 정보 보기',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontFamily: 'Gmarket_sans',
-                                fontWeight: FontWeight.w400,
-                                fontSize: Sizes.size16,
-                              ),
-                        ),
-                        Icon(
-                          _isDetailsExpanded
-                              ? Icons.keyboard_arrow_up
-                              : Icons.keyboard_arrow_down,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                ClipRect(
-                  child: AnimatedAlign(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                    alignment: Alignment.topCenter,
-                    heightFactor: _isDetailsExpanded ? 1.0 : 0.0,
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 8),
+                    Gaps.v10,
+                    // second item
+                    Container(
+                      width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade200),
+                        border: Border.all(color: Colors.grey.shade300),
                       ),
-                      child: _buildDetailsSection(),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              '경제적자유 금액',
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
+                                    fontFamily: 'Gmarket_sans',
+                                    height: 1.15,
+                                    fontSize: Sizes.size16,
+                                  ),
+                            ),
+                          ),
+                          Text(
+                            _formatCurrency(_economicFreedomAmount),
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(
+                                  fontFamily: 'Gmarket_sans',
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: Sizes.size16,
+                                ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
 
-            Gaps.v20,
-
-            // Apply to Budget Button
-            // SizedBox(
-            //   width: double.infinity,
-            //   child: ElevatedButton(
-            //     style: ElevatedButton.styleFrom(
-            //       backgroundColor: Colors.black,
-            //       foregroundColor: Colors.white,
-            //       minimumSize: const Size.fromHeight(56),
-            //       shape: RoundedRectangleBorder(
-            //         borderRadius: BorderRadius.circular(12),
-            //       ),
-            //     ),
-            //     onPressed: _showApplyModal,
-            //     child: Row(
-            //       mainAxisAlignment: MainAxisAlignment.center,
-            //       children: const [
-            //         Icon(Icons.arrow_forward, size: 20),
-            //         SizedBox(width: 8),
-            //         Text(
-            //           '예산에 적용하기',
-            //           style: TextStyle(
-            //             fontFamily: 'Gmarket_sans',
-            //             fontSize: 18,
-            //             fontWeight: FontWeight.w700,
-            //           ),
-            //         ),
-            //       ],
-            //     ),
-            //   ),
-            // ),
-            // Gaps.v16,
-
-            // Bottom buttons row
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.black,
-                      minimumSize: const Size.fromHeight(56),
-                      side: BorderSide(color: Colors.grey.shade300),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: _showEditConfirmation,
-                    icon: const Icon(Icons.edit_outlined),
-                    label: const Text(
-                      '수정',
-                      style: TextStyle(
+              Gaps.v32,
+              Row(
+                children: [
+                  SectionHeader(
+                    icon: Icons.pie_chart_outline,
+                    title: '월급 분리',
+                    fontSize: Sizes.size16 + Sizes.size2,
+                  ),
+                ],
+              ),
+              Gaps.v12,
+              // Total Monthly Allocation Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      '총 수입액',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontFamily: 'Gmarket_sans',
-                        fontWeight: FontWeight.w700,
                         fontSize: Sizes.size16,
                       ),
                     ),
-                  ),
+                    Gaps.v8,
+                    Text(
+                      _formatCurrency(_totalMonthlyAllocation),
+                      style: Theme.of(context).textTheme.headlineLarge
+                          ?.copyWith(
+                            fontFamily: 'Gmarket_sans',
+                            fontWeight: FontWeight.w700,
+                            fontSize: Sizes.size24,
+                          ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(56),
-                      side: BorderSide(color: Colors.grey.shade300),
-                      shape: RoundedRectangleBorder(
+              ),
+
+              // Gaps.v32,
+
+              // Allocation Breakdown
+              // Text(
+              //   '월급 분리 내역',
+              //   style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              //     fontFamily: 'Gmarket_sans',
+              //     fontWeight: FontWeight.w700,
+              //   ),
+              // ),
+              Gaps.v12,
+
+              // Emergency Fund
+              _buildAllocationItem(context, '비상금', _emergencyFund),
+
+              Gaps.v12,
+
+              // Pension Saving
+              _buildExpandableInvestmentItem(),
+
+              Gaps.v12,
+
+              // Short-term Goal Saving
+              _buildAllocationItem(context, '단기 목표', _shortTermGoalSaving),
+
+              Gaps.v12,
+
+              // Living Expense
+              _buildAllocationItem(context, '생활비', _livingExpenseAllocation),
+
+              Gaps.v20,
+
+              // Input Details (Expandable)
+              Column(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isDetailsExpanded = !_isDetailsExpanded;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                    onPressed: _saveResult,
-                    icon: const Icon(Icons.save_outlined),
-                    label: const Text(
-                      '저장',
-                      style: TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontWeight: FontWeight.w700,
-                        fontSize: Sizes.size16,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '입력한 세부 정보 보기',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontFamily: 'Gmarket_sans',
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: Sizes.size16,
+                                ),
+                          ),
+                          Icon(
+                            _isDetailsExpanded
+                                ? Icons.keyboard_arrow_up
+                                : Icons.keyboard_arrow_down,
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                  ClipRect(
+                    child: AnimatedAlign(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      alignment: Alignment.topCenter,
+                      heightFactor: _isDetailsExpanded ? 1.0 : 0.0,
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 8),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: _buildDetailsSection(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
 
-            Gaps.v12,
-          ],
+              Gaps.v20,
+
+              // Apply to Budget Button
+              // SizedBox(
+              //   width: double.infinity,
+              //   child: ElevatedButton(
+              //     style: ElevatedButton.styleFrom(
+              //       backgroundColor: Colors.black,
+              //       foregroundColor: Colors.white,
+              //       minimumSize: const Size.fromHeight(56),
+              //       shape: RoundedRectangleBorder(
+              //         borderRadius: BorderRadius.circular(12),
+              //       ),
+              //     ),
+              //     onPressed: _showApplyModal,
+              //     child: Row(
+              //       mainAxisAlignment: MainAxisAlignment.center,
+              //       children: const [
+              //         Icon(Icons.arrow_forward, size: 20),
+              //         SizedBox(width: 8),
+              //         Text(
+              //           '예산에 적용하기',
+              //           style: TextStyle(
+              //             fontFamily: 'Gmarket_sans',
+              //             fontSize: 18,
+              //             fontWeight: FontWeight.w700,
+              //           ),
+              //         ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
+              // Gaps.v16,
+
+              // Bottom buttons row
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.black,
+                        minimumSize: const Size.fromHeight(56),
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: _showEditConfirmation,
+                      icon: const Icon(Icons.edit_outlined),
+                      label: const Text(
+                        '수정',
+                        style: TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontWeight: FontWeight.w700,
+                          fontSize: Sizes.size16,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(56),
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: _saveResult,
+                      icon: const Icon(Icons.save_outlined),
+                      label: const Text(
+                        '저장',
+                        style: TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontWeight: FontWeight.w700,
+                          fontSize: Sizes.size16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              Gaps.v12,
+            ],
+          ),
         ),
       ),
     );
