@@ -16,6 +16,7 @@ class BudgetDistributionCard extends StatelessWidget {
     required this.totalExpense,
     required this.totalBudget,
     required this.totalBudgetForChart,
+    this.onRefresh,
   });
 
   final List<String> categoryOrder;
@@ -26,6 +27,7 @@ class BudgetDistributionCard extends StatelessWidget {
   final double totalExpense;
   final double totalBudget;
   final double totalBudgetForChart;
+  final VoidCallback? onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -58,16 +60,37 @@ class BudgetDistributionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '월 예산 분포',
-            style: TextStyle(
-              fontFamily: 'Gmarket_sans',
-              fontWeight: FontWeight.w600,
-              fontSize: Sizes.size16,
-              color: Colors.black,
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Text(
+                '월 예산 분포',
+                style: TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  fontWeight: FontWeight.w600,
+                  fontSize: Sizes.size16,
+                  color: Colors.black,
+                  height: 1.0,
+                ),
+              ),
+              if (onRefresh != null) ...[
+                const SizedBox(width: 4),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: onRefresh,
+                    child: const Padding(
+                      padding: EdgeInsets.all(4.0),
+                      child: Icon(Icons.refresh, color: Colors.black, size: 20),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Row(
             children: [
               SizedBox(
@@ -161,9 +184,7 @@ class _DistributionValueRow extends StatelessWidget {
             ),
             if (showInfo) ...[
               const SizedBox(width: 4),
-              const InfoTooltipIcon(
-                message: '지난달 월급최적화 기능에서 \\n입력한 월 총 수입입니다.',
-              ),
+              const InfoTooltipIcon(message: '지난달 월급최적화 기능에서 \n입력한 월 총 수입입니다.'),
             ],
           ],
         ),

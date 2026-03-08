@@ -67,9 +67,9 @@ class SemiCircleGaugeChart extends StatelessWidget {
             color: Colors.grey.shade600,
           ),
         ),
-        Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.center,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
               _formatCurrency(total),
@@ -80,17 +80,20 @@ class SemiCircleGaugeChart extends StatelessWidget {
                 color: Colors.black,
               ),
             ),
-            if (onRefresh != null)
-              Positioned(
-                right: -40, // 아이콘 크기(24) + 간격(4) 만큼 밖으로 밀어냄
-                child: IconButton(
-                  icon: const Icon(Icons.refresh, color: Colors.black),
-                  onPressed: onRefresh,
-                  iconSize: 24,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+            if (onRefresh != null) ...[
+              const SizedBox(width: 4),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: onRefresh,
+                  child: const Padding(
+                    padding: EdgeInsets.all(4.0),
+                    child: Icon(Icons.refresh, color: Colors.black, size: 24),
+                  ),
                 ),
               ),
+            ],
           ],
         ),
         const SizedBox(height: 24),

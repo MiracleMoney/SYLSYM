@@ -579,37 +579,14 @@ class _BudgetScreenState extends State<BudgetScreen>
                               ),
                               onPressed: () => _changeMonth(-1),
                             ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  '${_selectedMonth.year}년 ${_selectedMonth.month}월',
-                                  style: TextStyle(
-                                    fontFamily: 'Gmarket_sans',
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: Sizes.size16 + Sizes.size2,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.refresh,
-                                    color: Colors.black,
-                                    size: 20,
-                                  ),
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('데이터를 새로고침합니다.'),
-                                        duration: Duration(seconds: 1),
-                                      ),
-                                    );
-                                    _loadBudgetFromFirestore(_selectedMonth);
-                                    _loadSalaryResult();
-                                    _loadExpenses();
-                                  },
-                                ),
-                              ],
+                            Text(
+                              '${_selectedMonth.year}년 ${_selectedMonth.month}월',
+                              style: TextStyle(
+                                fontFamily: 'Gmarket_sans',
+                                fontWeight: FontWeight.w500,
+                                fontSize: Sizes.size16 + Sizes.size2,
+                                color: Colors.black,
+                              ),
                             ),
                             IconButton(
                               icon: Icon(
@@ -637,6 +614,17 @@ class _BudgetScreenState extends State<BudgetScreen>
                             totalExpense: _totalExpense,
                             totalBudget: _getTotalBudget(),
                             totalBudgetForChart: _getTotalBudgetForChart(),
+                            onRefresh: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('데이터를 새로고침합니다.'),
+                                  duration: Duration(seconds: 1),
+                                ),
+                              );
+                              _loadBudgetFromFirestore(_selectedMonth);
+                              _loadSalaryResult();
+                              _loadExpenses();
+                            },
                           ),
                           const SizedBox(height: 24),
                           CategorySelector(
