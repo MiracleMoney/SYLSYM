@@ -41,12 +41,7 @@ void main() async {
     return true;
   };
 
-  runApp(
-    DevicePreview(
-      enabled: !kReleaseMode, // 개발 모드에서만 활성화
-      builder: (context) => const MyApp(),
-    ),
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -56,19 +51,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // Device Preview 설정
-      useInheritedMediaQuery: true,
-      locale: DevicePreview.locale(context),
-      builder: (context, child) {
-        final app = DevicePreview.appBuilder(context, child);
-        return Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: app,
-          ),
-        );
-      },
-
       title: 'Miracle Money',
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.system,
