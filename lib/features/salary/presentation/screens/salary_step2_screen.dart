@@ -445,6 +445,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                 focusNode: _overtimeFocus,
                 nextFocus: _bonusFocus,
                 suffixText: '₩',
+                defaultZero: true,
               ),
               Gaps.v16,
               NumberInputField(
@@ -454,6 +455,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                 focusNode: _bonusFocus,
                 nextFocus: _incentiveFocus,
                 suffixText: '₩',
+                defaultZero: true,
               ),
               Gaps.v16,
               NumberInputField(
@@ -463,6 +465,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                 focusNode: _incentiveFocus,
                 nextFocus: _side1Focus,
                 suffixText: '₩',
+                defaultZero: true,
               ),
 
               Gaps.v32,
@@ -477,6 +480,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                 focusNode: _side1Focus,
                 nextFocus: _side2Focus,
                 suffixText: '₩',
+                defaultZero: true,
               ),
               Gaps.v16,
               NumberInputField(
@@ -486,6 +490,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                 focusNode: _side2Focus,
                 nextFocus: _side3Focus,
                 suffixText: '₩',
+                defaultZero: true,
               ),
               Gaps.v16,
               NumberInputField(
@@ -495,6 +500,7 @@ class _SalaryStep2ScreenState extends State<SalaryStep2Screen> {
                 focusNode: _side3Focus,
                 nextFocus: _retirementFocus,
                 suffixText: '₩',
+                defaultZero: true,
               ),
 
               Gaps.v32,

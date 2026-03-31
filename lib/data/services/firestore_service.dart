@@ -386,14 +386,79 @@ class FirestoreService {
     }
   }
 
-  // ==================== 자산 데이터 (나중에 구현) ====================
+  // ==================== 자산현황 데이터 ====================
+
+  /// 월별 자산현황 데이터 저장
+  /// structure: users/{userId}/asset_status/{yearMonth}
+  Future<void> saveAssetStatus(
+    Map<String, dynamic> assetData,
+    DateTime targetDate,
+  ) async {
+    try {
+      final userId = currentUserId;
+      final yearMonth =
+          '${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}';
+
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('asset_status')
+          .doc(yearMonth)
+          .set(assetData, SetOptions(merge: true));
+
+      if (kDebugMode) {
+        print('✅ 자산현황 데이터 저장 성공: $yearMonth');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ 자산현황 데이터 저장 실패: $e');
+      }
+      throw ErrorHandler.handleFirebaseError(e);
+    }
+  }
+
+  /// 월별 자산현황 데이터 불러오기
+  Future<Map<String, dynamic>?> loadAssetStatus(DateTime targetDate) async {
+    try {
+      final userId = currentUserId;
+      final yearMonth =
+          '${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}';
+
+      final doc = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('asset_status')
+          .doc(yearMonth)
+          .get();
+
+      if (!doc.exists || doc.data() == null) {
+        if (kDebugMode) {
+          print('ℹ️ 자산현황 데이터 없음: $yearMonth');
+        }
+        return null;
+      }
+
+      if (kDebugMode) {
+        print('✅ 자산현황 데이터 불러오기 성공: $yearMonth');
+      }
+
+      return doc.data();
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ 자산현황 데이터 불러오기 실패: $e');
+      }
+      throw ErrorHandler.handleFirebaseError(e);
+    }
+  }
+
+  // ==================== 레거시 자산 데이터 (호환용) ====================
 
   Future<void> saveAssets(Map<String, dynamic> assetsData) async {
-    // TODO: 구현
+    // 레거시: saveAssetStatus 사용 권장
   }
 
   Future<Map<String, dynamic>?> loadAssets(DateTime targetDate) async {
-    // TODO: 구현
+    // 레거시: loadAssetStatus 사용 권장
     return null;
   }
 

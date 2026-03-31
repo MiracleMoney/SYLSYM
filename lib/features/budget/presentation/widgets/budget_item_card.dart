@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
 
 /// 개별 예산 항목 카드 위젯
-class BudgetItemCard extends StatelessWidget {
+class BudgetItemCard extends StatefulWidget {
   const BudgetItemCard({
     super.key,
     required this.label,
@@ -24,6 +24,43 @@ class BudgetItemCard extends StatelessWidget {
   final VoidCallback onChanged;
 
   @override
+  State<BudgetItemCard> createState() => _BudgetItemCardState();
+}
+
+class _BudgetItemCardState extends State<BudgetItemCard> {
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_handleFocusChange);
+    // 초기값 설정 불필요 — 이미 '0'
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_handleFocusChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _handleFocusChange() {
+    if (_focusNode.hasFocus) {
+      // 포커스 진입: "0"이면 비움 (콤마는 유지 — 실시간 포맷)
+      final raw = widget.controller.text.replaceAll(',', '');
+      if (raw == '0' || raw.isEmpty) {
+        widget.controller.clear();
+      }
+    } else {
+      // 포커스 해제: 비어있으면 "0" 복원
+      final raw = widget.controller.text.replaceAll(',', '');
+      if (raw.isEmpty || (int.tryParse(raw) ?? 0) == 0) {
+        widget.controller.text = '0';
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -40,10 +77,14 @@ class BudgetItemCard extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: Colors.white,
-                border: Border.all(color: categoryColor, width: 0.5),
+                border: Border.all(color: widget.categoryColor, width: 0.5),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(iconData, color: categoryColor, size: 18),
+              child: Icon(
+                widget.iconData,
+                color: widget.categoryColor,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -51,7 +92,7 @@ class BudgetItemCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    label,
+                    widget.label,
                     style: TextStyle(
                       fontFamily: 'Gmarket_sans',
                       fontWeight: FontWeight.w400,
@@ -61,7 +102,7 @@ class BudgetItemCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    previousExpenseText,
+                    widget.previousExpenseText,
                     style: TextStyle(
                       fontFamily: 'Gmarket_sans',
                       fontWeight: FontWeight.w400,
@@ -76,16 +117,11 @@ class BudgetItemCard extends StatelessWidget {
             SizedBox(
               width: 120,
               child: TextField(
-                controller: controller,
+                controller: widget.controller,
+                focusNode: _focusNode,
+                enableInteractiveSelection: false,
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.right,
-                onTap: () {
-                  // 현재 값이 '0'이면 텍스트 지우기
-                  if (controller.text == '0') {
-                    controller.clear();
-                  }
-                },
-                // inputFormatters: [numberFormatter], // 임시 제거
                 style: const TextStyle(
                   fontFamily: 'Gmarket_sans',
                   fontWeight: FontWeight.w400,
@@ -117,21 +153,26 @@ class BudgetItemCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                     borderSide: const BorderSide(color: Color(0xFFE9435A)),
                   ),
+                  hintText: '0\u00A0',
+                  hintStyle: TextStyle(
+                    fontFamily: 'Gmarket_sans',
+                    fontWeight: FontWeight.w400,
+                    fontSize: Sizes.size14,
+                    color: Colors.grey.shade400,
+                  ),
                 ),
                 onChanged: (value) {
                   // 숫자만 추출
                   String digits = value.replaceAll(RegExp(r'[^\d]'), '');
                   if (digits.isNotEmpty) {
-                    // 콤마 포맷팅 적용
                     int number = int.parse(digits);
                     String formatted = number.toString().replaceAllMapped(
                       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
                       (match) => '${match[1]},',
                     );
 
-                    // 무한 루프 방지: 이미 포맷된 값과 같으면 업데이트하지 않음
-                    if (controller.text != formatted) {
-                      controller.value = TextEditingValue(
+                    if (widget.controller.text != formatted) {
+                      widget.controller.value = TextEditingValue(
                         text: formatted,
                         selection: TextSelection.collapsed(
                           offset: formatted.length,
@@ -139,7 +180,7 @@ class BudgetItemCard extends StatelessWidget {
                       );
                     }
                   }
-                  onChanged();
+                  widget.onChanged();
                 },
               ),
             ),

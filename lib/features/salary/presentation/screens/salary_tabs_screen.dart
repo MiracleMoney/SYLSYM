@@ -4,7 +4,6 @@ import 'package:miraclemoney/features/salary/presentation/screens/salary_step1_s
 import 'package:miraclemoney/features/salary/presentation/screens/salary_step2_screen.dart';
 import 'package:miraclemoney/features/salary/presentation/screens/salary_result_screen.dart';
 import 'package:miraclemoney/features/budget/presentation/screens/budget_screen.dart';
-import 'package:miraclemoney/features/asset_status/presentation/screens/asset_status_screen.dart';
 import 'package:miraclemoney/data/models/salary/salary_complete_data.dart';
 import 'package:miraclemoney/data/services/firestore_service.dart';
 import 'package:flutter/foundation.dart';
@@ -36,7 +35,7 @@ class _SalaryTabsScreenState extends State<SalaryTabsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this, initialIndex: 0);
+    _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
     _tabController.addListener(_handleTabSelection);
 
     // ✅ 월급최적화 탭으로 돌아올 때 현재 상태 확인 후 적절한 페이지로 복원

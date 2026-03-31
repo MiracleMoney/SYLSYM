@@ -46,6 +46,7 @@ class LabeledTextFormField extends StatelessWidget {
   final FocusNode? focusNode;
   final TextInputAction? textInputAction;
   final void Function(String)? onFieldSubmitted;
+  final bool hintZero;
 
   const LabeledTextFormField({
     super.key,
@@ -59,6 +60,7 @@ class LabeledTextFormField extends StatelessWidget {
     this.focusNode,
     this.textInputAction,
     this.onFieldSubmitted,
+    this.hintZero = false,
   });
 
   @override
@@ -90,6 +92,7 @@ class LabeledTextFormField extends StatelessWidget {
           inputFormatters: inputFormatters ?? defaultFormatters,
           textInputAction: textInputAction,
           onFieldSubmitted: onFieldSubmitted,
+          enableInteractiveSelection: false,
           style: const TextStyle(
             fontFamily: 'Gmarket_sans',
             fontSize: Sizes.size16,
@@ -107,12 +110,12 @@ class LabeledTextFormField extends StatelessWidget {
               borderRadius: BorderRadius.circular(Sizes.size8),
               borderSide: BorderSide.none,
             ),
-            hintText: hint,
+            hintText: hintZero ? '0' : hint,
             hintStyle: TextStyle(
               fontFamily: 'Gmarket_sans',
               fontWeight: FontWeight.w400,
-              fontSize: Sizes.size14,
-              color: Colors.grey.shade600,
+              fontSize: hintZero ? Sizes.size16 : Sizes.size14,
+              color: hintZero ? Colors.grey.shade400 : Colors.grey.shade600,
             ),
             suffixText: suffixText,
             suffixStyle: TextStyle(
