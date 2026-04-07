@@ -91,9 +91,10 @@ class AuthService {
       final data = userDoc.data();
       final birthdate = data?['birthdate'];
       final gender = data?['gender'];
+      final userInfoSkipped = data?['userInfoSkipped'] as bool? ?? false;
 
-      // birthdate와 gender가 모두 있어야 true
-      return birthdate != null && gender != null;
+      // 건너뛰기 했거나, birthdate와 gender가 모두 있으면 true
+      return userInfoSkipped || (birthdate != null && gender != null);
     } catch (e) {
       if (kDebugMode) print('❌ 사용자 정보 확인 실패: $e');
       return false;

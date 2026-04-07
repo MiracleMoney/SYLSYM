@@ -105,6 +105,29 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     }
   }
 
+  /// 건너뛰기 - 성별/생년월일 입력 없이 진행
+  Future<void> _skipUserInfo() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('로그인 정보가 없습니다');
+
+      await _firestore.collection('users').doc(user.uid).update({
+        'userInfoSkipped': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showSnackBar('처리 실패: ${e.toString()}', Colors.red);
+    }
+  }
+
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -122,262 +145,304 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Sizes.size24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Gaps.v32,
-              // 제목
-              const Text(
-                '추가 정보를 입력해주세요',
-                style: TextStyle(
-                  fontFamily: 'Gmarket_sans',
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              Gaps.v8,
-              const Text(
-                '서비스 이용을 위해 필요한 정보입니다',
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          actions: [
+            TextButton(
+              onPressed: _isLoading ? null : _skipUserInfo,
+              child: const Text(
+                '건너뛰기',
                 style: TextStyle(
                   fontFamily: 'Gmarket_sans',
                   fontSize: 14,
                   color: Colors.grey,
                 ),
               ),
-              Gaps.v48,
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Sizes.size24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Gaps.v32,
+                // 제목
+                const Text(
+                  '추가 정보를 입력해주세요',
+                  style: TextStyle(
+                    fontFamily: 'Gmarket_sans',
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                Gaps.v8,
+                const Text(
+                  '맞춤 통계를 위한 선택 정보입니다',
+                  style: TextStyle(
+                    fontFamily: 'Gmarket_sans',
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+                Gaps.v48,
 
-              // 생년월일
-              Row(
-                children: [
-                  Icon(Icons.cake_outlined, size: 20, color: Colors.grey[700]),
-                  Gaps.v8,
-                  const Text(
-                    '생년월일',
-                    style: TextStyle(
-                      fontFamily: 'Gmarket_sans',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
+                // 생년월일
+                Row(
+                  children: [
+                    Icon(
+                      Icons.cake_outlined,
+                      size: 20,
+                      color: Colors.grey[700],
                     ),
-                  ),
-                ],
-              ),
-              Gaps.v12,
-              Row(
-                children: [
-                  // 연도
-                  Expanded(
-                    flex: 2,
-                    child: TextField(
-                      controller: _birthYearController,
-                      focusNode: _birthYearFocus,
-                      keyboardType: TextInputType.number,
-                      maxLength: 4,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontSize: 16,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: '1990',
-                        hintStyle: TextStyle(
-                          fontFamily: 'Gmarket_sans',
-                          color: Colors.grey[400],
-                        ),
-                        counterText: '',
-                        enabledBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey, width: 1),
-                        ),
-                        focusedBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black, width: 2),
-                        ),
-                      ),
-                      onSubmitted: (_) => _birthMonthFocus.requestFocus(),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      '년',
+                    Gaps.v8,
+                    const Text(
+                      '생년월일',
                       style: TextStyle(
                         fontFamily: 'Gmarket_sans',
                         fontSize: 14,
-                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
                       ),
                     ),
-                  ),
-                  // 월
-                  Expanded(
-                    child: TextField(
-                      controller: _birthMonthController,
-                      focusNode: _birthMonthFocus,
-                      keyboardType: TextInputType.number,
-                      maxLength: 2,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontSize: 16,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: '01',
-                        hintStyle: TextStyle(
+                  ],
+                ),
+                Gaps.v12,
+                Row(
+                  children: [
+                    // 연도
+                    Expanded(
+                      flex: 2,
+                      child: TextField(
+                        controller: _birthYearController,
+                        focusNode: _birthYearFocus,
+                        keyboardType: TextInputType.number,
+                        maxLength: 4,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
                           fontFamily: 'Gmarket_sans',
-                          color: Colors.grey[400],
+                          fontSize: 16,
                         ),
-                        counterText: '',
-                        enabledBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey, width: 1),
-                        ),
-                        focusedBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black, width: 2),
-                        ),
-                      ),
-                      onSubmitted: (_) => _birthDayFocus.requestFocus(),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      '월',
-                      style: TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  ),
-                  // 일
-                  Expanded(
-                    child: TextField(
-                      controller: _birthDayController,
-                      focusNode: _birthDayFocus,
-                      keyboardType: TextInputType.number,
-                      maxLength: 2,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontSize: 16,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: '15',
-                        hintStyle: TextStyle(
-                          fontFamily: 'Gmarket_sans',
-                          color: Colors.grey[400],
-                        ),
-                        counterText: '',
-                        enabledBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey, width: 1),
-                        ),
-                        focusedBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black, width: 2),
-                        ),
-                      ),
-                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: Text(
-                      '일',
-                      style: TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              Gaps.v40,
-
-              // 성별
-              Row(
-                children: [
-                  Icon(Icons.person_outline, size: 20, color: Colors.grey[700]),
-                  Gaps.v8,
-                  const Text(
-                    '성별',
-                    style: TextStyle(
-                      fontFamily: 'Gmarket_sans',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-              Gaps.v12,
-              Row(
-                children: [
-                  Expanded(
-                    child: _GenderButton(
-                      label: '남성',
-                      isSelected: _selectedGender == '남성',
-                      onTap: () => setState(() => _selectedGender = '남성'),
-                    ),
-                  ),
-                  SizedBox(width: Sizes.size16),
-                  Expanded(
-                    child: _GenderButton(
-                      label: '여성',
-                      isSelected: _selectedGender == '여성',
-                      onTap: () => setState(() => _selectedGender = '여성'),
-                    ),
-                  ),
-                ],
-              ),
-
-              const Spacer(),
-
-              // 저장 버튼
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _saveUserInfo,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    disabledBackgroundColor: Colors.grey[300],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
+                        decoration: InputDecoration(
+                          hintText: '1990',
+                          hintStyle: TextStyle(
+                            fontFamily: 'Gmarket_sans',
+                            color: Colors.grey[400],
+                          ),
+                          counterText: '',
+                          enabledBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.grey,
+                              width: 1,
                             ),
                           ),
-                        )
-                      : const Text(
-                          '완료',
-                          style: TextStyle(
-                            fontFamily: 'Gmarket_sans',
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                          focusedBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.black,
+                              width: 2,
+                            ),
                           ),
                         ),
+                        onSubmitted: (_) => _birthMonthFocus.requestFocus(),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        '년',
+                        style: TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontSize: 14,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ),
+                    // 월
+                    Expanded(
+                      child: TextField(
+                        controller: _birthMonthController,
+                        focusNode: _birthMonthFocus,
+                        keyboardType: TextInputType.number,
+                        maxLength: 2,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontSize: 16,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: '01',
+                          hintStyle: TextStyle(
+                            fontFamily: 'Gmarket_sans',
+                            color: Colors.grey[400],
+                          ),
+                          counterText: '',
+                          enabledBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.grey,
+                              width: 1,
+                            ),
+                          ),
+                          focusedBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.black,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        onSubmitted: (_) => _birthDayFocus.requestFocus(),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        '월',
+                        style: TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontSize: 14,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ),
+                    // 일
+                    Expanded(
+                      child: TextField(
+                        controller: _birthDayController,
+                        focusNode: _birthDayFocus,
+                        keyboardType: TextInputType.number,
+                        maxLength: 2,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontSize: 16,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: '15',
+                          hintStyle: TextStyle(
+                            fontFamily: 'Gmarket_sans',
+                            color: Colors.grey[400],
+                          ),
+                          counterText: '',
+                          enabledBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.grey,
+                              width: 1,
+                            ),
+                          ),
+                          focusedBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.black,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Text(
+                        '일',
+                        style: TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontSize: 14,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              Gaps.v24,
-            ],
+
+                Gaps.v40,
+
+                // 성별
+                Row(
+                  children: [
+                    Icon(
+                      Icons.person_outline,
+                      size: 20,
+                      color: Colors.grey[700],
+                    ),
+                    Gaps.v8,
+                    const Text(
+                      '성별',
+                      style: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+                Gaps.v12,
+                Row(
+                  children: [
+                    Expanded(
+                      child: _GenderButton(
+                        label: '남성',
+                        isSelected: _selectedGender == '남성',
+                        onTap: () => setState(() => _selectedGender = '남성'),
+                      ),
+                    ),
+                    SizedBox(width: Sizes.size16),
+                    Expanded(
+                      child: _GenderButton(
+                        label: '여성',
+                        isSelected: _selectedGender == '여성',
+                        onTap: () => setState(() => _selectedGender = '여성'),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const Spacer(),
+
+                // 저장 버튼
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _saveUserInfo,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      disabledBackgroundColor: Colors.grey[300],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                        : const Text(
+                            '완료',
+                            style: TextStyle(
+                              fontFamily: 'Gmarket_sans',
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+                Gaps.v24,
+              ],
+            ),
           ),
         ),
       ),

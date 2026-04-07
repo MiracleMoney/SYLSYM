@@ -77,17 +77,6 @@ class MyRoomScreen extends StatelessWidget {
 
           // 메뉴 리스트
           ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text(
-              '설정',
-              style: TextStyle(fontFamily: 'Gmarket_sans'),
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              // TODO: 설정 화면
-            },
-          ),
-          ListTile(
             leading: const Icon(Icons.help_outline),
             title: const Text(
               '도움말',

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:miraclemoney/features/auth/presentation/screens/terms_viewer_screen.dart';
 
 /// 도움말 화면
@@ -76,8 +78,8 @@ class HelpScreen extends StatelessWidget {
           _buildFAQItem(
             context,
             question: '계정을 삭제하고 싶어요',
-            answer:
-                '마이룸 > 로그아웃 후, 이메일(miraclemoney23kr@gmail.com)로 계정 삭제를 요청하시면 처리해드립니다.',
+            answer: '계정을 삭제하면 모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.',
+            showDeleteButton: true,
           ),
           const Divider(height: 1, indent: 16),
           _buildFAQItem(
@@ -158,6 +160,7 @@ class HelpScreen extends StatelessWidget {
     BuildContext context, {
     required String question,
     required String answer,
+    bool showDeleteButton = false,
   }) {
     return ExpansionTile(
       tilePadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -172,14 +175,42 @@ class HelpScreen extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Text(
-            answer,
-            style: TextStyle(
-              fontFamily: 'Gmarket_sans',
-              fontSize: 14,
-              color: Colors.grey.shade700,
-              height: 1.5,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                answer,
+                style: TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  fontSize: 14,
+                  color: Colors.grey.shade700,
+                  height: 1.5,
+                ),
+              ),
+              if (showDeleteButton) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => _showDeleteAccountDialog(context),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      '계정 삭제',
+                      style: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ],
@@ -199,6 +230,97 @@ class HelpScreen extends StatelessWidget {
       }
     } catch (e) {
       debugPrint('이메일 앱 실행 실패: $e');
+    }
+  }
+
+  Future<void> _showDeleteAccountDialog(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '계정 삭제',
+          style: TextStyle(
+            fontFamily: 'Gmarket_sans',
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: const Text(
+          '정말로 삭제하시겠습니까?\n모든 데이터가 영구적으로 삭제됩니다.',
+          style: TextStyle(fontFamily: 'Gmarket_sans'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              '아니오',
+              style: TextStyle(
+                fontFamily: 'Gmarket_sans',
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              '예',
+              style: TextStyle(
+                fontFamily: 'Gmarket_sans',
+                color: Colors.red,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) return;
+
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .delete();
+
+        await user.delete();
+
+        if (context.mounted) {
+          Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+        }
+      } on FirebaseAuthException catch (e) {
+        if (context.mounted) {
+          if (e.code == 'requires-recent-login') {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  '보안을 위해 로그아웃 후 다시 로그인한 뒤 시도해주세요.',
+                  style: TextStyle(fontFamily: 'Gmarket_sans'),
+                ),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('계정 삭제 실패: ${e.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('계정 삭제 실패: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 }
