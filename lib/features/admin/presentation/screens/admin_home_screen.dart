@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:miraclemoney/features/admin/presentation/tabs/admin_code_tab.dart';
 import '../widgets/admin_password_dialog.dart';
-import '../tabs/admin_dashboard_tab.dart';
-import '../tabs/admin_code_generator_tab.dart';
-import '../tabs/admin_code_list_tab.dart';
-import '../tabs/admin_user_list_tab.dart'; //
-import '../tabs/admin_finance_stats_tab.dart'; // ✅ 추가
+import '../tabs/admin_user_list_tab.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -134,8 +130,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         index: _selectedIndex,
         children: const [
           AdminCodeTab(),
-          AdminUserListTab(), // ✅ 추가
-          AdminFinanceStatsTab(), // ✅ 추가
+          AdminUserListTab(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -148,18 +143,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           fontWeight: FontWeight.w700,
         ),
         unselectedLabelStyle: const TextStyle(fontFamily: 'Gmarket_sans'),
-        type: BottomNavigationBarType.fixed, // ✅ 4개 이상일 때 필수
+        type: BottomNavigationBarType.fixed,
 
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.code), label: '코드'),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: '사용자 목록',
-          ), // ✅ 추가
-          BottomNavigationBarItem(
-            icon: Icon(Icons.attach_money),
-            label: '금융 통계',
-          ), // ✅ 추가
+          ),
         ],
       ),
     );
