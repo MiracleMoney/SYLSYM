@@ -1,13 +1,11 @@
 import 'dart:ui';
 
-import 'package:device_preview/device_preview.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:miraclemoney/features/auth/data/auth_service.dart';
 import 'package:miraclemoney/features/auth/presentation/screens/terms_agreement_screen.dart';
@@ -16,7 +14,6 @@ import 'package:miraclemoney/features/auth/presentation/screens/user_info_screen
 import 'package:miraclemoney/features/salary/presentation/screens/demo_salary_step1_screen.dart';
 import 'package:miraclemoney/features/salary/presentation/screens/demo_salary_step2_screen.dart';
 import 'package:miraclemoney/features/salary/presentation/screens/demo_salary_result_screen.dart';
-import 'package:miraclemoney/features/salary/presentation/screens/salary_result_screen.dart';
 import 'firebase_options.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/navigation/main_navigation_screen.dart';
@@ -133,59 +130,79 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// ✨ 인증 게이트 (5단계 라우팅)
-/// 1. 로그인 여부 확인
-/// 2. 약관 동의 여부 확인
-/// 3. 초대코드 입력 여부 확인
-/// 4. 사용자 정보(생년월일/성별) 입력 여부 확인
-/// 5. 적절한 화면으로 이동
-class AuthGate extends StatelessWidget {
+/// 인증 게이트 — 로그인 상태와 온보딩 완료 여부에 따라 적절한 화면으로 라우팅.
+///
+/// StatefulWidget으로 _onboardingFuture를 State에 보관하여,
+/// authStateChanges 재emit 시에도 Firestore를 반복 읽지 않도록 최적화.
+/// users/{uid} 문서를 1회만 읽어 모든 온보딩 단계를 판단한다.
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  /// 로그인 상태가 유지되는 동안 재사용되는 Future.
+  /// 로그아웃 시 null로 초기화하여 다음 로그인에서 새로 생성된다.
+  Future<OnboardingStep>? _onboardingFuture;
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // 🔄 로딩 중
+        // 🔄 인증 상태 확인 중
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(
-                color: Colors.black,
-                strokeWidth: 3,
-              ),
-            ),
-          );
+          return _buildLoading();
         }
 
-        // ❌ 로그인 안 됨 → 로그인 화면
+        // ❌ 로그인 안 됨 → Future 초기화 후 로그인 화면
         if (!snapshot.hasData || snapshot.data == null) {
+          _onboardingFuture = null;
           return const LoginScreen();
         }
 
-        // ✅ 로그인 됨 → 약관 동의 확인
-        return FutureBuilder<bool>(
-          future: AuthService().hasAgreedToTerms(),
-          builder: (context, termsSnapshot) {
-            // 🔄 약관 동의 확인 중
-            if (termsSnapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
+        // ✅ 로그인 됨 → Future를 한 번만 생성하여 재사용 (??= 연산자)
+        _onboardingFuture ??= AuthService().checkOnboardingStep();
+
+        return FutureBuilder<OnboardingStep>(
+          future: _onboardingFuture,
+          builder: (context, stepSnapshot) {
+            // 🔄 온보딩 단계 확인 중
+            if (stepSnapshot.connectionState == ConnectionState.waiting) {
+              return _buildLoading();
+            }
+
+            // ⚠️ 오류 발생 시 재시도 화면 표시
+            if (stepSnapshot.hasError) {
+              return Scaffold(
                 body: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircularProgressIndicator(
-                        color: Colors.black,
-                        strokeWidth: 3,
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        '잠시만 기다려주세요...',
+                      const Text(
+                        '데이터를 불러오는 중 오류가 발생했습니다.',
                         style: TextStyle(
                           fontFamily: 'Gmarket_sans',
                           fontSize: 14,
-                          color: Colors.black54,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _onboardingFuture =
+                                AuthService().checkOnboardingStep();
+                          });
+                        },
+                        child: const Text(
+                          '다시 시도',
+                          style: TextStyle(fontFamily: 'Gmarket_sans'),
                         ),
                       ),
                     ],
@@ -194,91 +211,47 @@ class AuthGate extends StatelessWidget {
               );
             }
 
-            // ❌ 약관 동의 안 함 → 약관 동의 화면
-            if (termsSnapshot.data == false) {
-              return const TermsAgreementScreen();
+            // ✅ 단계별 화면 라우팅
+            switch (stepSnapshot.data) {
+              case OnboardingStep.terms:
+                return const TermsAgreementScreen();
+              case OnboardingStep.inviteCode:
+                return const InviteCodeScreen();
+              case OnboardingStep.userInfo:
+                return const UserInfoScreen();
+              case OnboardingStep.done:
+              case null:
+                return const MainNavigationScreen();
             }
-
-            // ✅ 약관 동의 완료 → 초대코드 확인
-            return FutureBuilder<bool>(
-              future: AuthService().hasInviteCode(),
-              builder: (context, codeSnapshot) {
-                // 🔄 초대코드 확인 중
-                if (codeSnapshot.connectionState == ConnectionState.waiting) {
-                  return const Scaffold(
-                    body: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(
-                            color: Colors.black,
-                            strokeWidth: 3,
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            '잠시만 기다려주세요...',
-                            style: TextStyle(
-                              fontFamily: 'Gmarket_sans',
-                              fontSize: 14,
-                              color: Colors.black54,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                // ❌ 초대코드 없음 → 초대코드 입력 화면
-                if (codeSnapshot.data == false) {
-                  return const InviteCodeScreen();
-                }
-
-                // ✅ 초대코드 있음 → 사용자 정보 확인
-                return FutureBuilder<bool>(
-                  future: AuthService().hasUserInfo(),
-                  builder: (context, userInfoSnapshot) {
-                    // 🔄 사용자 정보 확인 중
-                    if (userInfoSnapshot.connectionState ==
-                        ConnectionState.waiting) {
-                      return const Scaffold(
-                        body: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CircularProgressIndicator(
-                                color: Colors.black,
-                                strokeWidth: 3,
-                              ),
-                              SizedBox(height: 16),
-                              Text(
-                                '잠시만 기다려주세요...',
-                                style: TextStyle(
-                                  fontFamily: 'Gmarket_sans',
-                                  fontSize: 14,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-
-                    // ❌ 사용자 정보 없음 → 사용자 정보 입력 화면
-                    if (userInfoSnapshot.data == false) {
-                      return const UserInfoScreen();
-                    }
-
-                    // ✅ 모든 정보 완료 → 홈 화면
-                    return const MainNavigationScreen();
-                  },
-                );
-              },
-            );
           },
         );
       },
+    );
+  }
+
+  /// 공통 로딩 위젯 — 기존 3곳에 중복 정의되어 있던 것을 통합
+  Widget _buildLoading() {
+    return const Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: Colors.black,
+              strokeWidth: 3,
+            ),
+            SizedBox(height: 16),
+            Text(
+              '잠시만 기다려주세요...',
+              style: TextStyle(
+                fontFamily: 'Gmarket_sans',
+                fontSize: 14,
+                color: Colors.black54,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
