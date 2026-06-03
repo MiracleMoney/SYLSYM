@@ -15,7 +15,7 @@ import '../widgets/category_comparison_gauge.dart';
 import '../widgets/budget_items_list.dart';
 import '../widgets/save_budget_button.dart';
 import '../widgets/sticky_header_delegate.dart';
-import '../helpers/number_input_formatter.dart';
+import '../../helpers/number_input_formatter.dart';
 
 class BudgetScreen extends StatefulWidget {
   final bool isFocused;
