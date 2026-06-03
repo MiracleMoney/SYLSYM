@@ -29,12 +29,41 @@ class SalaryCompleteData {
   }
 
   factory SalaryCompleteData.fromJson(Map<String, dynamic> json) {
+    final step1Raw   = json['step1'];
+    final step2Raw   = json['step2'];
+    final resultRaw  = json['result'];
+    final createdRaw = json['createdAt'];
+    final updatedRaw = json['updatedAt'];
+
     return SalaryCompleteData(
-      step1: SalaryStep1Data.fromJson(json['step1'] as Map<String, dynamic>),
-      step2: SalaryStep2Data.fromJson(json['step2'] as Map<String, dynamic>),
-      result: SalaryResultData.fromJson(json['result'] as Map<String, dynamic>),
-      createdAt: (json['createdAt'] as Timestamp).toDate(),
-      updatedAt: (json['updatedAt'] as Timestamp).toDate(),
+      step1: step1Raw is Map<String, dynamic>
+          ? SalaryStep1Data.fromJson(step1Raw)
+          : SalaryStep1Data(),
+
+      step2: step2Raw is Map<String, dynamic>
+          ? SalaryStep2Data.fromJson(step2Raw)
+          : SalaryStep2Data(),
+
+      result: resultRaw is Map<String, dynamic>
+          ? SalaryResultData.fromJson(resultRaw)
+          : SalaryResultData(
+              emergencyFund: 0,
+              pensionInvestment: 0,
+              retirementInvestment: 0,
+              shortTermGoalSaving: 0,
+              livingExpense: 0,
+              totalIncome: 0,
+              retirementMonthlyExpense: 0,
+              economicFreedomAmount: 0,
+            ),
+
+      createdAt: createdRaw is Timestamp
+          ? createdRaw.toDate()
+          : DateTime.now(),
+
+      updatedAt: updatedRaw is Timestamp
+          ? updatedRaw.toDate()
+          : DateTime.now(),
     );
   }
 }
