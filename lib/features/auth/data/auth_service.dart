@@ -5,6 +5,14 @@ import 'package:flutter/foundation.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'dart:io' show Platform;
 
+/// 온보딩 단계 — AuthGate가 다음에 표시할 화면을 결정하는 데 사용
+enum OnboardingStep {
+  terms,       // 약관 동의 필요
+  inviteCode,  // 초대코드 입력 필요
+  userInfo,    // 생년월일·성별 입력 필요
+  done,        // 모든 온보딩 완료 → 메인 화면
+}
+
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
@@ -98,6 +106,54 @@ class AuthService {
     } catch (e) {
       if (kDebugMode) print('❌ 사용자 정보 확인 실패: $e');
       return false;
+    }
+  }
+
+  /// 🚦 온보딩 단계 통합 확인 — users/{uid} 문서를 1회만 읽어 다음 단계를 반환
+  ///
+  /// 기존의 hasAgreedToTerms / hasInviteCode / hasUserInfo 를 하나의 read로 통합.
+  /// [_ensureUserDocument] side-effect는 문서 미존재 시에만 발생.
+  Future<OnboardingStep> checkOnboardingStep() async {
+    if (currentUser == null) {
+      throw StateError('로그인된 사용자가 없습니다');
+    }
+
+    try {
+      final doc = await _firestore
+          .collection('users')
+          .doc(currentUser!.uid)
+          .get(); // ← 단 1회 read
+
+      // 문서 없음: 신규 가입 직후 → 문서 생성 후 약관 화면
+      if (!doc.exists) {
+        await _ensureUserDocument(currentUser!);
+        return OnboardingStep.terms;
+      }
+
+      final data = doc.data()!;
+
+      // 1단계: 약관 동의 여부
+      final termsAgreed = data['termsAgreed'] as bool? ?? false;
+      if (!termsAgreed) return OnboardingStep.terms;
+
+      // 2단계: 초대코드 입력 여부
+      final inviteCode = data['inviteCode'];
+      final hasCode =
+          inviteCode != null && inviteCode.toString().isNotEmpty;
+      if (!hasCode) return OnboardingStep.inviteCode;
+
+      // 3단계: 사용자 정보 입력 여부
+      final userInfoSkipped = data['userInfoSkipped'] as bool? ?? false;
+      final birthdate = data['birthdate'];
+      final gender = data['gender'];
+      if (!userInfoSkipped && (birthdate == null || gender == null)) {
+        return OnboardingStep.userInfo;
+      }
+
+      return OnboardingStep.done;
+    } catch (e) {
+      if (kDebugMode) print('❌ 온보딩 단계 확인 실패: $e');
+      rethrow;
     }
   }
 
