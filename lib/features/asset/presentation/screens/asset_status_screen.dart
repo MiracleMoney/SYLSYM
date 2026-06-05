@@ -1038,9 +1038,8 @@ class _FieldLabel extends StatelessWidget {
 // 요약 카드 공통 컨테이너
 // ──────────────────────────────────────────────
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.title, required this.items});
+  const _SummaryCard({required this.items});
 
-  final String title;
   final List<_SummaryItem> items;
 
   @override
@@ -1060,36 +1059,16 @@ class _SummaryCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontFamily: 'Gmarket_sans',
-              fontWeight: FontWeight.w700,
-              fontSize: Sizes.size14,
-              color: Colors.grey.shade700,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(children: items.map((e) => Expanded(child: e)).toList()),
-        ],
-      ),
+      child: Row(children: items.map((e) => Expanded(child: e)).toList()),
     );
   }
 }
 
 class _SummaryItem extends StatelessWidget {
-  const _SummaryItem({
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
+  const _SummaryItem({required this.label, required this.value});
 
   final String label;
   final String value;
-  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
@@ -1108,11 +1087,11 @@ class _SummaryItem extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           value,
-          style: TextStyle(
+          style: const TextStyle(
             fontFamily: 'Gmarket_sans',
             fontWeight: FontWeight.w700,
             fontSize: Sizes.size14,
-            color: valueColor ?? Colors.black,
+            color: Colors.black,
           ),
         ),
       ],
@@ -1132,33 +1111,12 @@ class _InvestmentSummaryCard extends StatelessWidget {
   final double principal;
   final double valuation;
 
-  String get _returnRateText {
-    if (principal <= 0) return '0%';
-    final rate = (valuation - principal) / principal * 100;
-    final sign = rate >= 0 ? '+' : '';
-    return '$sign${rate.toStringAsFixed(2)}%';
-  }
-
-  Color get _returnRateColor {
-    if (principal <= 0) return Colors.grey.shade600;
-    final rate = (valuation - principal) / principal * 100;
-    if (rate > 0) return const Color(0xFF4CAF50);
-    if (rate < 0) return const Color(0xFFE9435A);
-    return Colors.grey.shade600;
-  }
-
   @override
   Widget build(BuildContext context) {
     return _SummaryCard(
-      title: '투자 요약',
       items: [
         _SummaryItem(label: '투자원금', value: _formatAmount(principal)),
         _SummaryItem(label: '평가금액', value: _formatAmount(valuation)),
-        _SummaryItem(
-          label: '수익률',
-          value: _returnRateText,
-          valueColor: _returnRateColor,
-        ),
       ],
     );
   }
@@ -1179,7 +1137,6 @@ class _SavingSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SummaryCard(
-      title: '저축 요약',
       items: [
         _SummaryItem(label: '저축금액', value: _formatAmount(savingAmount)),
         _SummaryItem(label: '누적금액', value: _formatAmount(accumulated)),
@@ -1203,7 +1160,6 @@ class _DebtSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SummaryCard(
-      title: '부채 요약',
       items: [
         _SummaryItem(label: '이자금액', value: _formatAmount(interestAmount)),
         _SummaryItem(label: '대출잔액', value: _formatAmount(balance)),
