@@ -1,10 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
+import 'package:miraclemoney/data/services/firestore_service.dart';
 import 'package:miraclemoney/features/salary/presentation/widgets/form_widgets.dart';
 
 const _investmentAccounts = ['연금', 'IRP', 'ISA', '일반'];
 const _savingsAccounts = ['비상금', '단기목표', '주택청약', '내집마련', '기타'];
 const _debtAccounts = ['신용대출', '전세대출', '주택담보대출', '기타'];
+
+String _formatAmount(double amount) {
+  if (amount <= 0) return '0원';
+  return '${NumberFormat('#,###').format(amount.round())}원';
+}
+
+double _subAmount(Map<String, dynamic>? summary, String category, String key) {
+  if (summary == null) return 0;
+  final bySub = summary['bySubcategory'] as Map<String, dynamic>?;
+  final catMap = bySub?[category] as Map<String, dynamic>?;
+  return (catMap?[key] as num?)?.toDouble() ?? 0;
+}
 
 class AssetStatusScreen extends StatefulWidget {
   const AssetStatusScreen({super.key});
@@ -14,10 +28,32 @@ class AssetStatusScreen extends StatefulWidget {
 }
 
 class _AssetStatusScreenState extends State<AssetStatusScreen> {
+  final FirestoreService _firestoreService = FirestoreService();
+
   DateTime _selectedMonth = DateTime.now();
   String _selectedTab = '투자';
+  Map<String, dynamic>? _summary;
+  bool _isLoading = false;
 
   static const List<String> _tabs = ['투자', '저축', '부채'];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSummary();
+  }
+
+  Future<void> _loadSummary() async {
+    setState(() => _isLoading = true);
+    try {
+      final data = await _firestoreService.loadMonthlySummary(_selectedMonth);
+      if (mounted) setState(() => _summary = data);
+    } catch (_) {
+      if (mounted) setState(() => _summary = null);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   void _changeMonth(int delta) {
     setState(() {
@@ -26,6 +62,7 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
         _selectedMonth.month + delta,
       );
     });
+    _loadSummary();
   }
 
   @override
@@ -56,14 +93,30 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
                               ),
                               onPressed: () => _changeMonth(-1),
                             ),
-                            Text(
-                              '${_selectedMonth.year}년 ${_selectedMonth.month}월',
-                              style: const TextStyle(
-                                fontFamily: 'Gmarket_sans',
-                                fontWeight: FontWeight.w500,
-                                fontSize: Sizes.size16 + Sizes.size2,
-                                color: Colors.black,
-                              ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '${_selectedMonth.year}년 ${_selectedMonth.month}월',
+                                  style: const TextStyle(
+                                    fontFamily: 'Gmarket_sans',
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: Sizes.size16 + Sizes.size2,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                if (_isLoading) ...[
+                                  const SizedBox(width: 8),
+                                  const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 1.5,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                             IconButton(
                               icon: const Icon(
@@ -101,11 +154,11 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
 
                           // 탭별 콘텐츠
                           if (_selectedTab == '투자')
-                            const _InvestmentTabContent()
+                            _InvestmentTabContent(summary: _summary)
                           else if (_selectedTab == '저축')
-                            const _SavingsTabContent()
+                            _SavingsTabContent(summary: _summary)
                           else
-                            const _DebtTabContent(),
+                            _DebtTabContent(summary: _summary),
 
                           const SizedBox(height: 24),
                         ],
@@ -308,7 +361,9 @@ class _AssetTabSelector extends StatelessWidget {
 // 투자 탭 콘텐츠
 // ──────────────────────────────────────────────
 class _InvestmentTabContent extends StatelessWidget {
-  const _InvestmentTabContent();
+  const _InvestmentTabContent({required this.summary});
+
+  final Map<String, dynamic>? summary;
 
   static IconData _iconFor(String name) {
     switch (name) {
@@ -323,6 +378,19 @@ class _InvestmentTabContent extends StatelessWidget {
     }
   }
 
+  static String _subcategoryKeyFor(String name) {
+    switch (name) {
+      case '연금':
+        return 'PensionSaving';
+      case 'IRP':
+        return 'IRP';
+      case 'ISA':
+        return 'ISA';
+      default:
+        return 'General';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -334,6 +402,11 @@ class _InvestmentTabContent extends StatelessWidget {
                 accountName: name,
                 icon: _iconFor(name),
                 firstFieldLabel: '투자금액',
+                firstFieldAmount: _subAmount(
+                  summary,
+                  'InvestmentExpenses',
+                  _subcategoryKeyFor(name),
+                ),
                 secondFieldLabel: '평가금액',
                 secondFieldHint: '평가금액 입력',
               ),
@@ -348,7 +421,9 @@ class _InvestmentTabContent extends StatelessWidget {
 // 저축 탭 콘텐츠
 // ──────────────────────────────────────────────
 class _SavingsTabContent extends StatelessWidget {
-  const _SavingsTabContent();
+  const _SavingsTabContent({required this.summary});
+
+  final Map<String, dynamic>? summary;
 
   static IconData _iconFor(String name) {
     switch (name) {
@@ -365,6 +440,21 @@ class _SavingsTabContent extends StatelessWidget {
     }
   }
 
+  static String _subcategoryKeyFor(String name) {
+    switch (name) {
+      case '비상금':
+        return 'EmergencyFund';
+      case '단기목표':
+        return 'ShortTermGoal';
+      case '주택청약':
+        return 'HousingSubscription';
+      case '내집마련':
+        return 'HomeOwnership';
+      default:
+        return 'Other';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -376,6 +466,11 @@ class _SavingsTabContent extends StatelessWidget {
                 accountName: name,
                 icon: _iconFor(name),
                 firstFieldLabel: '저축금액',
+                firstFieldAmount: _subAmount(
+                  summary,
+                  'SavingExpenses',
+                  _subcategoryKeyFor(name),
+                ),
                 secondFieldLabel: '누적금액',
                 secondFieldHint: '누적금액 입력',
               ),
@@ -387,13 +482,74 @@ class _SavingsTabContent extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────
-// 공통 자산 계좌 카드 (투자/저축 탭 공용)
+// 부채 탭 콘텐츠
+// ──────────────────────────────────────────────
+class _DebtTabContent extends StatelessWidget {
+  const _DebtTabContent({required this.summary});
+
+  final Map<String, dynamic>? summary;
+
+  static IconData _iconFor(String name) {
+    switch (name) {
+      case '신용대출':
+        return Icons.credit_card_outlined;
+      case '전세대출':
+        return Icons.apartment_outlined;
+      case '주택담보대출':
+        return Icons.home_work_outlined;
+      default:
+        return Icons.receipt_long_outlined;
+    }
+  }
+
+  static String _subcategoryKeyFor(String name) {
+    switch (name) {
+      case '신용대출':
+        return 'CreditLoan';
+      case '전세대출':
+        return 'JeonseLoan';
+      case '주택담보대출':
+        return 'Mortgage';
+      default:
+        return 'Other';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: _debtAccounts
+          .map(
+            (name) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _AssetAccountCard(
+                accountName: name,
+                icon: _iconFor(name),
+                firstFieldLabel: '이자금액',
+                firstFieldAmount: _subAmount(
+                  summary,
+                  'InterestExpenses',
+                  _subcategoryKeyFor(name),
+                ),
+                secondFieldLabel: '대출잔액',
+                secondFieldHint: '대출잔액 입력',
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────
+// 공통 자산 계좌 카드 (투자/저축/부채 탭 공용)
 // ──────────────────────────────────────────────
 class _AssetAccountCard extends StatefulWidget {
   const _AssetAccountCard({
     required this.accountName,
     required this.icon,
     required this.firstFieldLabel,
+    required this.firstFieldAmount,
     required this.secondFieldLabel,
     required this.secondFieldHint,
   });
@@ -401,6 +557,7 @@ class _AssetAccountCard extends StatefulWidget {
   final String accountName;
   final IconData icon;
   final String firstFieldLabel;
+  final double firstFieldAmount;
   final String secondFieldLabel;
   final String secondFieldHint;
 
@@ -517,12 +674,12 @@ class _AssetAccountCardState extends State<_AssetAccountCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 첫 번째 필드 (읽기 전용)
+                    // 첫 번째 필드 — monthly_summaries 연동 값
                     _FieldLabel(widget.firstFieldLabel),
                     const SizedBox(height: 6),
-                    const Text(
-                      '0원',
-                      style: TextStyle(
+                    Text(
+                      _formatAmount(widget.firstFieldAmount),
+                      style: const TextStyle(
                         fontFamily: 'Gmarket_sans',
                         fontWeight: FontWeight.w700,
                         fontSize: Sizes.size16,
@@ -532,7 +689,7 @@ class _AssetAccountCardState extends State<_AssetAccountCard> {
 
                     const SizedBox(height: 16),
 
-                    // 두 번째 필드 (입력 가능)
+                    // 두 번째 필드 (사용자 입력)
                     _FieldLabel(widget.secondFieldLabel),
                     const SizedBox(height: 6),
                     Container(
@@ -599,46 +756,6 @@ class _FieldLabel extends StatelessWidget {
         fontWeight: FontWeight.w500,
         color: Colors.grey.shade600,
       ),
-    );
-  }
-}
-
-// ──────────────────────────────────────────────
-// 부채 탭 콘텐츠
-// ──────────────────────────────────────────────
-class _DebtTabContent extends StatelessWidget {
-  const _DebtTabContent();
-
-  static IconData _iconFor(String name) {
-    switch (name) {
-      case '신용대출':
-        return Icons.credit_card_outlined;
-      case '전세대출':
-        return Icons.apartment_outlined;
-      case '주택담보대출':
-        return Icons.home_work_outlined;
-      default:
-        return Icons.receipt_long_outlined;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: _debtAccounts
-          .map(
-            (name) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _AssetAccountCard(
-                accountName: name,
-                icon: _iconFor(name),
-                firstFieldLabel: '이자금액',
-                secondFieldLabel: '대출잔액',
-                secondFieldHint: '대출잔액 입력',
-              ),
-            ),
-          )
-          .toList(),
     );
   }
 }
