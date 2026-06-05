@@ -20,6 +20,50 @@ double _subAmount(Map<String, dynamic>? summary, String category, String key) {
   return (catMap?[key] as num?)?.toDouble() ?? 0;
 }
 
+// ──────────────────────────────────────────────
+// 계좌명 → Firestore 서브키 매핑
+// ──────────────────────────────────────────────
+String _investmentKey(String name) {
+  switch (name) {
+    case '연금':
+      return 'PensionSaving';
+    case 'IRP':
+      return 'IRP';
+    case 'ISA':
+      return 'ISA';
+    default:
+      return 'General';
+  }
+}
+
+String _savingsKey(String name) {
+  switch (name) {
+    case '비상금':
+      return 'EmergencyFund';
+    case '단기목표':
+      return 'ShortTermGoal';
+    case '주택청약':
+      return 'HousingSubscription';
+    case '내집마련':
+      return 'HomeOwnership';
+    default:
+      return 'Other';
+  }
+}
+
+String _debtKey(String name) {
+  switch (name) {
+    case '신용대출':
+      return 'CreditLoan';
+    case '전세대출':
+      return 'JeonseLoan';
+    case '주택담보대출':
+      return 'Mortgage';
+    default:
+      return 'Other';
+  }
+}
+
 class AssetStatusScreen extends StatefulWidget {
   const AssetStatusScreen({super.key});
 
@@ -37,21 +81,101 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
 
   static const List<String> _tabs = ['투자', '저축', '부채'];
 
+  // 사용자 직접 입력값 컨트롤러 — 부모가 소유·dispose
+  final Map<String, TextEditingController> _investmentControllers = {
+    'PensionSaving': TextEditingController(),
+    'IRP': TextEditingController(),
+    'ISA': TextEditingController(),
+    'General': TextEditingController(),
+  };
+
+  final Map<String, TextEditingController> _savingsControllers = {
+    'EmergencyFund': TextEditingController(),
+    'ShortTermGoal': TextEditingController(),
+    'HousingSubscription': TextEditingController(),
+    'HomeOwnership': TextEditingController(),
+    'Other': TextEditingController(),
+  };
+
+  final Map<String, TextEditingController> _debtControllers = {
+    'CreditLoan': TextEditingController(),
+    'JeonseLoan': TextEditingController(),
+    'Mortgage': TextEditingController(),
+    'Other': TextEditingController(),
+  };
+
   @override
   void initState() {
     super.initState();
-    _loadSummary();
+    _loadData();
   }
 
-  Future<void> _loadSummary() async {
+  @override
+  void dispose() {
+    for (final c in _investmentControllers.values) {
+      c.dispose();
+    }
+    for (final c in _savingsControllers.values) {
+      c.dispose();
+    }
+    for (final c in _debtControllers.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  // monthly_summaries + asset_status를 병렬 로드
+  Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      final data = await _firestoreService.loadMonthlySummary(_selectedMonth);
-      if (mounted) setState(() => _summary = data);
+      final results = await Future.wait<Map<String, dynamic>?>([
+        _firestoreService.loadMonthlySummary(_selectedMonth),
+        _firestoreService.loadAssetStatus(_selectedMonth),
+      ]);
+      if (mounted) {
+        setState(() => _summary = results[0]);
+        _populateControllers(results[1]);
+      }
     } catch (_) {
-      if (mounted) setState(() => _summary = null);
+      if (mounted) {
+        setState(() => _summary = null);
+        _clearControllers();
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // 불러온 asset_status 값을 컨트롤러에 세팅
+  void _populateControllers(Map<String, dynamic>? assetStatus) {
+    void fill(
+      Map<String, TextEditingController> controllers,
+      String section,
+      String valueKey,
+    ) {
+      final sectionData = assetStatus?[section] as Map<String, dynamic>?;
+      for (final entry in controllers.entries) {
+        final sub = sectionData?[entry.key] as Map<String, dynamic>?;
+        final value = (sub?[valueKey] as num?)?.toDouble() ?? 0;
+        entry.value.text =
+            value > 0 ? NumberFormat('#,###').format(value.round()) : '';
+      }
+    }
+
+    fill(_investmentControllers, 'investment', 'valuation');
+    fill(_savingsControllers, 'saving', 'accumulated');
+    fill(_debtControllers, 'debt', 'balance');
+  }
+
+  void _clearControllers() {
+    for (final c in _investmentControllers.values) {
+      c.text = '';
+    }
+    for (final c in _savingsControllers.values) {
+      c.text = '';
+    }
+    for (final c in _debtControllers.values) {
+      c.text = '';
     }
   }
 
@@ -62,7 +186,62 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
         _selectedMonth.month + delta,
       );
     });
-    _loadSummary();
+    _loadData();
+  }
+
+  double _parseController(TextEditingController c) =>
+      double.tryParse(c.text.replaceAll(',', '')) ?? 0.0;
+
+  // 저장 버튼 핸들러
+  Future<void> _onSave() async {
+    FocusScope.of(context).unfocus();
+
+    final yearMonth =
+        '${_selectedMonth.year}-${_selectedMonth.month.toString().padLeft(2, '0')}';
+
+    final assetData = {
+      'yearMonth': yearMonth,
+      'updatedAt': DateTime.now().toIso8601String(),
+      'investment': {
+        for (final e in _investmentControllers.entries)
+          e.key: {'valuation': _parseController(e.value)},
+      },
+      'saving': {
+        for (final e in _savingsControllers.entries)
+          e.key: {'accumulated': _parseController(e.value)},
+      },
+      'debt': {
+        for (final e in _debtControllers.entries)
+          e.key: {'balance': _parseController(e.value)},
+      },
+    };
+
+    try {
+      await _firestoreService.saveAssetStatus(assetData, _selectedMonth);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              '자산현황이 저장되었습니다.',
+              style: TextStyle(fontFamily: 'Gmarket_sans'),
+            ),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '저장에 실패했습니다: $e',
+              style: const TextStyle(fontFamily: 'Gmarket_sans'),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -154,11 +333,20 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
 
                           // 탭별 콘텐츠
                           if (_selectedTab == '투자')
-                            _InvestmentTabContent(summary: _summary)
+                            _InvestmentTabContent(
+                              summary: _summary,
+                              controllers: _investmentControllers,
+                            )
                           else if (_selectedTab == '저축')
-                            _SavingsTabContent(summary: _summary)
+                            _SavingsTabContent(
+                              summary: _summary,
+                              controllers: _savingsControllers,
+                            )
                           else
-                            _DebtTabContent(summary: _summary),
+                            _DebtTabContent(
+                              summary: _summary,
+                              controllers: _debtControllers,
+                            ),
 
                           const SizedBox(height: 24),
                         ],
@@ -187,19 +375,10 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
                   width: double.infinity,
                   height: MediaQuery.of(context).size.height * 0.06,
                   child: ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            '저장 기능은 준비 중입니다.',
-                            style: TextStyle(fontFamily: 'Gmarket_sans'),
-                          ),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    },
+                    onPressed: _isLoading ? null : _onSave,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
+                      disabledBackgroundColor: Colors.grey.shade400,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -361,9 +540,13 @@ class _AssetTabSelector extends StatelessWidget {
 // 투자 탭 콘텐츠
 // ──────────────────────────────────────────────
 class _InvestmentTabContent extends StatelessWidget {
-  const _InvestmentTabContent({required this.summary});
+  const _InvestmentTabContent({
+    required this.summary,
+    required this.controllers,
+  });
 
   final Map<String, dynamic>? summary;
+  final Map<String, TextEditingController> controllers;
 
   static IconData _iconFor(String name) {
     switch (name) {
@@ -378,25 +561,13 @@ class _InvestmentTabContent extends StatelessWidget {
     }
   }
 
-  static String _subcategoryKeyFor(String name) {
-    switch (name) {
-      case '연금':
-        return 'PensionSaving';
-      case 'IRP':
-        return 'IRP';
-      case 'ISA':
-        return 'ISA';
-      default:
-        return 'General';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
       children: _investmentAccounts
-          .map(
-            (name) => Padding(
+          .map((name) {
+            final key = _investmentKey(name);
+            return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: _AssetAccountCard(
                 accountName: name,
@@ -405,13 +576,14 @@ class _InvestmentTabContent extends StatelessWidget {
                 firstFieldAmount: _subAmount(
                   summary,
                   'InvestmentExpenses',
-                  _subcategoryKeyFor(name),
+                  key,
                 ),
                 secondFieldLabel: '평가금액',
                 secondFieldHint: '평가금액 입력',
+                controller: controllers[key]!,
               ),
-            ),
-          )
+            );
+          })
           .toList(),
     );
   }
@@ -421,9 +593,13 @@ class _InvestmentTabContent extends StatelessWidget {
 // 저축 탭 콘텐츠
 // ──────────────────────────────────────────────
 class _SavingsTabContent extends StatelessWidget {
-  const _SavingsTabContent({required this.summary});
+  const _SavingsTabContent({
+    required this.summary,
+    required this.controllers,
+  });
 
   final Map<String, dynamic>? summary;
+  final Map<String, TextEditingController> controllers;
 
   static IconData _iconFor(String name) {
     switch (name) {
@@ -440,27 +616,13 @@ class _SavingsTabContent extends StatelessWidget {
     }
   }
 
-  static String _subcategoryKeyFor(String name) {
-    switch (name) {
-      case '비상금':
-        return 'EmergencyFund';
-      case '단기목표':
-        return 'ShortTermGoal';
-      case '주택청약':
-        return 'HousingSubscription';
-      case '내집마련':
-        return 'HomeOwnership';
-      default:
-        return 'Other';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
       children: _savingsAccounts
-          .map(
-            (name) => Padding(
+          .map((name) {
+            final key = _savingsKey(name);
+            return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: _AssetAccountCard(
                 accountName: name,
@@ -469,13 +631,14 @@ class _SavingsTabContent extends StatelessWidget {
                 firstFieldAmount: _subAmount(
                   summary,
                   'SavingExpenses',
-                  _subcategoryKeyFor(name),
+                  key,
                 ),
                 secondFieldLabel: '누적금액',
                 secondFieldHint: '누적금액 입력',
+                controller: controllers[key]!,
               ),
-            ),
-          )
+            );
+          })
           .toList(),
     );
   }
@@ -485,9 +648,13 @@ class _SavingsTabContent extends StatelessWidget {
 // 부채 탭 콘텐츠
 // ──────────────────────────────────────────────
 class _DebtTabContent extends StatelessWidget {
-  const _DebtTabContent({required this.summary});
+  const _DebtTabContent({
+    required this.summary,
+    required this.controllers,
+  });
 
   final Map<String, dynamic>? summary;
+  final Map<String, TextEditingController> controllers;
 
   static IconData _iconFor(String name) {
     switch (name) {
@@ -502,25 +669,13 @@ class _DebtTabContent extends StatelessWidget {
     }
   }
 
-  static String _subcategoryKeyFor(String name) {
-    switch (name) {
-      case '신용대출':
-        return 'CreditLoan';
-      case '전세대출':
-        return 'JeonseLoan';
-      case '주택담보대출':
-        return 'Mortgage';
-      default:
-        return 'Other';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
       children: _debtAccounts
-          .map(
-            (name) => Padding(
+          .map((name) {
+            final key = _debtKey(name);
+            return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: _AssetAccountCard(
                 accountName: name,
@@ -529,20 +684,21 @@ class _DebtTabContent extends StatelessWidget {
                 firstFieldAmount: _subAmount(
                   summary,
                   'InterestExpenses',
-                  _subcategoryKeyFor(name),
+                  key,
                 ),
                 secondFieldLabel: '대출잔액',
                 secondFieldHint: '대출잔액 입력',
+                controller: controllers[key]!,
               ),
-            ),
-          )
+            );
+          })
           .toList(),
     );
   }
 }
 
 // ──────────────────────────────────────────────
-// 공통 자산 계좌 카드 (투자/저축/부채 탭 공용)
+// 공통 자산 계좌 카드
 // ──────────────────────────────────────────────
 class _AssetAccountCard extends StatefulWidget {
   const _AssetAccountCard({
@@ -552,6 +708,7 @@ class _AssetAccountCard extends StatefulWidget {
     required this.firstFieldAmount,
     required this.secondFieldLabel,
     required this.secondFieldHint,
+    required this.controller,
   });
 
   final String accountName;
@@ -560,6 +717,7 @@ class _AssetAccountCard extends StatefulWidget {
   final double firstFieldAmount;
   final String secondFieldLabel;
   final String secondFieldHint;
+  final TextEditingController controller; // 부모가 소유
 
   @override
   State<_AssetAccountCard> createState() => _AssetAccountCardState();
@@ -569,24 +727,24 @@ class _AssetAccountCardState extends State<_AssetAccountCard> {
   static const _accentColor = Color(0xFFE9435A);
 
   bool _isExpanded = false;
-  bool _hasValue = false;
-  final TextEditingController _inputController = TextEditingController();
+  late bool _hasValue;
 
   @override
   void initState() {
     super.initState();
-    _inputController.addListener(_onInputChanged);
+    _hasValue = widget.controller.text.isNotEmpty; // 초기값 반영
+    widget.controller.addListener(_onInputChanged);
   }
 
   void _onInputChanged() {
-    final hasValue = _inputController.text.isNotEmpty;
+    final hasValue = widget.controller.text.isNotEmpty;
     if (hasValue != _hasValue) setState(() => _hasValue = hasValue);
   }
 
   @override
   void dispose() {
-    _inputController.removeListener(_onInputChanged);
-    _inputController.dispose();
+    widget.controller.removeListener(_onInputChanged);
+    // controller 자체는 부모가 dispose하므로 여기서는 제거하지 않음
     super.dispose();
   }
 
@@ -674,7 +832,7 @@ class _AssetAccountCardState extends State<_AssetAccountCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 첫 번째 필드 — monthly_summaries 연동 값
+                    // 첫 번째 필드 — monthly_summaries 연동 (읽기 전용)
                     _FieldLabel(widget.firstFieldLabel),
                     const SizedBox(height: 6),
                     Text(
@@ -689,7 +847,7 @@ class _AssetAccountCardState extends State<_AssetAccountCard> {
 
                     const SizedBox(height: 16),
 
-                    // 두 번째 필드 (사용자 입력)
+                    // 두 번째 필드 — 사용자 직접 입력 (저장 대상)
                     _FieldLabel(widget.secondFieldLabel),
                     const SizedBox(height: 6),
                     Container(
@@ -699,7 +857,7 @@ class _AssetAccountCardState extends State<_AssetAccountCard> {
                         border: Border.all(color: Colors.grey.shade300),
                       ),
                       child: TextField(
-                        controller: _inputController,
+                        controller: widget.controller,
                         keyboardType: TextInputType.number,
                         inputFormatters: [ThousandsSeparatorInputFormatter()],
                         textInputAction: TextInputAction.done,
