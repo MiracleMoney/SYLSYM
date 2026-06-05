@@ -228,6 +228,28 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
   double _parseController(TextEditingController c) =>
       double.tryParse(c.text.replaceAll(',', '')) ?? 0.0;
 
+  // monthly_summaries에서 특정 카테고리의 세부항목 합계
+  double _subcategoryTotal(String category) {
+    if (_summary == null) return 0;
+    final bySub = _summary!['bySubcategory'] as Map<String, dynamic>?;
+    final catMap = bySub?[category] as Map<String, dynamic>?;
+    if (catMap == null) return 0;
+    double total = 0;
+    for (final v in catMap.values) {
+      total += (v as num?)?.toDouble() ?? 0;
+    }
+    return total;
+  }
+
+  // 컨트롤러 맵 전체 합계
+  double _sumControllers(Map<String, TextEditingController> controllers) {
+    double total = 0;
+    for (final c in controllers.values) {
+      total += double.tryParse(c.text.replaceAll(',', '')) ?? 0;
+    }
+    return total;
+  }
+
   // 저장 버튼 핸들러
   Future<void> _onSave() async {
     FocusScope.of(context).unfocus();
@@ -371,22 +393,44 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
 
                           const SizedBox(height: 16),
 
-                          // 탭별 콘텐츠
-                          if (_selectedTab == '투자')
+                          // 탭별 요약 카드 + 계좌 목록
+                          if (_selectedTab == '투자') ...[
+                            _InvestmentSummaryCard(
+                              principal: _subcategoryTotal(
+                                'InvestmentExpenses',
+                              ),
+                              valuation: _sumControllers(
+                                _investmentControllers,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
                             _InvestmentTabContent(
                               summary: _summary,
                               controllers: _investmentControllers,
-                            )
-                          else if (_selectedTab == '저축')
+                            ),
+                          ] else if (_selectedTab == '저축') ...[
+                            _SavingSummaryCard(
+                              savingAmount: _subcategoryTotal('SavingExpenses'),
+                              accumulated: _sumControllers(_savingsControllers),
+                            ),
+                            const SizedBox(height: 12),
                             _SavingsTabContent(
                               summary: _summary,
                               controllers: _savingsControllers,
-                            )
-                          else
+                            ),
+                          ] else ...[
+                            _DebtSummaryCard(
+                              interestAmount: _subcategoryTotal(
+                                'InterestExpenses',
+                              ),
+                              balance: _sumControllers(_debtControllers),
+                            ),
+                            const SizedBox(height: 12),
                             _DebtTabContent(
                               summary: _summary,
                               controllers: _debtControllers,
                             ),
+                          ],
 
                           const SizedBox(height: 24),
                         ],
@@ -986,6 +1030,184 @@ class _FieldLabel extends StatelessWidget {
         fontWeight: FontWeight.w500,
         color: Colors.grey.shade600,
       ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────
+// 요약 카드 공통 컨테이너
+// ──────────────────────────────────────────────
+class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({required this.title, required this.items});
+
+  final String title;
+  final List<_SummaryItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(6),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontFamily: 'Gmarket_sans',
+              fontWeight: FontWeight.w700,
+              fontSize: Sizes.size14,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(children: items.map((e) => Expanded(child: e)).toList()),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryItem extends StatelessWidget {
+  const _SummaryItem({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Gmarket_sans',
+            fontSize: Sizes.size12,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey.shade500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontFamily: 'Gmarket_sans',
+            fontWeight: FontWeight.w700,
+            fontSize: Sizes.size14,
+            color: valueColor ?? Colors.black,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ──────────────────────────────────────────────
+// 투자 요약 카드
+// ──────────────────────────────────────────────
+class _InvestmentSummaryCard extends StatelessWidget {
+  const _InvestmentSummaryCard({
+    required this.principal,
+    required this.valuation,
+  });
+
+  final double principal;
+  final double valuation;
+
+  String get _returnRateText {
+    if (principal <= 0) return '0%';
+    final rate = (valuation - principal) / principal * 100;
+    final sign = rate >= 0 ? '+' : '';
+    return '$sign${rate.toStringAsFixed(2)}%';
+  }
+
+  Color get _returnRateColor {
+    if (principal <= 0) return Colors.grey.shade600;
+    final rate = (valuation - principal) / principal * 100;
+    if (rate > 0) return const Color(0xFF4CAF50);
+    if (rate < 0) return const Color(0xFFE9435A);
+    return Colors.grey.shade600;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _SummaryCard(
+      title: '투자 요약',
+      items: [
+        _SummaryItem(label: '투자원금', value: _formatAmount(principal)),
+        _SummaryItem(label: '평가금액', value: _formatAmount(valuation)),
+        _SummaryItem(
+          label: '수익률',
+          value: _returnRateText,
+          valueColor: _returnRateColor,
+        ),
+      ],
+    );
+  }
+}
+
+// ──────────────────────────────────────────────
+// 저축 요약 카드
+// ──────────────────────────────────────────────
+class _SavingSummaryCard extends StatelessWidget {
+  const _SavingSummaryCard({
+    required this.savingAmount,
+    required this.accumulated,
+  });
+
+  final double savingAmount;
+  final double accumulated;
+
+  @override
+  Widget build(BuildContext context) {
+    return _SummaryCard(
+      title: '저축 요약',
+      items: [
+        _SummaryItem(label: '저축금액', value: _formatAmount(savingAmount)),
+        _SummaryItem(label: '누적금액', value: _formatAmount(accumulated)),
+      ],
+    );
+  }
+}
+
+// ──────────────────────────────────────────────
+// 부채 요약 카드
+// ──────────────────────────────────────────────
+class _DebtSummaryCard extends StatelessWidget {
+  const _DebtSummaryCard({
+    required this.interestAmount,
+    required this.balance,
+  });
+
+  final double interestAmount;
+  final double balance;
+
+  @override
+  Widget build(BuildContext context) {
+    return _SummaryCard(
+      title: '부채 요약',
+      items: [
+        _SummaryItem(label: '이자금액', value: _formatAmount(interestAmount)),
+        _SummaryItem(label: '대출잔액', value: _formatAmount(balance)),
+      ],
     );
   }
 }
