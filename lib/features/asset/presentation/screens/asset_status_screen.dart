@@ -688,19 +688,6 @@ class _InvestmentTabContent extends StatelessWidget {
   final Map<String, dynamic>? summary;
   final Map<String, TextEditingController> controllers;
 
-  static IconData _iconFor(String name) {
-    switch (name) {
-      case '연금':
-        return Icons.savings_outlined;
-      case 'IRP':
-        return Icons.account_balance_outlined;
-      case 'ISA':
-        return Icons.bar_chart_outlined;
-      default:
-        return Icons.trending_up_outlined;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -710,11 +697,9 @@ class _InvestmentTabContent extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 12),
           child: _AssetAccountCard(
             accountName: name,
-            icon: _iconFor(name),
             firstFieldLabel: '투자금액',
             firstFieldAmount: _subAmount(summary, 'InvestmentExpenses', key),
-            secondFieldLabel: '평가금액',
-            secondFieldHint: '평가금액 입력',
+            secondFieldHint: '0',
             controller: controllers[key]!,
           ),
         );
@@ -732,21 +717,6 @@ class _SavingsTabContent extends StatelessWidget {
   final Map<String, dynamic>? summary;
   final Map<String, TextEditingController> controllers;
 
-  static IconData _iconFor(String name) {
-    switch (name) {
-      case '비상금':
-        return Icons.account_balance_wallet_outlined;
-      case '단기목표':
-        return Icons.flag_outlined;
-      case '주택청약':
-        return Icons.home_outlined;
-      case '내집마련':
-        return Icons.house_outlined;
-      default:
-        return Icons.savings_outlined;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -756,11 +726,9 @@ class _SavingsTabContent extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 12),
           child: _AssetAccountCard(
             accountName: name,
-            icon: _iconFor(name),
             firstFieldLabel: '저축금액',
             firstFieldAmount: _subAmount(summary, 'SavingExpenses', key),
-            secondFieldLabel: '누적금액',
-            secondFieldHint: '누적금액 입력',
+            secondFieldHint: '0',
             controller: controllers[key]!,
           ),
         );
@@ -778,19 +746,6 @@ class _DebtTabContent extends StatelessWidget {
   final Map<String, dynamic>? summary;
   final Map<String, TextEditingController> controllers;
 
-  static IconData _iconFor(String name) {
-    switch (name) {
-      case '신용대출':
-        return Icons.credit_card_outlined;
-      case '전세대출':
-        return Icons.apartment_outlined;
-      case '주택담보대출':
-        return Icons.home_work_outlined;
-      default:
-        return Icons.receipt_long_outlined;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -800,11 +755,9 @@ class _DebtTabContent extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 12),
           child: _AssetAccountCard(
             accountName: name,
-            icon: _iconFor(name),
             firstFieldLabel: '이자금액',
             firstFieldAmount: _subAmount(summary, 'InterestExpenses', key),
-            secondFieldLabel: '대출잔액',
-            secondFieldHint: '대출잔액 입력',
+            secondFieldHint: '0',
             controller: controllers[key]!,
           ),
         );
@@ -814,24 +767,20 @@ class _DebtTabContent extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────
-// 공통 자산 계좌 카드 (항상 펼쳐진 평면형)
+// 공통 자산 계좌 카드 (예산 입력 카드 스타일)
 // ──────────────────────────────────────────────
 class _AssetAccountCard extends StatelessWidget {
   const _AssetAccountCard({
     required this.accountName,
-    required this.icon,
     required this.firstFieldLabel,
     required this.firstFieldAmount,
-    required this.secondFieldLabel,
     required this.secondFieldHint,
     required this.controller,
   });
 
   final String accountName;
-  final IconData icon;
   final String firstFieldLabel;
   final double firstFieldAmount;
-  final String secondFieldLabel;
   final String secondFieldHint;
   final TextEditingController controller; // 부모가 소유·dispose
 
@@ -839,127 +788,92 @@ class _AssetAccountCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(8),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 계좌명 헤더
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Icon(icon, size: 22, color: const Color(0xFF5B7EFF)),
-                const SizedBox(width: 10),
-                Text(
-                  accountName,
-                  style: const TextStyle(
-                    fontFamily: 'Gmarket_sans',
-                    fontWeight: FontWeight.w700,
-                    fontSize: Sizes.size16,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Container(height: 1, color: Colors.grey.shade100),
-
-          // 금액 필드
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          // 왼쪽: 계좌명 + 읽기 전용 금액
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 첫 번째 필드 — monthly_summaries 연동 (읽기 전용)
-                _FieldLabel(firstFieldLabel),
-                const SizedBox(height: 6),
                 Text(
-                  _formatAmount(firstFieldAmount),
-                  style: const TextStyle(
+                  accountName,
+                  style: TextStyle(
                     fontFamily: 'Gmarket_sans',
                     fontWeight: FontWeight.w700,
-                    fontSize: Sizes.size16,
-                    color: Colors.black,
+                    fontSize: Sizes.size14,
+                    color: Colors.grey.shade800,
                   ),
                 ),
-
-                const SizedBox(height: 16),
-
-                // 두 번째 필드 — 사용자 직접 입력 (저장 대상)
-                _FieldLabel(secondFieldLabel),
-                const SizedBox(height: 6),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: TextField(
-                    controller: controller,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [ThousandsSeparatorInputFormatter()],
-                    textInputAction: TextInputAction.done,
-                    decoration: InputDecoration(
-                      hintText: secondFieldHint,
-                      hintStyle: TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontSize: Sizes.size14,
-                        color: Colors.grey.shade400,
-                      ),
-                      suffixText: '원',
-                      suffixStyle: TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontSize: Sizes.size14,
-                        color: Colors.grey.shade600,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                    ),
-                    style: const TextStyle(
-                      fontFamily: 'Gmarket_sans',
-                      fontWeight: FontWeight.w500,
-                      fontSize: Sizes.size14,
-                      color: Colors.black,
-                    ),
+                const SizedBox(height: 4),
+                Text(
+                  '$firstFieldLabel  ${_formatAmount(firstFieldAmount)}',
+                  style: TextStyle(
+                    fontFamily: 'Gmarket_sans',
+                    fontWeight: FontWeight.w400,
+                    fontSize: Sizes.size10,
+                    color: Colors.grey.shade500,
                   ),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 12),
+          // 오른쪽: 사용자 직접 입력 (저장 대상)
+          SizedBox(
+            width: 120,
+            child: TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              inputFormatters: [ThousandsSeparatorInputFormatter()],
+              textInputAction: TextInputAction.done,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontFamily: 'Gmarket_sans',
+                fontWeight: FontWeight.w400,
+                fontSize: Sizes.size14,
+                color: Colors.black,
+              ),
+              decoration: InputDecoration(
+                prefixText: '₩ ',
+                prefixStyle: TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  fontWeight: FontWeight.w400,
+                  fontSize: Sizes.size14,
+                  color: Colors.grey.shade600,
+                ),
+                hintText: secondFieldHint,
+                hintStyle: TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  fontWeight: FontWeight.w400,
+                  fontSize: Sizes.size14,
+                  color: Colors.grey.shade400,
+                ),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 8,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFE9435A)),
+                ),
+              ),
+            ),
+          ),
         ],
-      ),
-    );
-  }
-}
-
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: TextStyle(
-        fontFamily: 'Gmarket_sans',
-        fontSize: Sizes.size12,
-        fontWeight: FontWeight.w500,
-        color: Colors.grey.shade600,
       ),
     );
   }
