@@ -17,7 +17,7 @@ String _formatAmount(double amount) {
 // 입력 금액 구간별 폰트 크기 (₩ 120px 입력칸 기준)
 double _inputFontSize(String text) {
   final value = int.tryParse(text.replaceAll(',', '')) ?? 0;
-  if (value >= 100000000) return 12; // 1억 이상
+  if (value >= 100000000) return 11; // 1억 이상
   if (value >= 10000000) return 13;  // 1천만 이상
   return 14;                          // ~ 9,999,999
 }
