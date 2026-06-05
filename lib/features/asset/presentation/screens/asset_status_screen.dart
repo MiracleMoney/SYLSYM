@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
 
 const _investmentAccounts = ['연금', 'IRP', 'ISA', '일반'];
@@ -16,19 +15,6 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
   String _selectedTab = '투자';
 
   static const List<String> _tabs = ['투자', '저축', '부채'];
-
-  // 투자 평가금액 컨트롤러 (UI 전용, 저장 없음)
-  final Map<String, TextEditingController> _evalControllers = {
-    for (final name in _investmentAccounts) name: TextEditingController(),
-  };
-
-  @override
-  void dispose() {
-    for (final c in _evalControllers.values) {
-      c.dispose();
-    }
-    super.dispose();
-  }
 
   void _changeMonth(int delta) {
     setState(() {
@@ -106,7 +92,7 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
 
                     // 탭별 콘텐츠
                     if (_selectedTab == '투자')
-                      _InvestmentTabContent(controllers: _evalControllers)
+                      const _InvestmentTabContent()
                     else
                       _AssetTabPlaceholder(selectedTab: _selectedTab),
 
@@ -259,9 +245,7 @@ class _AssetTabSelector extends StatelessWidget {
 // 투자 탭 콘텐츠
 // ──────────────────────────────────────────────
 class _InvestmentTabContent extends StatelessWidget {
-  const _InvestmentTabContent({required this.controllers});
-
-  final Map<String, TextEditingController> controllers;
+  const _InvestmentTabContent();
 
   @override
   Widget build(BuildContext context) {
@@ -270,10 +254,7 @@ class _InvestmentTabContent extends StatelessWidget {
           .map(
             (name) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: _InvestmentAccountCard(
-                accountName: name,
-                evalController: controllers[name]!,
-              ),
+              child: _InvestmentAccountCard(accountName: name),
             ),
           )
           .toList(),
@@ -282,16 +263,14 @@ class _InvestmentTabContent extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────
-// 계좌별 투자 카드
+// 계좌별 투자 카드 (계좌명 + New 배지만 표시)
 // ──────────────────────────────────────────────
 class _InvestmentAccountCard extends StatelessWidget {
-  const _InvestmentAccountCard({
-    required this.accountName,
-    required this.evalController,
-  });
+  const _InvestmentAccountCard({required this.accountName});
 
   final String accountName;
-  final TextEditingController evalController;
+
+  static const _accentColor = Color(0xFFE9435A);
 
   IconData get _icon {
     switch (accountName) {
@@ -321,171 +300,41 @@ class _InvestmentAccountCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 카드 헤더
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Row(
+          children: [
+            Icon(_icon, size: 22, color: const Color(0xFF5B7EFF)),
+            const SizedBox(width: 10),
+            Text(
+              accountName,
+              style: const TextStyle(
+                fontFamily: 'Gmarket_sans',
+                fontWeight: FontWeight.w700,
+                fontSize: Sizes.size16,
+                color: Colors.black,
+              ),
             ),
-            child: Row(
-              children: [
-                Icon(_icon, size: 20, color: const Color(0xFF5B7EFF)),
-                const SizedBox(width: 8),
-                Text(
-                  accountName,
-                  style: const TextStyle(
-                    fontFamily: 'Gmarket_sans',
-                    fontWeight: FontWeight.w700,
-                    fontSize: Sizes.size16,
-                    color: Colors.black,
-                  ),
+            const SizedBox(width: 8),
+            // New 배지 (평가금액 미입력 상태)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              decoration: BoxDecoration(
+                color: _accentColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                'New',
+                style: TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 10,
+                  color: Colors.white,
                 ),
-              ],
+              ),
             ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 투자금액 (읽기 전용)
-                _FieldLabel('투자금액'),
-                const SizedBox(height: 6),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Text(
-                      '0원',
-                      style: TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontWeight: FontWeight.w700,
-                        fontSize: Sizes.size16,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        '지출 데이터 연동 예정',
-                        style: TextStyle(
-                          fontFamily: 'Gmarket_sans',
-                          fontSize: 10,
-                          color: Colors.blue.shade400,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // 평가금액 (입력 가능)
-                _FieldLabel('평가금액'),
-                const SizedBox(height: 6),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: TextField(
-                    controller: evalController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    textInputAction: TextInputAction.done,
-                    decoration: InputDecoration(
-                      hintText: '평가금액 입력',
-                      hintStyle: TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontSize: Sizes.size14,
-                        color: Colors.grey.shade400,
-                      ),
-                      suffixText: '원',
-                      suffixStyle: TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontSize: Sizes.size14,
-                        color: Colors.grey.shade600,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                    ),
-                    style: const TextStyle(
-                      fontFamily: 'Gmarket_sans',
-                      fontWeight: FontWeight.w500,
-                      fontSize: Sizes.size14,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // 평가손익
-                const Divider(height: 1),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '평가손익',
-                      style: TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontSize: Sizes.size12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    const Text(
-                      '0원',
-                      style: TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontSize: Sizes.size14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: TextStyle(
-        fontFamily: 'Gmarket_sans',
-        fontSize: Sizes.size12,
-        fontWeight: FontWeight.w500,
-        color: Colors.grey.shade600,
+          ],
+        ),
       ),
     );
   }
