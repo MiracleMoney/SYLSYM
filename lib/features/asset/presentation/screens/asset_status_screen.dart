@@ -13,6 +13,13 @@ String _formatAmount(double amount) {
   return '${NumberFormat('#,###').format(amount.round())}원';
 }
 
+// 순자산 전용: 음수도 실제 값 그대로 표시
+String _formatNetAmount(double amount) {
+  if (amount == 0) return '0원';
+  final formatted = NumberFormat('#,###').format(amount.abs().round());
+  return amount < 0 ? '-$formatted원' : '$formatted원';
+}
+
 double _subAmount(Map<String, dynamic>? summary, String category, String key) {
   if (summary == null) return 0;
   final bySub = summary['bySubcategory'] as Map<String, dynamic>?;
@@ -492,14 +499,70 @@ class _AssetSummaryCard extends StatelessWidget {
           const SizedBox(height: 12),
           Container(height: 1, color: Colors.white.withAlpha(60)),
           const SizedBox(height: 12),
-          Text(
-            '순자산 ${_formatAmount(netAssets)}',
-            style: const TextStyle(
-              fontFamily: 'Gmarket_sans',
-              fontWeight: FontWeight.w500,
-              fontSize: Sizes.size14,
-              color: Colors.white70,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                '순자산 ${_formatNetAmount(netAssets)}',
+                style: const TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  fontWeight: FontWeight.w500,
+                  fontSize: Sizes.size14,
+                  color: Colors.white70,
+                ),
+              ),
+              if (netAssets < 0) ...[
+                const SizedBox(width: 6),
+                GestureDetector(
+                  onTap: () => showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      title: const Text(
+                        '순자산이 마이너스입니다',
+                        style: TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      content: const Text(
+                        '현재 부채가 자산보다 많습니다.\n\n'
+                        '순자산은 총자산 - 부채로 계산되며,\n'
+                        '현재는 부채가 자산보다 더 많아 순자산이 음수 상태입니다.\n\n'
+                        '장기적으로 부채 감소 또는 자산 증가를 통해 순자산을 개선할 수 있습니다.',
+                        style: TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                          height: 1.5,
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.black,
+                          ),
+                          child: const Text(
+                            '확인',
+                            style: TextStyle(
+                              fontFamily: 'Gmarket_sans',
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  child: const Text(
+                    '⚠️',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),
