@@ -14,12 +14,12 @@ String _formatAmount(double amount) {
 }
 
 // 입력 자릿수에 따른 동적 폰트 크기 (₩ 120px 입력칸 기준)
+// 입력 금액 구간별 폰트 크기 (₩ 120px 입력칸 기준)
 double _inputFontSize(String text) {
-  final digits = text.replaceAll(',', '').length;
-  if (digits >= 10) return 13; // 1,000,000,000 이상
-  if (digits >= 9) return 14;  // 100,000,000 ~ 999,999,999
-  if (digits >= 8) return 15;  // 10,000,000 ~ 99,999,999
-  return 16;                    // ~ 9,999,999
+  final value = int.tryParse(text.replaceAll(',', '')) ?? 0;
+  if (value >= 100000000) return 12; // 1억 이상
+  if (value >= 10000000) return 13;  // 1천만 이상
+  return 14;                          // ~ 9,999,999
 }
 
 // 순자산 전용: 음수도 실제 값 그대로 표시
