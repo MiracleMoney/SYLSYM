@@ -4,6 +4,7 @@ import 'package:miraclemoney/features/salary/presentation/widgets/form_widgets.d
 
 const _investmentAccounts = ['연금', 'IRP', 'ISA', '일반'];
 const _savingsAccounts = ['비상금', '단기목표', '주택청약', '내집마련', '기타'];
+const _debtAccounts = ['신용대출', '전세대출', '주택담보대출', '기타'];
 
 class AssetStatusScreen extends StatefulWidget {
   const AssetStatusScreen({super.key});
@@ -104,7 +105,7 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
                           else if (_selectedTab == '저축')
                             const _SavingsTabContent()
                           else
-                            _AssetTabPlaceholder(selectedTab: _selectedTab),
+                            const _DebtTabContent(),
 
                           const SizedBox(height: 24),
                         ],
@@ -603,44 +604,41 @@ class _FieldLabel extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────
-// 부채 탭 placeholder
+// 부채 탭 콘텐츠
 // ──────────────────────────────────────────────
-class _AssetTabPlaceholder extends StatelessWidget {
-  const _AssetTabPlaceholder({required this.selectedTab});
+class _DebtTabContent extends StatelessWidget {
+  const _DebtTabContent();
 
-  final String selectedTab;
+  static IconData _iconFor(String name) {
+    switch (name) {
+      case '신용대출':
+        return Icons.credit_card_outlined;
+      case '전세대출':
+        return Icons.apartment_outlined;
+      case '주택담보대출':
+        return Icons.home_work_outlined;
+      default:
+        return Icons.receipt_long_outlined;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.construction_outlined,
-            size: 40,
-            color: Colors.grey.shade400,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            '$selectedTab 항목은 다음 단계에서 구현됩니다.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Gmarket_sans',
-              fontWeight: FontWeight.w500,
-              fontSize: Sizes.size14,
-              color: Colors.grey.shade500,
+    return Column(
+      children: _debtAccounts
+          .map(
+            (name) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _AssetAccountCard(
+                accountName: name,
+                icon: _iconFor(name),
+                firstFieldLabel: '이자금액',
+                secondFieldLabel: '대출잔액',
+                secondFieldHint: '대출잔액 입력',
+              ),
             ),
-          ),
-        ],
-      ),
+          )
+          .toList(),
     );
   }
 }
