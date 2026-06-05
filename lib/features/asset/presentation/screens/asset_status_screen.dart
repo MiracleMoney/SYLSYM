@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
+import 'package:miraclemoney/features/salary/presentation/widgets/form_widgets.dart';
 
 const _investmentAccounts = ['연금', 'IRP', 'ISA', '일반'];
 
@@ -99,6 +99,55 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
 
                     const SizedBox(height: 24),
                   ],
+                ),
+              ),
+            ),
+
+            // 하단 저장 버튼
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withAlpha(26),
+                    blurRadius: 4,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: SizedBox(
+                  width: double.infinity,
+                  height: MediaQuery.of(context).size.height * 0.06,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            '저장 기능은 준비 중입니다.',
+                            style: TextStyle(fontFamily: 'Gmarket_sans'),
+                          ),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      '자산현황 저장',
+                      style: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w700,
+                        fontSize: Sizes.size16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -279,10 +328,23 @@ class _InvestmentAccountCardState extends State<_InvestmentAccountCard> {
   static const _accentColor = Color(0xFFE9435A);
 
   bool _isExpanded = false;
+  bool _hasValue = false;
   final TextEditingController _evalController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _evalController.addListener(_onEvalChanged);
+  }
+
+  void _onEvalChanged() {
+    final hasValue = _evalController.text.isNotEmpty;
+    if (hasValue != _hasValue) setState(() => _hasValue = hasValue);
+  }
+
+  @override
   void dispose() {
+    _evalController.removeListener(_onEvalChanged);
     _evalController.dispose();
     super.dispose();
   }
@@ -351,27 +413,18 @@ class _InvestmentAccountCardState extends State<_InvestmentAccountCard> {
                         color: Colors.black,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    // New 배지 — 배경 연한색, 글자색 accent
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFEBED),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
+                    if (!_hasValue) ...[
+                      const SizedBox(width: 6),
+                      const Text(
                         'New',
                         style: TextStyle(
                           fontFamily: 'Gmarket_sans',
                           fontWeight: FontWeight.w700,
-                          fontSize: 10,
+                          fontSize: 11,
                           color: _accentColor,
                         ),
                       ),
-                    ),
+                    ],
                     const Spacer(),
                     Icon(
                       _isExpanded
@@ -420,9 +473,7 @@ class _InvestmentAccountCardState extends State<_InvestmentAccountCard> {
                       child: TextField(
                         controller: _evalController,
                         keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
+                        inputFormatters: [ThousandsSeparatorInputFormatter()],
                         textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
                           hintText: '평가금액 입력',
