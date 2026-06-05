@@ -79,6 +79,9 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
   Map<String, dynamic>? _summary;
   bool _isLoading = false;
 
+  double _totalAssets = 0;
+  double _netAssets = 0;
+
   static const List<String> _tabs = ['투자', '저축', '부채'];
 
   // 사용자 직접 입력값 컨트롤러 — 부모가 소유·dispose
@@ -165,6 +168,30 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
     fill(_investmentControllers, 'investment', 'valuation');
     fill(_savingsControllers, 'saving', 'accumulated');
     fill(_debtControllers, 'debt', 'balance');
+
+    _computeAssets();
+  }
+
+  // 총자산액 = investment valuation 합 + saving accumulated 합
+  // 순자산액 = 총자산액 - debt balance 합
+  void _computeAssets() {
+    double total = 0;
+    for (final c in _investmentControllers.values) {
+      total += double.tryParse(c.text.replaceAll(',', '')) ?? 0;
+    }
+    for (final c in _savingsControllers.values) {
+      total += double.tryParse(c.text.replaceAll(',', '')) ?? 0;
+    }
+
+    double debt = 0;
+    for (final c in _debtControllers.values) {
+      debt += double.tryParse(c.text.replaceAll(',', '')) ?? 0;
+    }
+
+    setState(() {
+      _totalAssets = total;
+      _netAssets = total - debt;
+    });
   }
 
   void _clearControllers() {
@@ -177,6 +204,7 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
     for (final c in _debtControllers.values) {
       c.text = '';
     }
+    _computeAssets();
   }
 
   void _changeMonth(int delta) {
@@ -218,6 +246,7 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
 
     try {
       await _firestoreService.saveAssetStatus(assetData, _selectedMonth);
+      _computeAssets(); // 저장 직후 상단 카드 즉시 갱신
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -317,7 +346,10 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
                           const SizedBox(height: 8),
 
                           // 총자산 그라데이션 카드
-                          const _AssetSummaryCard(),
+                          _AssetSummaryCard(
+                            totalAssets: _totalAssets,
+                            netAssets: _netAssets,
+                          ),
 
                           const SizedBox(height: 24),
 
@@ -407,7 +439,13 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
 // 총자산 요약 카드
 // ──────────────────────────────────────────────
 class _AssetSummaryCard extends StatelessWidget {
-  const _AssetSummaryCard();
+  const _AssetSummaryCard({
+    required this.totalAssets,
+    required this.netAssets,
+  });
+
+  final double totalAssets;
+  final double netAssets;
 
   @override
   Widget build(BuildContext context) {
@@ -442,9 +480,9 @@ class _AssetSummaryCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            '0원',
-            style: TextStyle(
+          Text(
+            _formatAmount(totalAssets),
+            style: const TextStyle(
               fontFamily: 'Gmarket_sans',
               fontWeight: FontWeight.w700,
               fontSize: 32,
@@ -454,9 +492,9 @@ class _AssetSummaryCard extends StatelessWidget {
           const SizedBox(height: 12),
           Container(height: 1, color: Colors.white.withAlpha(60)),
           const SizedBox(height: 12),
-          const Text(
-            '순자산 0원',
-            style: TextStyle(
+          Text(
+            '순자산 ${_formatAmount(netAssets)}',
+            style: const TextStyle(
               fontFamily: 'Gmarket_sans',
               fontWeight: FontWeight.w500,
               fontSize: Sizes.size14,
