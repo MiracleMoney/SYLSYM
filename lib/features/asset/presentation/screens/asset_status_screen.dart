@@ -95,6 +95,7 @@ class _AssetStatusScreenState extends State<AssetStatusScreen>
   String _selectedTab = '투자';
   Map<String, dynamic>? _summary;
   bool _isLoading = false;
+  bool _isSaving = false;
 
   double _totalAssets = 0;
   double _netAssets = 0;
@@ -147,25 +148,30 @@ class _AssetStatusScreenState extends State<AssetStatusScreen>
   @override
   bool get wantKeepAlive => true;
 
+  bool _isSameMonth(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month;
+
   // monthly_summaries + asset_status를 병렬 로드
   Future<void> _loadData() async {
+    final targetMonth = _selectedMonth; // 호출 시점 월 캡처
     setState(() => _isLoading = true);
     try {
       final results = await Future.wait<Map<String, dynamic>?>([
-        _firestoreService.loadMonthlySummary(_selectedMonth),
-        _firestoreService.loadAssetStatus(_selectedMonth),
+        _firestoreService.loadMonthlySummary(targetMonth),
+        _firestoreService.loadAssetStatus(targetMonth),
       ]);
-      if (mounted) {
-        setState(() => _summary = results[0]);
-        _populateControllers(results[1]);
-      }
+      // 응답 도착 시점에 월이 바뀌었으면 결과 무시
+      if (!mounted || !_isSameMonth(_selectedMonth, targetMonth)) return;
+      setState(() => _summary = results[0]);
+      _populateControllers(results[1]);
     } catch (_) {
-      if (mounted) {
-        setState(() => _summary = null);
-        _clearControllers();
-      }
+      if (!mounted || !_isSameMonth(_selectedMonth, targetMonth)) return;
+      // 읽기 실패 시 summary만 null로 처리, 컨트롤러 값은 유지
+      setState(() => _summary = null);
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && _isSameMonth(_selectedMonth, targetMonth)) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -215,18 +221,6 @@ class _AssetStatusScreenState extends State<AssetStatusScreen>
     });
   }
 
-  void _clearControllers() {
-    for (final c in _investmentControllers.values) {
-      c.text = '';
-    }
-    for (final c in _savingsControllers.values) {
-      c.text = '';
-    }
-    for (final c in _debtControllers.values) {
-      c.text = '';
-    }
-    _computeAssets();
-  }
 
   void _changeMonth(int delta) {
     setState(() {
@@ -265,6 +259,9 @@ class _AssetStatusScreenState extends State<AssetStatusScreen>
 
   // 저장 버튼 핸들러
   Future<void> _onSave() async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+
     FocusScope.of(context).unfocus();
 
     final yearMonth =
@@ -313,6 +310,8 @@ class _AssetStatusScreenState extends State<AssetStatusScreen>
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -393,6 +392,8 @@ class _AssetStatusScreenState extends State<AssetStatusScreen>
                           _AssetSummaryCard(
                             totalAssets: _totalAssets,
                             netAssets: _netAssets,
+                            onRefresh: _loadData,
+                            isRefreshing: _isLoading,
                           ),
 
                           const SizedBox(height: 24),
@@ -473,7 +474,7 @@ class _AssetStatusScreenState extends State<AssetStatusScreen>
                   width: double.infinity,
                   height: MediaQuery.of(context).size.height * 0.06,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _onSave,
+                    onPressed: (_isLoading || _isSaving) ? null : _onSave,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
                       disabledBackgroundColor: Colors.grey.shade400,
@@ -505,10 +506,17 @@ class _AssetStatusScreenState extends State<AssetStatusScreen>
 // 총자산 요약 카드
 // ──────────────────────────────────────────────
 class _AssetSummaryCard extends StatelessWidget {
-  const _AssetSummaryCard({required this.totalAssets, required this.netAssets});
+  const _AssetSummaryCard({
+    required this.totalAssets,
+    required this.netAssets,
+    this.onRefresh,
+    this.isRefreshing = false,
+  });
 
   final double totalAssets;
   final double netAssets;
+  final VoidCallback? onRefresh;
+  final bool isRefreshing;
 
   @override
   Widget build(BuildContext context) {
@@ -533,14 +541,44 @@ class _AssetSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '총자산액',
-            style: TextStyle(
-              fontFamily: 'Gmarket_sans',
-              fontWeight: FontWeight.w500,
-              fontSize: Sizes.size14,
-              color: Colors.white70,
-            ),
+          Row(
+            children: [
+              const Text(
+                '총자산액',
+                style: TextStyle(
+                  fontFamily: 'Gmarket_sans',
+                  fontWeight: FontWeight.w500,
+                  fontSize: Sizes.size14,
+                  color: Colors.white70,
+                ),
+              ),
+              const SizedBox(width: 4),
+              if (onRefresh != null)
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: isRefreshing ? null : onRefresh,
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: isRefreshing
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.5,
+                                color: Colors.white70,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.refresh,
+                              color: Colors.white70,
+                              size: 18,
+                            ),
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(
