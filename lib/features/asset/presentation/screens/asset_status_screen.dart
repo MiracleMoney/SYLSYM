@@ -688,6 +688,21 @@ class _InvestmentTabContent extends StatelessWidget {
   final Map<String, dynamic>? summary;
   final Map<String, TextEditingController> controllers;
 
+  static const _color = Color(0xFFFFA726); // 예산 화면 투자 카테고리 색상
+
+  static IconData _iconFor(String name) {
+    switch (name) {
+      case '연금':
+        return Icons.account_balance;
+      case 'IRP':
+        return Icons.work_rounded;
+      case 'ISA':
+        return Icons.money;
+      default:
+        return Icons.trending_up;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -697,6 +712,8 @@ class _InvestmentTabContent extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 12),
           child: _AssetAccountCard(
             accountName: name,
+            icon: _iconFor(name),
+            categoryColor: _color,
             firstFieldLabel: '투자금액',
             firstFieldAmount: _subAmount(summary, 'InvestmentExpenses', key),
             secondFieldHint: '0',
@@ -717,6 +734,23 @@ class _SavingsTabContent extends StatelessWidget {
   final Map<String, dynamic>? summary;
   final Map<String, TextEditingController> controllers;
 
+  static const _color = Color(0xFFEC407A); // 예산 화면 저축 카테고리 색상
+
+  static IconData _iconFor(String name) {
+    switch (name) {
+      case '비상금':
+        return Icons.warning_amber;
+      case '단기목표':
+        return Icons.flag;
+      case '주택청약':
+        return Icons.home_work;
+      case '내집마련':
+        return Icons.house;
+      default:
+        return Icons.savings;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -726,6 +760,8 @@ class _SavingsTabContent extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 12),
           child: _AssetAccountCard(
             accountName: name,
+            icon: _iconFor(name),
+            categoryColor: _color,
             firstFieldLabel: '저축금액',
             firstFieldAmount: _subAmount(summary, 'SavingExpenses', key),
             secondFieldHint: '0',
@@ -746,6 +782,21 @@ class _DebtTabContent extends StatelessWidget {
   final Map<String, dynamic>? summary;
   final Map<String, TextEditingController> controllers;
 
+  static const _color = Color(0xFFAB47BC); // 예산 화면 이자 카테고리 색상
+
+  static IconData _iconFor(String name) {
+    switch (name) {
+      case '신용대출':
+        return Icons.credit_card;
+      case '전세대출':
+        return Icons.apartment;
+      case '주택담보대출':
+        return Icons.home;
+      default:
+        return Icons.percent;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -755,6 +806,8 @@ class _DebtTabContent extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 12),
           child: _AssetAccountCard(
             accountName: name,
+            icon: _iconFor(name),
+            categoryColor: _color,
             firstFieldLabel: '이자금액',
             firstFieldAmount: _subAmount(summary, 'InterestExpenses', key),
             secondFieldHint: '0',
@@ -772,6 +825,8 @@ class _DebtTabContent extends StatelessWidget {
 class _AssetAccountCard extends StatelessWidget {
   const _AssetAccountCard({
     required this.accountName,
+    required this.icon,
+    required this.categoryColor,
     required this.firstFieldLabel,
     required this.firstFieldAmount,
     required this.secondFieldHint,
@@ -779,6 +834,8 @@ class _AssetAccountCard extends StatelessWidget {
   });
 
   final String accountName;
+  final IconData icon;
+  final Color categoryColor;
   final String firstFieldLabel;
   final double firstFieldAmount;
   final String secondFieldHint;
@@ -791,10 +848,22 @@ class _AssetAccountCard extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade300),
         borderRadius: BorderRadius.circular(10),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // 아이콘 컨테이너 (예산 카드와 동일 구조)
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: categoryColor, width: 0.5),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: categoryColor, size: 18),
+          ),
+          const SizedBox(width: 12),
           // 왼쪽: 계좌명 + 읽기 전용 금액
           Expanded(
             child: Column(
