@@ -346,20 +346,23 @@ class FirestoreService {
           print('✅ 지출 수정 성공 (같은 월): $originalYearMonth/$expenseId');
         }
       } else {
-        // 다른 월: 원본 삭제 후 새 월에 생성
-        await userDoc
+        // 다른 월: WriteBatch로 삭제+생성을 원자적으로 처리
+        final oldRef = userDoc
             .collection('expenses')
             .doc(originalYearMonth)
             .collection('items')
-            .doc(expenseId)
-            .delete();
+            .doc(expenseId);
 
-        await userDoc
+        final newRef = userDoc
             .collection('expenses')
             .doc(newYearMonth)
             .collection('items')
-            .doc(expenseId)
-            .set(expenseData);
+            .doc(expenseId);
+
+        final batch = _firestore.batch();
+        batch.delete(oldRef);
+        batch.set(newRef, expenseData);
+        await batch.commit();
 
         if (kDebugMode) {
           print('✅ 지출 수정 성공 (월 이동): $originalYearMonth → $newYearMonth/$expenseId');
