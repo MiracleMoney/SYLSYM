@@ -167,8 +167,9 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
       for (final entry in controllers.entries) {
         final sub = sectionData?[entry.key] as Map<String, dynamic>?;
         final value = (sub?[valueKey] as num?)?.toDouble() ?? 0;
-        entry.value.text =
-            value > 0 ? NumberFormat('#,###').format(value.round()) : '';
+        entry.value.text = value > 0
+            ? NumberFormat('#,###').format(value.round())
+            : '';
       }
     }
 
@@ -423,7 +424,7 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
                       ),
                     ),
                     child: const Text(
-                      '자산현황 저장',
+                      '저장',
                       style: TextStyle(
                         fontFamily: 'Gmarket_sans',
                         fontWeight: FontWeight.w700,
@@ -446,10 +447,7 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
 // 총자산 요약 카드
 // ──────────────────────────────────────────────
 class _AssetSummaryCard extends StatelessWidget {
-  const _AssetSummaryCard({
-    required this.totalAssets,
-    required this.netAssets,
-  });
+  const _AssetSummaryCard({required this.totalAssets, required this.netAssets});
 
   final double totalAssets;
   final double netAssets;
@@ -556,10 +554,7 @@ class _AssetSummaryCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  child: const Text(
-                    '⚠️',
-                    style: TextStyle(fontSize: 14),
-                  ),
+                  child: const Text('⚠️', style: TextStyle(fontSize: 14)),
                 ),
               ],
             ],
@@ -619,11 +614,11 @@ class _AssetTabSelector extends StatelessWidget {
                       tab,
                       style: TextStyle(
                         fontFamily: 'Gmarket_sans',
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                         fontSize: Sizes.size12,
-                        color:
-                            isSelected ? Colors.white : Colors.grey.shade700,
+                        color: isSelected ? Colors.white : Colors.grey.shade700,
                       ),
                     ),
                   ),
@@ -665,27 +660,21 @@ class _InvestmentTabContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: _investmentAccounts
-          .map((name) {
-            final key = _investmentKey(name);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _AssetAccountCard(
-                accountName: name,
-                icon: _iconFor(name),
-                firstFieldLabel: '투자금액',
-                firstFieldAmount: _subAmount(
-                  summary,
-                  'InvestmentExpenses',
-                  key,
-                ),
-                secondFieldLabel: '평가금액',
-                secondFieldHint: '평가금액 입력',
-                controller: controllers[key]!,
-              ),
-            );
-          })
-          .toList(),
+      children: _investmentAccounts.map((name) {
+        final key = _investmentKey(name);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _AssetAccountCard(
+            accountName: name,
+            icon: _iconFor(name),
+            firstFieldLabel: '투자금액',
+            firstFieldAmount: _subAmount(summary, 'InvestmentExpenses', key),
+            secondFieldLabel: '평가금액',
+            secondFieldHint: '평가금액 입력',
+            controller: controllers[key]!,
+          ),
+        );
+      }).toList(),
     );
   }
 }
@@ -694,10 +683,7 @@ class _InvestmentTabContent extends StatelessWidget {
 // 저축 탭 콘텐츠
 // ──────────────────────────────────────────────
 class _SavingsTabContent extends StatelessWidget {
-  const _SavingsTabContent({
-    required this.summary,
-    required this.controllers,
-  });
+  const _SavingsTabContent({required this.summary, required this.controllers});
 
   final Map<String, dynamic>? summary;
   final Map<String, TextEditingController> controllers;
@@ -720,27 +706,21 @@ class _SavingsTabContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: _savingsAccounts
-          .map((name) {
-            final key = _savingsKey(name);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _AssetAccountCard(
-                accountName: name,
-                icon: _iconFor(name),
-                firstFieldLabel: '저축금액',
-                firstFieldAmount: _subAmount(
-                  summary,
-                  'SavingExpenses',
-                  key,
-                ),
-                secondFieldLabel: '누적금액',
-                secondFieldHint: '누적금액 입력',
-                controller: controllers[key]!,
-              ),
-            );
-          })
-          .toList(),
+      children: _savingsAccounts.map((name) {
+        final key = _savingsKey(name);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _AssetAccountCard(
+            accountName: name,
+            icon: _iconFor(name),
+            firstFieldLabel: '저축금액',
+            firstFieldAmount: _subAmount(summary, 'SavingExpenses', key),
+            secondFieldLabel: '누적금액',
+            secondFieldHint: '누적금액 입력',
+            controller: controllers[key]!,
+          ),
+        );
+      }).toList(),
     );
   }
 }
@@ -749,10 +729,7 @@ class _SavingsTabContent extends StatelessWidget {
 // 부채 탭 콘텐츠
 // ──────────────────────────────────────────────
 class _DebtTabContent extends StatelessWidget {
-  const _DebtTabContent({
-    required this.summary,
-    required this.controllers,
-  });
+  const _DebtTabContent({required this.summary, required this.controllers});
 
   final Map<String, dynamic>? summary;
   final Map<String, TextEditingController> controllers;
@@ -773,27 +750,21 @@ class _DebtTabContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: _debtAccounts
-          .map((name) {
-            final key = _debtKey(name);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _AssetAccountCard(
-                accountName: name,
-                icon: _iconFor(name),
-                firstFieldLabel: '이자금액',
-                firstFieldAmount: _subAmount(
-                  summary,
-                  'InterestExpenses',
-                  key,
-                ),
-                secondFieldLabel: '대출잔액',
-                secondFieldHint: '대출잔액 입력',
-                controller: controllers[key]!,
-              ),
-            );
-          })
-          .toList(),
+      children: _debtAccounts.map((name) {
+        final key = _debtKey(name);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _AssetAccountCard(
+            accountName: name,
+            icon: _iconFor(name),
+            firstFieldLabel: '이자금액',
+            firstFieldAmount: _subAmount(summary, 'InterestExpenses', key),
+            secondFieldLabel: '대출잔액',
+            secondFieldHint: '대출잔액 입력',
+            controller: controllers[key]!,
+          ),
+        );
+      }).toList(),
     );
   }
 }
