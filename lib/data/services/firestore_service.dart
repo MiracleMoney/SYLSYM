@@ -314,27 +314,56 @@ class FirestoreService {
   }
 
   /// 지출 수정
+  /// [originalDate]: 수정 전 원본 날짜 (경로 결정에 사용)
+  /// 날짜가 다른 월로 변경된 경우 원본 문서 삭제 후 새 월에 재생성
   Future<void> updateExpense(
     String expenseId,
     Map<String, dynamic> expenseData,
-    DateTime expenseDate,
+    DateTime originalDate,
   ) async {
     try {
       final userId = currentUserId;
-      final yearMonth =
-          '${expenseDate.year}-${expenseDate.month.toString().padLeft(2, '0')}';
+      final originalYearMonth =
+          '${originalDate.year}-${originalDate.month.toString().padLeft(2, '0')}';
 
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('expenses')
-          .doc(yearMonth)
-          .collection('items')
-          .doc(expenseId)
-          .update(expenseData);
+      final newDateStr = expenseData['date'] as String;
+      final newDate = DateTime.parse(newDateStr);
+      final newYearMonth =
+          '${newDate.year}-${newDate.month.toString().padLeft(2, '0')}';
 
-      if (kDebugMode) {
-        print('✅ 지출 수정 성공: $yearMonth/$expenseId');
+      final userDoc = _firestore.collection('users').doc(userId);
+
+      if (originalYearMonth == newYearMonth) {
+        // 같은 월: 기존 문서 업데이트
+        await userDoc
+            .collection('expenses')
+            .doc(originalYearMonth)
+            .collection('items')
+            .doc(expenseId)
+            .update(expenseData);
+
+        if (kDebugMode) {
+          print('✅ 지출 수정 성공 (같은 월): $originalYearMonth/$expenseId');
+        }
+      } else {
+        // 다른 월: 원본 삭제 후 새 월에 생성
+        await userDoc
+            .collection('expenses')
+            .doc(originalYearMonth)
+            .collection('items')
+            .doc(expenseId)
+            .delete();
+
+        await userDoc
+            .collection('expenses')
+            .doc(newYearMonth)
+            .collection('items')
+            .doc(expenseId)
+            .set(expenseData);
+
+        if (kDebugMode) {
+          print('✅ 지출 수정 성공 (월 이동): $originalYearMonth → $newYearMonth/$expenseId');
+        }
       }
     } catch (e) {
       if (kDebugMode) {
@@ -384,6 +413,138 @@ class FirestoreService {
       }
       return [];
     }
+  }
+
+  // ==================== 월별 지출 summary ====================
+
+  static String _toYearMonth(DateTime date) =>
+      '${date.year}-${date.month.toString().padLeft(2, '0')}';
+
+  /// 해당 월 items 전체를 읽어 monthly_summaries를 재계산 후 저장
+  Future<void> recalculateAndSaveSummary(DateTime targetDate) async {
+    try {
+      final userId = currentUserId;
+      final yearMonth = _toYearMonth(targetDate);
+
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('expenses')
+          .doc(yearMonth)
+          .collection('items')
+          .get();
+
+      final items = snapshot.docs.map((d) => d.data()).toList();
+      final summary = _computeSummary(yearMonth, items);
+
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('monthly_summaries')
+          .doc(yearMonth)
+          .set(summary);
+
+      if (kDebugMode) {
+        print('✅ summary 갱신 완료: $yearMonth (${items.length}건)');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ summary 갱신 실패: $e');
+      }
+      // summary 실패는 지출 CRUD에 영향을 주지 않도록 예외를 전파하지 않음
+    }
+  }
+
+  /// 월별 summary 불러오기
+  Future<Map<String, dynamic>?> loadMonthlySummary(DateTime targetDate) async {
+    try {
+      final userId = currentUserId;
+      final yearMonth = _toYearMonth(targetDate);
+
+      final doc = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('monthly_summaries')
+          .doc(yearMonth)
+          .get();
+
+      return doc.exists ? doc.data() : null;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ summary 불러오기 실패: $e');
+      }
+      return null;
+    }
+  }
+
+  /// items 목록으로 summary 문서 계산
+  Map<String, dynamic> _computeSummary(
+    String yearMonth,
+    List<Map<String, dynamic>> items,
+  ) {
+    double totalExpense = 0;
+
+    final byCategory = <String, double>{
+      'LivingExpenses': 0,
+      'FixedExpenses': 0,
+      'InvestmentExpenses': 0,
+      'SavingExpenses': 0,
+      'InterestExpenses': 0,
+    };
+
+    final bySubcategory = <String, Map<String, double>>{
+      'LivingExpenses': {
+        'Groceries': 0, 'EatingOut': 0, 'Delivery': 0,
+        'Coffee': 0, 'Drinks': 0, 'Alcohol': 0,
+        'DailyGoods': 0, 'Cigarettes': 0, 'Beauty': 0,
+        'Clothes': 0, 'Shoes': 0, 'Accessories': 0,
+        'Culture': 0, 'Gathering': 0, 'Hobby': 0,
+        'OTT': 0, 'Subscription': 0, 'Other': 0,
+      },
+      'FixedExpenses': {
+        'HealthInsurance': 0, 'MobileBill': 0, 'Transportation': 0,
+        'CarLoan': 0, 'CarInsurance': 0, 'GasOil': 0,
+        'RentLease': 0, 'Utilities': 0, 'ManagementFee': 0,
+        'Other': 0,
+      },
+      'InvestmentExpenses': {
+        'PensionSaving': 0, 'IRP': 0, 'ISA': 0, 'General': 0,
+      },
+      'SavingExpenses': {
+        'EmergencyFund': 0, 'ShortTermGoal': 0,
+        'HousingSubscription': 0, 'HomeOwnership': 0, 'Other': 0,
+      },
+      'InterestExpenses': {
+        'CreditLoan': 0, 'JeonseLoan': 0, 'Mortgage': 0, 'Other': 0,
+      },
+    };
+
+    for (final item in items) {
+      final amount = (item['amount'] as num?)?.toDouble() ?? 0;
+      final category = item['category'] as String? ?? '';
+      final subcategory = item['subcategory'] as String? ?? '';
+
+      totalExpense += amount;
+
+      if (byCategory.containsKey(category)) {
+        byCategory[category] = (byCategory[category] ?? 0) + amount;
+      }
+
+      if (bySubcategory.containsKey(category)) {
+        final sub = bySubcategory[category]!;
+        if (sub.containsKey(subcategory)) {
+          sub[subcategory] = (sub[subcategory] ?? 0) + amount;
+        }
+      }
+    }
+
+    return {
+      'yearMonth': yearMonth,
+      'updatedAt': DateTime.now().toIso8601String(),
+      'totalExpense': totalExpense,
+      'byCategory': byCategory,
+      'bySubcategory': bySubcategory,
+    };
   }
 
   // ==================== 자산현황 데이터 ====================

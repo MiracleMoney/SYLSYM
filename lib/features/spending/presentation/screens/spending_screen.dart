@@ -125,7 +125,8 @@ class _SpendingScreenState extends State<SpendingScreen>
   Future<void> _addExpense(ExpenseModel expense) async {
     try {
       await _firestoreService.addExpense(expense.toJson());
-      await _loadExpenses(); // 데이터 다시 불러오기
+      await _firestoreService.recalculateAndSaveSummary(expense.date);
+      await _loadExpenses();
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -141,15 +142,30 @@ class _SpendingScreenState extends State<SpendingScreen>
     }
   }
 
-  /// 지출 수정
-  Future<void> _updateExpense(ExpenseModel expense) async {
+  /// 지출 수정 — originalDate: 수정 전 원본 날짜
+  Future<void> _updateExpense(
+    ExpenseModel expense,
+    DateTime originalDate,
+  ) async {
     try {
       await _firestoreService.updateExpense(
         expense.id,
         expense.toJson(),
-        expense.date,
+        originalDate,
       );
-      await _loadExpenses(); // 데이터 다시 불러오기
+
+      // 월이 바뀐 경우 원본 월과 새 월 모두 재계산
+      final originalYearMonth =
+          '${originalDate.year}-${originalDate.month.toString().padLeft(2, '0')}';
+      final newYearMonth =
+          '${expense.date.year}-${expense.date.month.toString().padLeft(2, '0')}';
+
+      await _firestoreService.recalculateAndSaveSummary(originalDate);
+      if (originalYearMonth != newYearMonth) {
+        await _firestoreService.recalculateAndSaveSummary(expense.date);
+      }
+
+      await _loadExpenses();
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -168,11 +184,11 @@ class _SpendingScreenState extends State<SpendingScreen>
   /// 지출 삭제
   Future<void> _deleteExpense(String expenseId) async {
     try {
-      // 삭제할 지출 찾기 (날짜 정보 필요)
       final expense = _expenses.firstWhere((e) => e.id == expenseId);
 
       await _firestoreService.deleteExpense(expenseId, expense.date);
-      await _loadExpenses(); // 데이터 다시 불러오기
+      await _firestoreService.recalculateAndSaveSummary(expense.date);
+      await _loadExpenses();
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -204,7 +220,8 @@ class _SpendingScreenState extends State<SpendingScreen>
       builder: (context) => AddExpenseDialog(
         onExpenseAdded: _addExpense,
         existingExpense: expense,
-        onExpenseUpdated: _updateExpense,
+        onExpenseUpdated: (updated, originalDate) =>
+            _updateExpense(updated, originalDate),
         onExpenseDeleted: _deleteExpense,
       ),
     );

@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 
 class AddExpenseDialog extends StatefulWidget {
   final Function(ExpenseModel) onExpenseAdded;
-  final Function(ExpenseModel)? onExpenseUpdated;
+  final Function(ExpenseModel, DateTime originalDate)? onExpenseUpdated;
   final Function(String)? onExpenseDeleted;
   final ExpenseModel? existingExpense;
   final DateTime? initialDate;
@@ -27,6 +27,7 @@ class AddExpenseDialog extends StatefulWidget {
 
 class _AddExpenseDialogState extends State<AddExpenseDialog> {
   late DateTime _selectedDate;
+  late DateTime _originalDate;
   late TextEditingController _amountController;
   late TextEditingController _descriptionController;
   String? _selectedCategory;
@@ -40,6 +41,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
 
     // 기존 지출이 있으면 수정 모드, 없으면 추가 모드
     if (widget.existingExpense != null) {
+      _originalDate = widget.existingExpense!.date;
       _selectedDate = widget.existingExpense!.date;
       _amountController = TextEditingController(
         text: NumberFormat(
@@ -60,6 +62,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
       } else {
         _selectedDate = widget.initialDate ?? DateTime.now();
       }
+      _originalDate = _selectedDate;
       _amountController = TextEditingController();
       _descriptionController = TextEditingController();
     }
@@ -105,9 +108,9 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
       createdAt: widget.existingExpense?.createdAt ?? DateTime.now(),
     );
 
-    // 수정 모드면 onExpenseUpdated, 추가 모드면 onExpenseAdded 호출
+    // 수정 모드면 onExpenseUpdated(원본 날짜 포함), 추가 모드면 onExpenseAdded 호출
     if (widget.existingExpense != null) {
-      widget.onExpenseUpdated?.call(expense);
+      widget.onExpenseUpdated?.call(expense, _originalDate);
     } else {
       widget.onExpenseAdded(expense);
     }
