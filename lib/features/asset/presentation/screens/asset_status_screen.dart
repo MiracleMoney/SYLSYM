@@ -814,9 +814,9 @@ class _DebtTabContent extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────
-// 공통 자산 계좌 카드
+// 공통 자산 계좌 카드 (항상 펼쳐진 평면형)
 // ──────────────────────────────────────────────
-class _AssetAccountCard extends StatefulWidget {
+class _AssetAccountCard extends StatelessWidget {
   const _AssetAccountCard({
     required this.accountName,
     required this.icon,
@@ -833,183 +833,114 @@ class _AssetAccountCard extends StatefulWidget {
   final double firstFieldAmount;
   final String secondFieldLabel;
   final String secondFieldHint;
-  final TextEditingController controller; // 부모가 소유
-
-  @override
-  State<_AssetAccountCard> createState() => _AssetAccountCardState();
-}
-
-class _AssetAccountCardState extends State<_AssetAccountCard> {
-  static const _accentColor = Color(0xFFE9435A);
-
-  bool _isExpanded = false;
-  late bool _hasValue;
-
-  @override
-  void initState() {
-    super.initState();
-    _hasValue = widget.controller.text.isNotEmpty; // 초기값 반영
-    widget.controller.addListener(_onInputChanged);
-  }
-
-  void _onInputChanged() {
-    final hasValue = widget.controller.text.isNotEmpty;
-    if (hasValue != _hasValue) setState(() => _hasValue = hasValue);
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_onInputChanged);
-    // controller 자체는 부모가 dispose하므로 여기서는 제거하지 않음
-    super.dispose();
-  }
+  final TextEditingController controller; // 부모가 소유·dispose
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      alignment: Alignment.topCenter,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: _isExpanded
-                ? _accentColor.withAlpha(80)
-                : Colors.grey.shade200,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(8),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(_isExpanded ? 14 : 8),
-              blurRadius: _isExpanded ? 12 : 8,
-              offset: const Offset(0, 2),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 계좌명 헤더
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Icon(icon, size: 22, color: const Color(0xFF5B7EFF)),
+                const SizedBox(width: 10),
+                Text(
+                  accountName,
+                  style: const TextStyle(
+                    fontFamily: 'Gmarket_sans',
+                    fontWeight: FontWeight.w700,
+                    fontSize: Sizes.size16,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 헤더 (탭 가능)
-            InkWell(
-              onTap: () => setState(() => _isExpanded = !_isExpanded),
-              borderRadius: BorderRadius.vertical(
-                top: const Radius.circular(16),
-                bottom: Radius.circular(_isExpanded ? 0 : 16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 16,
+          ),
+
+          Container(height: 1, color: Colors.grey.shade100),
+
+          // 금액 필드
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 첫 번째 필드 — monthly_summaries 연동 (읽기 전용)
+                _FieldLabel(firstFieldLabel),
+                const SizedBox(height: 6),
+                Text(
+                  _formatAmount(firstFieldAmount),
+                  style: const TextStyle(
+                    fontFamily: 'Gmarket_sans',
+                    fontWeight: FontWeight.w700,
+                    fontSize: Sizes.size16,
+                    color: Colors.black,
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Icon(widget.icon, size: 22, color: const Color(0xFF5B7EFF)),
-                    const SizedBox(width: 10),
-                    Text(
-                      widget.accountName,
-                      style: const TextStyle(
+
+                const SizedBox(height: 16),
+
+                // 두 번째 필드 — 사용자 직접 입력 (저장 대상)
+                _FieldLabel(secondFieldLabel),
+                const SizedBox(height: 6),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: TextField(
+                    controller: controller,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [ThousandsSeparatorInputFormatter()],
+                    textInputAction: TextInputAction.done,
+                    decoration: InputDecoration(
+                      hintText: secondFieldHint,
+                      hintStyle: TextStyle(
                         fontFamily: 'Gmarket_sans',
-                        fontWeight: FontWeight.w700,
-                        fontSize: Sizes.size16,
-                        color: Colors.black,
+                        fontSize: Sizes.size14,
+                        color: Colors.grey.shade400,
+                      ),
+                      suffixText: '원',
+                      suffixStyle: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontSize: Sizes.size14,
+                        color: Colors.grey.shade600,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
                       ),
                     ),
-                    if (!_hasValue) ...[
-                      const SizedBox(width: 6),
-                      const Text(
-                        'New',
-                        style: TextStyle(
-                          fontFamily: 'Gmarket_sans',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 11,
-                          color: _accentColor,
-                        ),
-                      ),
-                    ],
-                    const Spacer(),
-                    Icon(
-                      _isExpanded
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                      size: 20,
-                      color: Colors.grey.shade400,
+                    style: const TextStyle(
+                      fontFamily: 'Gmarket_sans',
+                      fontWeight: FontWeight.w500,
+                      fontSize: Sizes.size14,
+                      color: Colors.black,
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-
-            // 펼침 영역
-            if (_isExpanded) ...[
-              Container(height: 1, color: Colors.grey.shade100),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 첫 번째 필드 — monthly_summaries 연동 (읽기 전용)
-                    _FieldLabel(widget.firstFieldLabel),
-                    const SizedBox(height: 6),
-                    Text(
-                      _formatAmount(widget.firstFieldAmount),
-                      style: const TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontWeight: FontWeight.w700,
-                        fontSize: Sizes.size16,
-                        color: Colors.black,
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // 두 번째 필드 — 사용자 직접 입력 (저장 대상)
-                    _FieldLabel(widget.secondFieldLabel),
-                    const SizedBox(height: 6),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: TextField(
-                        controller: widget.controller,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [ThousandsSeparatorInputFormatter()],
-                        textInputAction: TextInputAction.done,
-                        decoration: InputDecoration(
-                          hintText: widget.secondFieldHint,
-                          hintStyle: TextStyle(
-                            fontFamily: 'Gmarket_sans',
-                            fontSize: Sizes.size14,
-                            color: Colors.grey.shade400,
-                          ),
-                          suffixText: '원',
-                          suffixStyle: TextStyle(
-                            fontFamily: 'Gmarket_sans',
-                            fontSize: Sizes.size14,
-                            color: Colors.grey.shade600,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                        ),
-                        style: const TextStyle(
-                          fontFamily: 'Gmarket_sans',
-                          fontWeight: FontWeight.w500,
-                          fontSize: Sizes.size14,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
