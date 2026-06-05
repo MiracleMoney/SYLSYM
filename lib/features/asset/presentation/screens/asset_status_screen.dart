@@ -3,6 +3,7 @@ import 'package:miraclemoney/core/constants/sizes.dart';
 import 'package:miraclemoney/features/salary/presentation/widgets/form_widgets.dart';
 
 const _investmentAccounts = ['연금', 'IRP', 'ISA', '일반'];
+const _savingsAccounts = ['비상금', '단기목표', '주택청약', '내집마련', '기타'];
 
 class AssetStatusScreen extends StatefulWidget {
   const AssetStatusScreen({super.key});
@@ -34,76 +35,87 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
         backgroundColor: Colors.white,
         body: Column(
           children: [
-            // 월 이동 헤더
-            SafeArea(
-              bottom: false,
-              child: Container(
-                color: Colors.white,
-                padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left, color: Colors.black),
-                      onPressed: () => _changeMonth(-1),
-                    ),
-                    Text(
-                      '${_selectedMonth.year}년 ${_selectedMonth.month}월',
-                      style: const TextStyle(
-                        fontFamily: 'Gmarket_sans',
-                        fontWeight: FontWeight.w500,
-                        fontSize: Sizes.size16 + Sizes.size2,
-                        color: Colors.black,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.chevron_right,
-                        color: Colors.black,
-                      ),
-                      onPressed: () => _changeMonth(1),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 8),
-
-                    // 총자산 그라데이션 카드
-                    const _AssetSummaryCard(),
-
-                    const SizedBox(height: 24),
-
-                    // 탭 (투자 / 저축 / 부채)
-                    _AssetTabSelector(
-                      tabs: _tabs,
-                      selectedTab: _selectedTab,
-                      onTabSelected: (tab) =>
-                          setState(() => _selectedTab = tab),
+                    // 월 이동 헤더 — 스크롤과 함께 이동
+                    SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.chevron_left,
+                                color: Colors.black,
+                              ),
+                              onPressed: () => _changeMonth(-1),
+                            ),
+                            Text(
+                              '${_selectedMonth.year}년 ${_selectedMonth.month}월',
+                              style: const TextStyle(
+                                fontFamily: 'Gmarket_sans',
+                                fontWeight: FontWeight.w500,
+                                fontSize: Sizes.size16 + Sizes.size2,
+                                color: Colors.black,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.chevron_right,
+                                color: Colors.black,
+                              ),
+                              onPressed: () => _changeMonth(1),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
 
-                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 8),
 
-                    // 탭별 콘텐츠
-                    if (_selectedTab == '투자')
-                      const _InvestmentTabContent()
-                    else
-                      _AssetTabPlaceholder(selectedTab: _selectedTab),
+                          // 총자산 그라데이션 카드
+                          const _AssetSummaryCard(),
 
-                    const SizedBox(height: 24),
+                          const SizedBox(height: 24),
+
+                          // 탭 (투자 / 저축 / 부채)
+                          _AssetTabSelector(
+                            tabs: _tabs,
+                            selectedTab: _selectedTab,
+                            onTabSelected: (tab) =>
+                                setState(() => _selectedTab = tab),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // 탭별 콘텐츠
+                          if (_selectedTab == '투자')
+                            const _InvestmentTabContent()
+                          else if (_selectedTab == '저축')
+                            const _SavingsTabContent()
+                          else
+                            _AssetTabPlaceholder(selectedTab: _selectedTab),
+
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
 
-            // 하단 저장 버튼
+            // 하단 저장 버튼 (고정)
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -297,60 +309,8 @@ class _AssetTabSelector extends StatelessWidget {
 class _InvestmentTabContent extends StatelessWidget {
   const _InvestmentTabContent();
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: _investmentAccounts
-          .map(
-            (name) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _InvestmentAccountCard(accountName: name),
-            ),
-          )
-          .toList(),
-    );
-  }
-}
-
-// ──────────────────────────────────────────────
-// 계좌별 투자 카드 (탭하면 투자금액/평가금액 펼침)
-// ──────────────────────────────────────────────
-class _InvestmentAccountCard extends StatefulWidget {
-  const _InvestmentAccountCard({required this.accountName});
-
-  final String accountName;
-
-  @override
-  State<_InvestmentAccountCard> createState() => _InvestmentAccountCardState();
-}
-
-class _InvestmentAccountCardState extends State<_InvestmentAccountCard> {
-  static const _accentColor = Color(0xFFE9435A);
-
-  bool _isExpanded = false;
-  bool _hasValue = false;
-  final TextEditingController _evalController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _evalController.addListener(_onEvalChanged);
-  }
-
-  void _onEvalChanged() {
-    final hasValue = _evalController.text.isNotEmpty;
-    if (hasValue != _hasValue) setState(() => _hasValue = hasValue);
-  }
-
-  @override
-  void dispose() {
-    _evalController.removeListener(_onEvalChanged);
-    _evalController.dispose();
-    super.dispose();
-  }
-
-  IconData get _icon {
-    switch (widget.accountName) {
+  static IconData _iconFor(String name) {
+    switch (name) {
       case '연금':
         return Icons.savings_outlined;
       case 'IRP':
@@ -360,6 +320,116 @@ class _InvestmentAccountCardState extends State<_InvestmentAccountCard> {
       default:
         return Icons.trending_up_outlined;
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: _investmentAccounts
+          .map(
+            (name) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _AssetAccountCard(
+                accountName: name,
+                icon: _iconFor(name),
+                firstFieldLabel: '투자금액',
+                secondFieldLabel: '평가금액',
+                secondFieldHint: '평가금액 입력',
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────
+// 저축 탭 콘텐츠
+// ──────────────────────────────────────────────
+class _SavingsTabContent extends StatelessWidget {
+  const _SavingsTabContent();
+
+  static IconData _iconFor(String name) {
+    switch (name) {
+      case '비상금':
+        return Icons.account_balance_wallet_outlined;
+      case '단기목표':
+        return Icons.flag_outlined;
+      case '주택청약':
+        return Icons.home_outlined;
+      case '내집마련':
+        return Icons.house_outlined;
+      default:
+        return Icons.savings_outlined;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: _savingsAccounts
+          .map(
+            (name) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _AssetAccountCard(
+                accountName: name,
+                icon: _iconFor(name),
+                firstFieldLabel: '저축금액',
+                secondFieldLabel: '누적금액',
+                secondFieldHint: '누적금액 입력',
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────
+// 공통 자산 계좌 카드 (투자/저축 탭 공용)
+// ──────────────────────────────────────────────
+class _AssetAccountCard extends StatefulWidget {
+  const _AssetAccountCard({
+    required this.accountName,
+    required this.icon,
+    required this.firstFieldLabel,
+    required this.secondFieldLabel,
+    required this.secondFieldHint,
+  });
+
+  final String accountName;
+  final IconData icon;
+  final String firstFieldLabel;
+  final String secondFieldLabel;
+  final String secondFieldHint;
+
+  @override
+  State<_AssetAccountCard> createState() => _AssetAccountCardState();
+}
+
+class _AssetAccountCardState extends State<_AssetAccountCard> {
+  static const _accentColor = Color(0xFFE9435A);
+
+  bool _isExpanded = false;
+  bool _hasValue = false;
+  final TextEditingController _inputController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _inputController.addListener(_onInputChanged);
+  }
+
+  void _onInputChanged() {
+    final hasValue = _inputController.text.isNotEmpty;
+    if (hasValue != _hasValue) setState(() => _hasValue = hasValue);
+  }
+
+  @override
+  void dispose() {
+    _inputController.removeListener(_onInputChanged);
+    _inputController.dispose();
+    super.dispose();
   }
 
   @override
@@ -402,7 +472,7 @@ class _InvestmentAccountCardState extends State<_InvestmentAccountCard> {
                 ),
                 child: Row(
                   children: [
-                    Icon(_icon, size: 22, color: const Color(0xFF5B7EFF)),
+                    Icon(widget.icon, size: 22, color: const Color(0xFF5B7EFF)),
                     const SizedBox(width: 10),
                     Text(
                       widget.accountName,
@@ -446,8 +516,8 @@ class _InvestmentAccountCardState extends State<_InvestmentAccountCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 투자금액 (읽기 전용)
-                    _FieldLabel('투자금액'),
+                    // 첫 번째 필드 (읽기 전용)
+                    _FieldLabel(widget.firstFieldLabel),
                     const SizedBox(height: 6),
                     const Text(
                       '0원',
@@ -461,8 +531,8 @@ class _InvestmentAccountCardState extends State<_InvestmentAccountCard> {
 
                     const SizedBox(height: 16),
 
-                    // 평가금액 (입력 가능)
-                    _FieldLabel('평가금액'),
+                    // 두 번째 필드 (입력 가능)
+                    _FieldLabel(widget.secondFieldLabel),
                     const SizedBox(height: 6),
                     Container(
                       decoration: BoxDecoration(
@@ -471,12 +541,12 @@ class _InvestmentAccountCardState extends State<_InvestmentAccountCard> {
                         border: Border.all(color: Colors.grey.shade300),
                       ),
                       child: TextField(
-                        controller: _evalController,
+                        controller: _inputController,
                         keyboardType: TextInputType.number,
                         inputFormatters: [ThousandsSeparatorInputFormatter()],
                         textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
-                          hintText: '평가금액 입력',
+                          hintText: widget.secondFieldHint,
                           hintStyle: TextStyle(
                             fontFamily: 'Gmarket_sans',
                             fontSize: Sizes.size14,
@@ -533,7 +603,7 @@ class _FieldLabel extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────
-// 저축 / 부채 탭 placeholder
+// 부채 탭 placeholder
 // ──────────────────────────────────────────────
 class _AssetTabPlaceholder extends StatelessWidget {
   const _AssetTabPlaceholder({required this.selectedTab});
