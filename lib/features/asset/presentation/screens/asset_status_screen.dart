@@ -87,7 +87,8 @@ class AssetStatusScreen extends StatefulWidget {
   State<AssetStatusScreen> createState() => _AssetStatusScreenState();
 }
 
-class _AssetStatusScreenState extends State<AssetStatusScreen> {
+class _AssetStatusScreenState extends State<AssetStatusScreen>
+    with AutomaticKeepAliveClientMixin {
   final FirestoreService _firestoreService = FirestoreService();
 
   DateTime _selectedMonth = DateTime.now();
@@ -142,6 +143,9 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
     }
     super.dispose();
   }
+
+  @override
+  bool get wantKeepAlive => true;
 
   // monthly_summaries + asset_status를 병렬 로드
   Future<void> _loadData() async {
@@ -314,6 +318,7 @@ class _AssetStatusScreenState extends State<AssetStatusScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
