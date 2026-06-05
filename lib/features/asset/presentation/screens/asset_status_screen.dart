@@ -979,15 +979,20 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _SummaryItem extends StatelessWidget {
-  const _SummaryItem({required this.label, required this.value});
+  const _SummaryItem({
+    required this.label,
+    required this.value,
+    this.alignment = CrossAxisAlignment.start,
+  });
 
   final String label;
   final String value;
+  final CrossAxisAlignment alignment;
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: alignment,
       children: [
         Text(
           label,
@@ -1001,6 +1006,8 @@ class _SummaryItem extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           value,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
           style: const TextStyle(
             fontFamily: 'Gmarket_sans',
             fontWeight: FontWeight.w700,
@@ -1030,7 +1037,11 @@ class _InvestmentSummaryCard extends StatelessWidget {
     return _SummaryCard(
       items: [
         _SummaryItem(label: '투자원금', value: _formatAmount(principal)),
-        _SummaryItem(label: '평가금액', value: _formatAmount(valuation)),
+        _SummaryItem(
+          label: '평가금액',
+          value: _formatAmount(valuation),
+          alignment: CrossAxisAlignment.end,
+        ),
       ],
     );
   }
@@ -1053,7 +1064,11 @@ class _SavingSummaryCard extends StatelessWidget {
     return _SummaryCard(
       items: [
         _SummaryItem(label: '저축금액', value: _formatAmount(savingAmount)),
-        _SummaryItem(label: '누적금액', value: _formatAmount(accumulated)),
+        _SummaryItem(
+          label: '누적금액',
+          value: _formatAmount(accumulated),
+          alignment: CrossAxisAlignment.end,
+        ),
       ],
     );
   }
@@ -1076,7 +1091,11 @@ class _DebtSummaryCard extends StatelessWidget {
     return _SummaryCard(
       items: [
         _SummaryItem(label: '이자금액', value: _formatAmount(interestAmount)),
-        _SummaryItem(label: '대출잔액', value: _formatAmount(balance)),
+        _SummaryItem(
+          label: '대출잔액',
+          value: _formatAmount(balance),
+          alignment: CrossAxisAlignment.end,
+        ),
       ],
     );
   }
