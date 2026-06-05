@@ -13,6 +13,15 @@ String _formatAmount(double amount) {
   return '${NumberFormat('#,###').format(amount.round())}원';
 }
 
+// 입력 자릿수에 따른 동적 폰트 크기 (₩ 120px 입력칸 기준)
+double _inputFontSize(String text) {
+  final digits = text.replaceAll(',', '').length;
+  if (digits >= 10) return 13; // 1,000,000,000 이상
+  if (digits >= 9) return 14;  // 100,000,000 ~ 999,999,999
+  if (digits >= 8) return 15;  // 10,000,000 ~ 99,999,999
+  return 16;                    // ~ 9,999,999
+}
+
 // 순자산 전용: 음수도 실제 값 그대로 표시
 String _formatNetAmount(double amount) {
   if (amount == 0) return '0원';
@@ -892,54 +901,60 @@ class _AssetAccountCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          // 오른쪽: 사용자 직접 입력 (저장 대상)
+          // 오른쪽: 사용자 직접 입력 — 자릿수에 따라 폰트 크기 자동 조정
           SizedBox(
             width: 120,
-            child: TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              inputFormatters: [ThousandsSeparatorInputFormatter()],
-              textInputAction: TextInputAction.done,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontFamily: 'Gmarket_sans',
-                fontWeight: FontWeight.w400,
-                fontSize: Sizes.size14,
-                color: Colors.black,
-              ),
-              decoration: InputDecoration(
-                prefixText: '₩ ',
-                prefixStyle: TextStyle(
-                  fontFamily: 'Gmarket_sans',
-                  fontWeight: FontWeight.w400,
-                  fontSize: Sizes.size14,
-                  color: Colors.grey.shade600,
-                ),
-                hintText: secondFieldHint,
-                hintStyle: TextStyle(
-                  fontFamily: 'Gmarket_sans',
-                  fontWeight: FontWeight.w400,
-                  fontSize: Sizes.size14,
-                  color: Colors.grey.shade400,
-                ),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 8,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFE9435A)),
-                ),
-              ),
+            child: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              builder: (context, value, _) {
+                final fontSize = _inputFontSize(value.text);
+                return TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [ThousandsSeparatorInputFormatter()],
+                  textInputAction: TextInputAction.done,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontFamily: 'Gmarket_sans',
+                    fontWeight: FontWeight.w400,
+                    fontSize: fontSize,
+                    color: Colors.black,
+                  ),
+                  decoration: InputDecoration(
+                    prefixText: '₩ ',
+                    prefixStyle: TextStyle(
+                      fontFamily: 'Gmarket_sans',
+                      fontWeight: FontWeight.w400,
+                      fontSize: fontSize,
+                      color: Colors.grey.shade600,
+                    ),
+                    hintText: secondFieldHint,
+                    hintStyle: TextStyle(
+                      fontFamily: 'Gmarket_sans',
+                      fontWeight: FontWeight.w400,
+                      fontSize: fontSize,
+                      color: Colors.grey.shade400,
+                    ),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 8,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFFE9435A)),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
