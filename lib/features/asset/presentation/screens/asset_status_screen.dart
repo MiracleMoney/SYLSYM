@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:miraclemoney/core/constants/sizes.dart';
 
 const _investmentAccounts = ['연금', 'IRP', 'ISA', '일반'];
@@ -263,17 +264,31 @@ class _InvestmentTabContent extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────
-// 계좌별 투자 카드 (계좌명 + New 배지만 표시)
+// 계좌별 투자 카드 (탭하면 투자금액/평가금액 펼침)
 // ──────────────────────────────────────────────
-class _InvestmentAccountCard extends StatelessWidget {
+class _InvestmentAccountCard extends StatefulWidget {
   const _InvestmentAccountCard({required this.accountName});
 
   final String accountName;
 
+  @override
+  State<_InvestmentAccountCard> createState() => _InvestmentAccountCardState();
+}
+
+class _InvestmentAccountCardState extends State<_InvestmentAccountCard> {
   static const _accentColor = Color(0xFFE9435A);
 
+  bool _isExpanded = false;
+  final TextEditingController _evalController = TextEditingController();
+
+  @override
+  void dispose() {
+    _evalController.dispose();
+    super.dispose();
+  }
+
   IconData get _icon {
-    switch (accountName) {
+    switch (widget.accountName) {
       case '연금':
         return Icons.savings_outlined;
       case 'IRP':
@@ -287,54 +302,180 @@ class _InvestmentAccountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(8),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
+      alignment: Alignment.topCenter,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _isExpanded
+                ? _accentColor.withAlpha(80)
+                : Colors.grey.shade200,
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        child: Row(
-          children: [
-            Icon(_icon, size: 22, color: const Color(0xFF5B7EFF)),
-            const SizedBox(width: 10),
-            Text(
-              accountName,
-              style: const TextStyle(
-                fontFamily: 'Gmarket_sans',
-                fontWeight: FontWeight.w700,
-                fontSize: Sizes.size16,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(width: 8),
-            // New 배지 (평가금액 미입력 상태)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(
-                color: _accentColor,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text(
-                'New',
-                style: TextStyle(
-                  fontFamily: 'Gmarket_sans',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 10,
-                  color: Colors.white,
-                ),
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(_isExpanded ? 14 : 8),
+              blurRadius: _isExpanded ? 12 : 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 헤더 (탭 가능)
+            InkWell(
+              onTap: () => setState(() => _isExpanded = !_isExpanded),
+              borderRadius: BorderRadius.vertical(
+                top: const Radius.circular(16),
+                bottom: Radius.circular(_isExpanded ? 0 : 16),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    Icon(_icon, size: 22, color: const Color(0xFF5B7EFF)),
+                    const SizedBox(width: 10),
+                    Text(
+                      widget.accountName,
+                      style: const TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w700,
+                        fontSize: Sizes.size16,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // New 배지 — 배경 연한색, 글자색 accent
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFEBED),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'New',
+                        style: TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10,
+                          color: _accentColor,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      _isExpanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      size: 20,
+                      color: Colors.grey.shade400,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // 펼침 영역
+            if (_isExpanded) ...[
+              Container(height: 1, color: Colors.grey.shade100),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 투자금액 (읽기 전용)
+                    _FieldLabel('투자금액'),
+                    const SizedBox(height: 6),
+                    const Text(
+                      '0원',
+                      style: TextStyle(
+                        fontFamily: 'Gmarket_sans',
+                        fontWeight: FontWeight.w700,
+                        fontSize: Sizes.size16,
+                        color: Colors.black,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // 평가금액 (입력 가능)
+                    _FieldLabel('평가금액'),
+                    const SizedBox(height: 6),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: TextField(
+                        controller: _evalController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        textInputAction: TextInputAction.done,
+                        decoration: InputDecoration(
+                          hintText: '평가금액 입력',
+                          hintStyle: TextStyle(
+                            fontFamily: 'Gmarket_sans',
+                            fontSize: Sizes.size14,
+                            color: Colors.grey.shade400,
+                          ),
+                          suffixText: '원',
+                          suffixStyle: TextStyle(
+                            fontFamily: 'Gmarket_sans',
+                            fontSize: Sizes.size14,
+                            color: Colors.grey.shade600,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                        ),
+                        style: const TextStyle(
+                          fontFamily: 'Gmarket_sans',
+                          fontWeight: FontWeight.w500,
+                          fontSize: Sizes.size14,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontFamily: 'Gmarket_sans',
+        fontSize: Sizes.size12,
+        fontWeight: FontWeight.w500,
+        color: Colors.grey.shade600,
       ),
     );
   }
